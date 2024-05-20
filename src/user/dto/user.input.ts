@@ -1,13 +1,17 @@
-import { Field, InputType, Int } from 'type-graphql';
+import { Field, InputType } from 'type-graphql';
+import { userAccountInfo, userPersonalInfo } from './user.dto';
+import { GraphQLJSONObject } from 'graphql-scalars';
 
 @InputType()
 export class userInput {
-  @Field({ nullable: false })
-  firstName: string;
+  @Field(() => GraphQLJSONObject)
+  user: userPersonalInfo;
 
-  @Field({ nullable: false })
-  lastName: string;
+  @Field()
+  password: string;
 
-  @Field(() => Int, { nullable: true })
-  teamId?: number;
+  @Field()
+  email: string;
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  userInfo?: userAccountInfo;
 }
