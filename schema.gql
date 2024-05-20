@@ -3,5 +3,9 @@
 # ------------------------------------------------------
 
 type Query {
-  hello: String!
+  hiMom: String!
+}
+
+type Mutation {
+  createUser(create: String!): String!
 }

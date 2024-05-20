@@ -1,25 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
+import { User } from './dto/user.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { userInput } from './dto/user.input';
 
 @Injectable()
 export class UserService {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(createUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectModel(User.name)
+    private UserModel: Model<User>,
+  ) {}
+
+  async create(user: userInput): Promise<User> {
+    return (await this.UserModel.create(user)).save();
   }
 
-  findAll() {
-    return `This action returns all user`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(id: number, updateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findOne(p0: { _id: string }): Promise<User[]> {
+    return await this.UserModel.find({ _id: p0._id });
   }
 }
