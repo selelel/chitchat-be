@@ -1,40 +1,19 @@
-import Mongoose, { Schema } from 'mongoose';
+import { Types } from 'mongoose';
 
-export const chatSchema = new Schema(
-  {
-    chatId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-    },
-    userId: {
-      type: Schema.Types.ObjectId,
-      required: true,
-    },
-    typing: {
-      type: Boolean,
-      required: false,
-    },
-    isFriend: {
-      type: Boolean,
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ['valid', 'block', 'permission_needed'],
-      required: true,
-    },
-    mute: {
-      is: {
-        type: Boolean,
-        required: true,
-      },
-      until: {
-        type: Date,
-        required: true,
-      },
-    },
-  },
-  { _id: false },
-);
+export enum ChatStatus {
+  Valid = 'valid',
+  Block = 'block',
+  PermissionNeeded = 'permission_needed',
+}
 
-export class CreateChatDto {}
+export interface Chat {
+  readonly chatId: Types.ObjectId;
+  readonly userId: Types.ObjectId;
+  readonly typing?: boolean;
+  readonly isFriend: boolean;
+  readonly status: ChatStatus;
+  readonly mute: {
+    is: boolean;
+    until: Date;
+  };
+}
