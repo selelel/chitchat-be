@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ChatModule } from './chat/chat.module';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { AuthService } from './auth/auth.service';
 
 @Module({
   imports: [
@@ -20,7 +21,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       url: process.env.DB_URI,
       entities: [join(__dirname, '**/**.entity{.ts,.js}')],
     }),
-    ChatModule,
+    AuthModule,
   ],
+  providers: [AuthService],
 })
 export class AppModule {}

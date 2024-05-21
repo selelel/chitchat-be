@@ -1,4 +1,4 @@
-import { Column, Entity, ObjectId, ObjectIdColumn, BaseEntity } from 'typeorm';
+import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 import {
   chatInfoArray,
   userAccountInfo,
@@ -10,12 +10,12 @@ import { ID } from 'type-graphql';
 
 @Entity()
 @ObjectType()
-export class User extends BaseEntity {
+export class User {
   @ObjectIdColumn()
   @Field(() => ID, { nullable: true })
   _id: ObjectId;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'json', unique: true })
   @Field(() => GraphQLJSONObject)
   user: userPersonalInfo;
 
@@ -28,29 +28,29 @@ export class User extends BaseEntity {
   email: string;
 
   @Column({ nullable: true, type: 'json' })
-  @Field(() => GraphQLJSONObject, { nullable: true })
+  @Field(() => GraphQLJSONObject)
   userInfo?: userAccountInfo;
 
-  @Column({ nullable: true })
+  @Column()
   @Field(() => [String], { nullable: true })
   tags?: string[];
-  @Column({ nullable: true })
+  @Column()
   @Field(() => [GraphQLJSONObject], { nullable: true })
   chats?: chatInfoArray[];
 
-  @Column({ nullable: true })
+  @Column()
   @Field(() => [String], { nullable: true })
   group?: string[];
 
-  @Column({ nullable: true })
+  @Column()
   @Field(() => [String], { nullable: true })
   followers?: string[];
 
-  @Column({ nullable: true })
+  @Column()
   @Field(() => [String], { nullable: true })
   following?: string[];
 
-  @Column({ nullable: true })
+  @Column()
   @Field(() => [String], { nullable: true })
   post?: string[];
 }
