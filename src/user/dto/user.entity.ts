@@ -1,5 +1,9 @@
 import { Column, Entity, ObjectId, ObjectIdColumn, BaseEntity } from 'typeorm';
-import { chatInfoArray, userAccountInfo, userPersonalInfo } from './user.dto';
+import {
+  chatInfoArray,
+  userAccountInfo,
+  userPersonalInfo,
+} from './user.interfaces';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
 import { ID } from 'type-graphql';
@@ -22,6 +26,7 @@ export class User extends BaseEntity {
   @Column()
   @Field()
   email: string;
+
   @Column({ nullable: true, type: 'json' })
   @Field(() => GraphQLJSONObject, { nullable: true })
   userInfo?: userAccountInfo;
