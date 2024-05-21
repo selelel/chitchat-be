@@ -26,5 +26,12 @@ type Query {
 }
 
 type Mutation {
-  createUser: User!
+  createUser(createUserInput: userInput!): User!
+}
+
+input userInput {
+  user: JSONObject!
+  password: String!
+  email: String!
+  userInfo: JSONObject
 }

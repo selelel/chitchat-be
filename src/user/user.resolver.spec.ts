@@ -12,7 +12,7 @@ describe('UserResolver', () => {
     resolver = module.get<UserResolver>(UserResolver);
   });
 
-  it('should be defined', () => {
-    expect(resolver).toBeDefined();
+  it('testQuery should be Array of User', () => {
+    expect(resolver.testQuery()).toBe(Array);
   });
 });
