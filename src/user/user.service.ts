@@ -1,8 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { userInput } from './dto/user.input';
+import { UserInput } from './dto/user.input';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectId, Repository } from 'typeorm';
 import { User } from './dto/user.entity';
+import { ConflictError } from 'src/core/graphql.error';
+import * as bcrypt from 'bcryptjs';
+import { BCRYPT } from 'src/utils/constant';
 
 @Injectable()
 export class UserService {
@@ -10,8 +13,17 @@ export class UserService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  async create(user: userInput): Promise<User> {
+  async createUser(user: UserInput): Promise<User> {
+    const userExist = await this.findEmail(user.email);
+    // TODO Validate entity and password
+    if (userExist) {
+      throw new ConflictError('User with this email already exists');
+    }
+
+    const hash = await bcrypt.hash(user.password, BCRYPT.salt);
+    user.password = hash;
     const newUser = this.userRepository.create(user);
+
     return this.userRepository.save(newUser);
   }
 
@@ -19,7 +31,7 @@ export class UserService {
     return await this.userRepository.find();
   }
 
-  async findOne(_id: ObjectId): Promise<User> {
+  async findOneById(_id: ObjectId): Promise<User> {
     return await this.userRepository.findOne({ where: { _id } });
   }
 

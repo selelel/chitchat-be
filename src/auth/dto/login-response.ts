@@ -4,7 +4,7 @@ import { User } from 'src/user/dto/user.entity';
 @ObjectType()
 export class LoginResponse {
   @Field()
-  accestoken: string;
+  accesstoken: string;
   @Field(() => User)
   user: User;
 }

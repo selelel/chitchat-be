@@ -3,7 +3,7 @@ import { userAccountInfo, userPersonalInfo } from './user.interfaces';
 import { GraphQLJSONObject } from 'graphql-scalars';
 
 @InputType()
-export class userInput {
+export class UserInput {
   @Field(() => GraphQLJSONObject)
   user: userPersonalInfo;
 
