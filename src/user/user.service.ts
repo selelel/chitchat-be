@@ -24,7 +24,6 @@ export class UserService {
   }
 
   async findEmail(email: string): Promise<User> {
-    console.log('HEllo');
     return await this.userRepository.findOne({ where: { email } });
   }
 }
