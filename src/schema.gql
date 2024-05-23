@@ -50,7 +50,7 @@ type User {
   user: userPersonalInfo!
   email: String!
   userInfo: userAccountInfo!
-  tags: [String!]
+  tags: [String!]!
   chats: [JSONObject!]
   group: [String!]
   followers: [String!]

@@ -19,9 +19,9 @@ export class AuthService {
     const accesstoken = sign({ _id, password }, JWT.JWT_SUPER_SECRET_KEY, {
       expiresIn: JWT.JWT_EXPIRE_IN,
     });
-    console.log(user);
     // TODO pass the token, pls refer to Entity issue
-    user.token = [...user.token, accesstoken];
+    await this.usersService.addToken(user._id, accesstoken, user.token);
+    console.log(user.token);
     return accesstoken;
   }
 

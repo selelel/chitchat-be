@@ -1,4 +1,6 @@
 import {
+  BaseEntity,
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -16,7 +18,7 @@ import { userAccountInfo } from './user.account.info';
 // TODO Column is not created when the user is created
 @Entity()
 @ObjectType()
-export class User {
+export class User extends BaseEntity {
   @ObjectIdColumn()
   @Field(() => ID, { nullable: true })
   _id: ObjectId;
@@ -28,41 +30,44 @@ export class User {
   @Field(() => userPersonalInfo)
   public user: userPersonalInfo;
 
-  @Column({ type: 'string', default: '' })
+  @Column({ type: 'string' })
   public password: string;
 
-  @Column({ type: 'string', default: '' })
+  @Column({ type: 'string' })
   @Field()
   public email: string;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'json', nullable: true })
   @Field(() => userAccountInfo)
   public userInfo: userAccountInfo | null;
 
-  @Column({ type: 'array', nullable: false })
-  @Field(() => [String], { nullable: true })
-  public tags: string[] | null;
+  @Column({ type: 'array', nullable: true, array: true })
+  @Field(() => [String])
+  public tags: string[];
 
-  @Column({ type: 'array', default: [] })
+  @Column({ type: 'array', nullable: true })
   @Field(() => [GraphQLJSONObject], { nullable: true })
-  public chats: chatInfoArray[] | null;
+  public chats: chatInfoArray[];
 
-  @Column({ type: 'array', default: [] })
+  @Column({ type: 'array', nullable: true })
   @Field(() => [String], { nullable: true })
-  public group: string[] | null;
+  public group: string[];
 
-  @Column({ type: 'array', default: [] })
+  @Column({ type: 'array', nullable: true })
   @Field(() => [String], { nullable: true })
-  public followers: string[] | null;
+  public followers: string[];
 
-  @Column({ type: 'array', default: [] })
+  @Column({ type: 'array', nullable: true })
   @Field(() => [String], { nullable: true })
-  public following: string[] | null;
+  public following: string[];
 
-  @Column({ type: 'array', default: [] })
+  @Column({ type: 'array', nullable: true })
   @Field(() => [String], { nullable: true })
   public post: string[];
 
-  @Column({ type: 'array', default: [] })
+  @Column({ type: 'array', nullable: true })
   public token: string[];
+
+  @BeforeInsert()
+  beforeInsertActions() {}
 }

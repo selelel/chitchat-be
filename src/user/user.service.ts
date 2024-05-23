@@ -39,4 +39,21 @@ export class UserService {
   async findEmail(email: string): Promise<User> {
     return await this.userRepository.findOne({ where: { email } });
   }
+
+  async addToken(
+    _id: ObjectId,
+    token: string,
+    currentToken: string[],
+  ): Promise<void> {
+    this.userRepository.update(_id, { token: [...currentToken, token] });
+  }
+
+  async removeToken(
+    _id: ObjectId,
+    token: string,
+    currentToken: string[],
+  ): Promise<void> {
+    const filterToken = currentToken.filter((d) => d === token);
+    this.userRepository.update(_id, { tags: [...filterToken] });
+  }
 }

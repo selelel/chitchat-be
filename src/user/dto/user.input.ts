@@ -15,5 +15,5 @@ export class UserInput {
   email: string;
 
   @Field(() => GraphQLJSONObject, { nullable: true })
-  userInfo?: userAccountInfo;
+  userInfo: userAccountInfo;
 }
