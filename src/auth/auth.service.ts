@@ -3,7 +3,6 @@ import { UserService } from 'src/user/user.service';
 import { LoginResponse } from './dto/login-response';
 import { LoginUserInput } from './dto/login-response.input';
 import { sign, verify, decode } from 'jsonwebtoken';
-import { UserInput } from 'src/user/dto/user.input';
 import { JWT } from 'src/utils/constant';
 import { NotFoundError, UnauthorizedError } from 'src/core/graphql.error';
 import { ObjectId } from 'typeorm';
@@ -62,14 +61,5 @@ export class AuthService {
 
     const accesstoken = await this.createAccessToken(user._id, password);
     return { accesstoken, user };
-  }
-
-  async signin(user: UserInput) {
-    try {
-      const createdUser = await this.usersService.createUser(user);
-      return createdUser;
-    } catch (error) {
-      return error;
-    }
   }
 }

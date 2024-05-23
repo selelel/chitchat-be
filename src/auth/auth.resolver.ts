@@ -6,10 +6,14 @@ import { LoginUserInput } from './dto/login-response.input';
 // import { UseGuards } from '@nestjs/common';
 import { User } from 'src/user/dto/user.entity';
 import { UserInput } from 'src/user/dto/user.input';
+import { UserService } from 'src/user/user.service';
 
 @Resolver()
 export class AuthResolver {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private userService: UserService,
+  ) {}
 
   // TODO When user login create the Accestoken push it to its token column array
   @Mutation(() => LoginResponse)
@@ -22,7 +26,7 @@ export class AuthResolver {
 
   @Mutation(() => User)
   async signin(@Args('signinUserInput') signinUserInput: UserInput) {
-    const createdUser = await this.authService.signin(signinUserInput);
+    const createdUser = await this.userService.createUser(signinUserInput);
     console.log(createdUser);
     return createdUser;
   }
