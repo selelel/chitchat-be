@@ -2,11 +2,54 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type userPersonalInfo {
+  firstname: String!
+  lastname: String!
+  username: String!
+  hide_name: Boolean!
+}
+
+type userAccountInfo {
+  avatar: String!
+  bio: String!
+  age: Int!
+  mbti: MbtiType!
+  gender: Gender!
+}
+
+enum MbtiType {
+  ISTJ
+  ISFJ
+  INFJ
+  INTJ
+  ISTP
+  ISFP
+  INFP
+  INTP
+  ESTP
+  ESFP
+  ENFP
+  ENTP
+  ESTJ
+  ESFJ
+  ENFJ
+  ENTJ
+  UNDEFINED
+  undefined
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  UNDEFINED
+  undefined
+}
+
 type User {
   _id: ID
-  user: JSONObject!
+  user: userPersonalInfo!
   email: String!
-  userInfo: JSONObject!
+  userInfo: userAccountInfo!
   tags: [String!]
   chats: [JSONObject!]
   group: [String!]
@@ -30,13 +73,9 @@ type Query {
 }
 
 type Mutation {
+  createUser(createUserInput: UserInput!): User!
   login(loginUserInput: LoginUserInput!): LoginResponse!
   signin(signinUserInput: UserInput!): User!
-}
-
-input LoginUserInput {
-  password: String!
-  email: String!
 }
 
 input UserInput {
@@ -44,4 +83,9 @@ input UserInput {
   password: String!
   email: String!
   userInfo: JSONObject
+}
+
+input LoginUserInput {
+  password: String!
+  email: String!
 }

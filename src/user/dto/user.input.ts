@@ -1,6 +1,7 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { userAccountInfo, userPersonalInfo } from './user.interfaces';
 import { GraphQLJSONObject } from 'graphql-scalars';
+import { userAccountInfo } from './user.account.info';
+import { userPersonalInfo } from './user.personal.info';
 
 @InputType()
 export class UserInput {

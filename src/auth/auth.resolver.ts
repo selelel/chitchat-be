@@ -23,6 +23,7 @@ export class AuthResolver {
   @Mutation(() => User)
   async signin(@Args('signinUserInput') signinUserInput: UserInput) {
     const createdUser = await this.authService.signin(signinUserInput);
+    console.log(createdUser);
     return createdUser;
   }
 }

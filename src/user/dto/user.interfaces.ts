@@ -1,30 +1,33 @@
-export type User = {
-  user: userPersonalInfo;
-  password: string;
-  email: string;
-  userInfo?: userAccountInfo;
-  tags?: string[];
-  chats?: chatInfoArray[];
-  group?: string[];
-  followers?: string[];
-  following?: string[];
-  post?: string[];
-};
+import { registerEnumType } from '@nestjs/graphql';
 
-export type userPersonalInfo = {
-  firstname: string;
-  lastname: string;
-  username: string;
-  hide_name: boolean;
-};
+export enum Gender {
+  MALE = 'M',
+  FEMALE = 'F',
+  UNDEFINED = undefined,
+}
 
-export type userAccountInfo = {
-  avatar?: Buffer;
-  bio?: string;
-  age?: number;
-  mbti?: string;
-  gender?: 'M' | 'F';
-};
+export enum MbtiType {
+  ISTJ = 'ISTJ',
+  ISFJ = 'ISFJ',
+  INFJ = 'INFJ',
+  INTJ = 'INTJ',
+  ISTP = 'ISTP',
+  ISFP = 'ISFP',
+  INFP = 'INFP',
+  INTP = 'INTP',
+  ESTP = 'ESTP',
+  ESFP = 'ESFP',
+  ENFP = 'ENFP',
+  ENTP = 'ENTP',
+  ESTJ = 'ESTJ',
+  ESFJ = 'ESFJ',
+  ENFJ = 'ENFJ',
+  ENTJ = 'ENTJ',
+  UNDEFINED = undefined,
+}
+
+registerEnumType(Gender, { name: 'Gender' });
+registerEnumType(MbtiType, { name: 'MbtiType' });
 
 export type chatInfoArray = {
   chatId: string;

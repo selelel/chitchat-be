@@ -24,6 +24,7 @@ export class UserService {
     user.password = hash;
     const newUser = this.userRepository.create(user);
 
+    console.log(newUser);
     return this.userRepository.save(newUser);
   }
 
