@@ -70,10 +70,13 @@ type LoginResponse {
 
 type Query {
   testQuery: [User!]!
+  testAuth: [User!]!
 }
 
 type Mutation {
   createUser(createUserInput: UserInput!): User!
+  logoutAll(token: String!): String!
+  logout(token: String!): String!
   login(loginUserInput: LoginUserInput!): LoginResponse!
   signin(signinUserInput: UserInput!): User!
 }

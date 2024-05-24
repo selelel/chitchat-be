@@ -6,6 +6,7 @@ import { User } from './dto/user.entity';
 import { ConflictError } from 'src/core/graphql.error';
 import * as bcrypt from 'bcryptjs';
 import { BCRYPT } from 'src/utils/constant';
+import * as mongoDb from 'mongodb';
 
 @Injectable()
 export class UserService {
@@ -19,12 +20,9 @@ export class UserService {
     if (userExist) {
       throw new ConflictError('User with this email already exists');
     }
-
     const hash = await bcrypt.hash(user.password, BCRYPT.salt);
     user.password = hash;
     const newUser = this.userRepository.create(user);
-
-    console.log(newUser);
     return this.userRepository.save(newUser);
   }
 
@@ -33,27 +31,12 @@ export class UserService {
   }
 
   async findOneById(_id: ObjectId): Promise<User> {
-    return await this.userRepository.findOne({ where: { _id } });
+    return await this.userRepository.findOne({
+      where: { _id: new mongoDb.ObjectId(_id) },
+    });
   }
 
   async findEmail(email: string): Promise<User> {
     return await this.userRepository.findOne({ where: { email } });
-  }
-
-  async addToken(
-    _id: ObjectId,
-    token: string,
-    currentToken: string[],
-  ): Promise<void> {
-    this.userRepository.update(_id, { token: [...currentToken, token] });
-  }
-
-  async removeToken(
-    _id: ObjectId,
-    token: string,
-    currentToken: string[],
-  ): Promise<void> {
-    const filterToken = currentToken.filter((d) => d === token);
-    this.userRepository.update(_id, { tags: [...filterToken] });
   }
 }

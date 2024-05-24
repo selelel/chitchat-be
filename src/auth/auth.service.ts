@@ -5,12 +5,17 @@ import { LoginUserInput } from './dto/login-response.input';
 import { sign, verify, decode } from 'jsonwebtoken';
 import { JWT } from 'src/utils/constant';
 import { NotFoundError, UnauthorizedError } from 'src/core/graphql.error';
-import { ObjectId } from 'typeorm';
+import { ObjectId, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/user/dto/user.entity';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UserService) {}
+  constructor(
+    @InjectRepository(User) private userRepository: Repository<User>,
+    private usersService: UserService,
+  ) {}
 
   // TODO Also create a function that will check if the token is expired or not, then remove the token from the array and create an error
 
@@ -20,8 +25,7 @@ export class AuthService {
       expiresIn: JWT.JWT_EXPIRE_IN,
     });
     // TODO pass the token, pls refer to Entity issue
-    await this.usersService.addToken(user._id, accesstoken, user.token);
-    console.log(user.token);
+    await this.addToken(user._id, accesstoken, user.token);
     return accesstoken;
   }
 
@@ -38,13 +42,18 @@ export class AuthService {
       verify(token, process.env.JWT_SUPER_SECRET_KEY);
       return Promise.resolve(true);
     } catch (error) {
+      const {
+        payload: { _id },
+      } = this.decodeToken(token);
+      this.removeToken(_id, token);
       return Promise.resolve(false);
     }
   }
 
   decodeToken(token: string): any {
     try {
-      return decode(token, { complete: true });
+      const decodedToken = decode(token, { complete: true });
+      return decodedToken;
     } catch (error) {
       return null;
     }
@@ -61,5 +70,26 @@ export class AuthService {
 
     const accesstoken = await this.createAccessToken(user._id, password);
     return { accesstoken, user };
+  }
+
+  async addToken(
+    _id: ObjectId,
+    token: string,
+    currentToken: string[] = [],
+  ): Promise<void> {
+    const addedToken = currentToken.concat(token);
+    this.userRepository.update(_id, { token: addedToken });
+  }
+
+  async removeToken(
+    _id: ObjectId,
+    token_to_remove: string,
+    option?: { removeAll?: boolean },
+  ): Promise<void> {
+    const { token } = await this.usersService.findOneById(_id);
+    const filterToken = token.filter((d: string) => d !== token_to_remove);
+    this.userRepository.update(_id, {
+      token: option?.removeAll ? [] : [...filterToken],
+    });
   }
 }

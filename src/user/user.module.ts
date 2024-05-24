@@ -6,7 +6,7 @@ import { User } from './dto/user.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
-  exports: [UserService],
+  exports: [UserService, TypeOrmModule.forFeature([User])],
   providers: [UserService, UserResolver],
 })
 export class UserModule {}

@@ -1,6 +1,5 @@
 import {
   BaseEntity,
-  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -67,7 +66,4 @@ export class User extends BaseEntity {
 
   @Column({ type: 'array', nullable: true })
   public token: string[];
-
-  @BeforeInsert()
-  beforeInsertActions() {}
 }
