@@ -1,0 +1,41 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  _id: ID
+  email: String!
+  tags: [String!]!
+  group: [String!]
+  followers: [String!]
+  following: [String!]
+  post: [String!]
+}
+
+type LoginResponse {
+  accesstoken: String!
+  user: User!
+}
+
+type Query {
+  testQuery: [User!]!
+  testAuth: [User!]!
+}
+
+type Mutation {
+  createUser(createUserInput: UserInput!): User!
+  logoutAll(token: String!): String!
+  logout(token: String!): String!
+  login(loginUserInput: LoginUserInput!): LoginResponse!
+  signin(signinUserInput: UserInput!): User!
+}
+
+input UserInput {
+  password: String!
+  email: String!
+}
+
+input LoginUserInput {
+  password: String!
+  email: String!
+}

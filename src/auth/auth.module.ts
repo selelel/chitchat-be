@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './auth.local.strategy';
 import { UserModule } from 'src/user/user.module';
 import { AuthResolver } from './auth.resolver';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from 'src/user/dto/user.entity';
+import { User } from 'src/user/entities';
+import { LocalStrategy } from './strategy/auth.local.strategy';
 
 @Module({
   imports: [PassportModule, UserModule, TypeOrmModule.forFeature([User])],

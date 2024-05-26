@@ -1,32 +1,37 @@
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   ObjectId,
   ObjectIdColumn,
 } from 'typeorm';
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ID } from 'type-graphql';
 import { Date } from 'mongoose';
-import { userPersonalInfo } from './user.personal.info';
-import { userAccountInfo } from './user.account.info';
-import { userChatInfo } from './user.chat.info';
+import { Chat } from 'src/chat/entities/chat.entity';
+import { PersonalObjectEntity } from './personal.object.entity';
+import { AccountObjectEntity } from './account.object.entity';
+import { GraphQLObjectType } from 'graphql';
 
-// TODO Column is not created when the user is created
 @Entity()
 @ObjectType()
-export class User extends BaseEntity {
+export class User {
   @ObjectIdColumn()
   @Field(() => ID, { nullable: true })
   _id: ObjectId;
 
   @CreateDateColumn()
-  createdAt: Date;
+  joined_date: Date;
 
-  @Column({ type: 'json', unique: true })
-  @Field(() => userPersonalInfo)
-  public user: userPersonalInfo;
+  @Column({ type: 'json' })
+  @Field(() => GraphQLObjectType)
+  user: PersonalObjectEntity;
+
+  @Column({ type: 'json', nullable: true })
+  @Field({ nullable: true })
+  userInfo: AccountObjectEntity;
 
   @Column({ type: 'string' })
   public password: string;
@@ -35,17 +40,17 @@ export class User extends BaseEntity {
   @Field()
   public email: string;
 
-  @Column({ type: 'json', nullable: true })
-  @Field(() => userAccountInfo)
-  public userInfo: userAccountInfo;
-
-  @Column({ array: true, nullable: true })
-  @Field(() => [userChatInfo], { nullable: true })
-  public chats: userChatInfo[];
-
   @Column({ type: 'array', nullable: true, array: true })
   @Field(() => [String])
   public tags: string[];
+
+  @ManyToMany(() => Chat)
+  @JoinTable({
+    name: 'user_chats',
+    joinColumn: { name: 'userId', referencedColumnName: '_id' },
+    inverseJoinColumn: { name: 'chatId', referencedColumnName: '_id' },
+  })
+  chats: Chat[];
 
   @Column({ type: 'array', nullable: true })
   @Field(() => [String], { nullable: true })

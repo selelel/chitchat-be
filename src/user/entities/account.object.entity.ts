@@ -1,10 +1,15 @@
-import { Field, Int, ObjectType } from '@nestjs/graphql';
-import { Column, Entity } from 'typeorm';
-import { Gender, MbtiType } from './user.interfaces';
+import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
+import { Gender, MbtiType } from '../enums';
 
+@InputType()
 @Entity()
 @ObjectType()
-export class userAccountInfo {
+export class AccountObjectEntity {
+  @ObjectIdColumn()
+  @Field(() => ID, { nullable: true })
+  _id: ObjectId;
+
   @Column({ default: undefined })
   @Field()
   avatar: string;

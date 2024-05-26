@@ -7,6 +7,7 @@ import { join } from 'path';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { AuthService } from './auth/auth.service';
     ConfigModule.forRoot({ cache: true, isGlobal: true }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/core/schema.gql'),
     }),
     TypeOrmModule.forRoot({
       type: 'mongodb',
@@ -22,6 +23,7 @@ import { AuthService } from './auth/auth.service';
       entities: [join(__dirname, '**/**.entity{.ts,.js}')],
     }),
     AuthModule,
+    ChatModule,
   ],
   providers: [AuthService],
 })

@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { LoginResponse } from './dto/login-response';
-import { LoginUserInput } from './dto/login-response.input';
 import { sign, verify, decode } from 'jsonwebtoken';
 import { JWT } from 'src/utils/constant';
 import { NotFoundError, UnauthorizedError } from 'src/core/graphql.error';
 import { ObjectId, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/dto/user.entity';
+import { User } from 'src/user/entities';
+import { LoginResponse } from './dto/login.response';
+import { LoginUserInput } from './input/login.input';
 
 @Injectable()
 export class AuthService {

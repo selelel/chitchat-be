@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UserInput } from './dto/user.input';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ObjectId, Repository } from 'typeorm';
-import { User } from './dto/user.entity';
 import { ConflictError } from 'src/core/graphql.error';
 import * as bcrypt from 'bcryptjs';
 import { BCRYPT } from 'src/utils/constant';
 import * as mongoDb from 'mongodb';
+import { User } from './entities';
+import { UserInput } from './dto/user.input.dto';
 
 @Injectable()
 export class UserService {
