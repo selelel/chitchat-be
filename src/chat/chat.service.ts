@@ -1,9 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Chat } from './entities/chat.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ChatService {
-  create(createChatDto: string) {
-    return createChatDto;
+  constructor(
+    @InjectRepository(Chat) private chatRepository: Repository<Chat>,
+  ) {}
+  async createChat(users: any): Promise<Chat> {
+    const newChat = new Chat();
+    newChat.users = users; // Assign user IDs directly
+
+    return await this.chatRepository.save(newChat); // Save the chat with user IDs
   }
 
   findAll() {

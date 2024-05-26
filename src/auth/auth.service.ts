@@ -37,15 +37,20 @@ export class AuthService {
     return new NotFoundError('User');
   }
 
-  async validateToken(token: string): Promise<boolean> {
+  async validateToken(validate_token: string): Promise<boolean> {
+    const {
+      payload: { _id },
+    } = this.decodeToken(validate_token);
+    const { token } = await this.usersService.findOneById(_id);
+
     try {
-      verify(token, process.env.JWT_SUPER_SECRET_KEY);
-      return Promise.resolve(true);
+      if (
+        token.includes(validate_token) &&
+        verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
+      )
+        return Promise.resolve(true);
     } catch (error) {
-      const {
-        payload: { _id },
-      } = this.decodeToken(token);
-      this.removeToken(_id, token);
+      this.removeToken(_id, validate_token);
       return Promise.resolve(false);
     }
   }

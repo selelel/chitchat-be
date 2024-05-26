@@ -15,10 +15,13 @@ export class Chat {
   @ObjectIdColumn()
   _id: ObjectId;
 
+  @Column({ type: String })
+  chatId: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToMany(() => User, (user) => user.chats)
+  @ManyToMany(() => User, (user) => user.chats, { eager: true })
   @JoinTable({
     name: 'user_chats',
     joinColumn: { name: 'chatId', referencedColumnName: '_id' },
