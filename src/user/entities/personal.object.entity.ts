@@ -1,24 +1,26 @@
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 
 @Entity()
+@ObjectType()
 export class PersonalObjectEntity {
   @ObjectIdColumn()
+  @Field(() => ID, { nullable: true })
   _id: ObjectId;
 
-  @Column({ name: 'username', type: 'string' })
+  @Column({ type: 'string' })
+  @Field()
+  firstname: string;
+
+  @Column({ type: 'json' })
+  @Field()
+  lastname: string;
+
+  @Column({ type: 'json', unique: true })
+  @Field()
   username: string;
 
-  @Column({ name: 'first_name', type: 'string', nullable: true })
-  first_name: string;
-
-  @Column({ name: 'last_name', type: 'string', nullable: true })
-  last_name: string;
-
-  @Column({
-    name: 'hide_name',
-    type: 'boolean',
-    nullable: true,
-    default: false,
-  })
+  @Column({ type: 'boolean' })
+  @Field()
   hide_name: boolean;
 }

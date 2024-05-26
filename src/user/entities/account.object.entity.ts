@@ -1,8 +1,7 @@
-import { Field, ID, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 import { Gender, MbtiType } from '../enums';
 
-@InputType()
 @Entity()
 @ObjectType()
 export class AccountObjectEntity {

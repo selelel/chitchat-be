@@ -13,7 +13,6 @@ import { Date } from 'mongoose';
 import { Chat } from 'src/chat/entities/chat.entity';
 import { PersonalObjectEntity } from './personal.object.entity';
 import { AccountObjectEntity } from './account.object.entity';
-import { GraphQLObjectType } from 'graphql';
 
 @Entity()
 @ObjectType()
@@ -26,11 +25,11 @@ export class User {
   joined_date: Date;
 
   @Column({ type: 'json' })
-  @Field(() => GraphQLObjectType)
+  @Field(() => PersonalObjectEntity)
   user: PersonalObjectEntity;
 
-  @Column({ type: 'json', nullable: true })
-  @Field({ nullable: true })
+  @Column({ type: 'json' })
+  @Field(() => AccountObjectEntity, { nullable: true })
   userInfo: AccountObjectEntity;
 
   @Column({ type: 'string' })
