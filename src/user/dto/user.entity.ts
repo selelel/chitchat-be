@@ -6,13 +6,12 @@ import {
   ObjectId,
   ObjectIdColumn,
 } from 'typeorm';
-import { chatInfoArray } from './user.interfaces';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { GraphQLJSONObject } from 'graphql-scalars';
 import { ID } from 'type-graphql';
 import { Date } from 'mongoose';
 import { userPersonalInfo } from './user.personal.info';
 import { userAccountInfo } from './user.account.info';
+import { userChatInfo } from './user.chat.info';
 
 // TODO Column is not created when the user is created
 @Entity()
@@ -38,15 +37,15 @@ export class User extends BaseEntity {
 
   @Column({ type: 'json', nullable: true })
   @Field(() => userAccountInfo)
-  public userInfo: userAccountInfo | null;
+  public userInfo: userAccountInfo;
+
+  @Column({ array: true, nullable: true })
+  @Field(() => [userChatInfo], { nullable: true })
+  public chats: userChatInfo[];
 
   @Column({ type: 'array', nullable: true, array: true })
   @Field(() => [String])
   public tags: string[];
-
-  @Column({ type: 'array', nullable: true })
-  @Field(() => [GraphQLJSONObject], { nullable: true })
-  public chats: chatInfoArray[];
 
   @Column({ type: 'array', nullable: true })
   @Field(() => [String], { nullable: true })
