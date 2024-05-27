@@ -22,15 +22,12 @@ export class AuthResolver {
     return await this.userService.findAll();
   }
 
-  @Mutation(() => String)
+  @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logoutAll(
-    @Args('token') token: string,
-    @CurrentUser() user,
-  ): Promise<boolean> {
+  async logoutAll(@CurrentUser() { user, token }): Promise<boolean> {
     const decodedToken = await this.authService.decodeToken(token);
     if (decodedToken.payload._id === user.payload._id) {
-      await this.authService.removeToken(decodedToken.payload._id, token, {
+      await this.authService.removeUserToken(decodedToken.payload._id, token, {
         removeAll: true,
       });
       return true;
@@ -39,22 +36,19 @@ export class AuthResolver {
     }
   }
 
-  @Mutation(() => String)
+  @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logout(
-    @Args('token') token: string,
-    @CurrentUser() user,
-  ): Promise<boolean> {
+  async logout(@CurrentUser() { user, token }): Promise<boolean> {
+    console.log(user);
     const decodedToken = await this.authService.decodeToken(token);
     if (decodedToken.payload._id === user.payload._id) {
-      await this.authService.removeToken(decodedToken.payload._id, token);
+      await this.authService.removeUserToken(decodedToken.payload._id, token);
       return true;
     } else {
       return false;
     }
   }
 
-  // TODO When user login create the Accestoken push it to its token column array
   @Mutation(() => LoginResponse)
   async login(@Args('loginUserInput') loginUserInput: LoginUserInput) {
     const token = await this.authService.login(loginUserInput);
@@ -64,7 +58,6 @@ export class AuthResolver {
   @Mutation(() => User)
   async signin(@Args('signinUserInput') signinUserInput: UserInput) {
     const createdUser = await this.userService.createUser(signinUserInput);
-    console.log(createdUser);
     return createdUser;
   }
 }

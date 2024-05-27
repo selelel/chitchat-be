@@ -1,72 +1,58 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ObjectId,
-  ObjectIdColumn,
-} from 'typeorm';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { ID } from 'type-graphql';
-import { Date } from 'mongoose';
 import { Chat } from 'src/chat/entities/chat.entity';
 import { PersonalObjectEntity } from './personal.object.entity';
 import { AccountObjectEntity } from './account.object.entity';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 
-@Entity()
+export type UserDocument = HydratedDocument<User>;
+
+@Schema()
 @ObjectType()
 export class User {
-  @ObjectIdColumn()
-  @Field(() => ID, { nullable: true })
-  _id: ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId }) // No need for required: true
+  _id: mongoose.Schema.Types.ObjectId;
 
-  @CreateDateColumn()
-  joined_date: Date;
-
-  @Column({ type: 'json' })
+  @Prop({ type: PersonalObjectEntity, required: true })
   @Field(() => PersonalObjectEntity)
   user: PersonalObjectEntity;
 
-  @Column({ type: 'json' })
+  @Prop({ type: AccountObjectEntity, required: true })
   @Field(() => AccountObjectEntity, { nullable: true })
   userInfo: AccountObjectEntity;
 
-  @Column({ type: 'string' })
+  @Prop({ type: String, required: true })
   public password: string;
 
-  @Column({ type: 'string' })
+  @Prop({ type: String, required: true })
   @Field()
   public email: string;
 
-  @Column({ type: 'array', nullable: true, array: true })
+  @Prop({ type: [String], required: true })
   @Field(() => [String])
   public tags: string[];
 
-  @ManyToMany(() => Chat)
-  @JoinTable({
-    name: 'user_chats',
-    joinColumn: { name: 'userId', referencedColumnName: '_id' },
-    inverseJoinColumn: { name: 'chatId', referencedColumnName: '_id' },
-  })
+  @Prop({ type: [String], required: true })
   chats: Chat[];
 
-  @Column({ type: 'array', nullable: true })
+  @Prop({ type: [String], required: true })
   @Field(() => [String], { nullable: true })
   public group: string[];
 
-  @Column({ type: 'array', nullable: true })
+  @Prop({ type: [String], required: true })
   @Field(() => [String], { nullable: true })
   public followers: string[];
 
-  @Column({ type: 'array', nullable: true })
+  @Prop({ type: [String], required: true })
   @Field(() => [String], { nullable: true })
   public following: string[];
 
-  @Column({ type: 'array', nullable: true })
+  @Prop({ type: [String], required: true })
   @Field(() => [String], { nullable: true })
   public post: string[];
 
-  @Column({ type: 'array', nullable: true })
+  @Prop({ type: [String], required: true })
   public token: string[];
 }
+
+export const UserSchema = SchemaFactory.createForClass(User);
