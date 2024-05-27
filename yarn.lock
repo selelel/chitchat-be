@@ -1158,7 +1158,7 @@
 
 "@nestjs/mongoose@^10.0.6":
   version "10.0.6"
-  resolved "https://registry.npmjs.org/@nestjs/mongoose/-/mongoose-10.0.6.tgz"
+  resolved "https://registry.yarnpkg.com/@nestjs/mongoose/-/mongoose-10.0.6.tgz#6081975eaa658a6097b63d139a82f58b2b35956c"
   integrity sha512-J8jFgSvCDEKMXU57QAIdXIlWQsOFWK+x0PM1KI/0zHe3/4JrAtFGTFD08hRX3IHk+WJT9g/XQIpMSNM7/10Jlg==
 
 "@nestjs/passport@^10.0.3":

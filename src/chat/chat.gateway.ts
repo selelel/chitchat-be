@@ -7,7 +7,6 @@ import {
 import { ChatService } from './chat.service';
 import { Server } from 'socket.io';
 import { OnModuleInit } from '@nestjs/common';
-import { ObjectId } from 'mongodb';
 
 @WebSocketGateway()
 export class ChatGateway implements OnModuleInit {
@@ -21,12 +20,9 @@ export class ChatGateway implements OnModuleInit {
 
   @WebSocketServer()
   server: Server;
-
   @SubscribeMessage('newMessage')
   async testMessage(@MessageBody() body: any) {
-    const testChatData = [new ObjectId('66535e2b1e769d7bd4319202')];
-
-    console.log(await this.chatService.createChat(testChatData));
+    await this.chatService.createChatWithUser('66544d18a2c835d2e44e821d');
     this.server.emit('onMessage', body);
   }
 }

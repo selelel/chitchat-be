@@ -1,29 +1,31 @@
-import { Injectable } from '@nestjs/common';
-import { Chat } from './entities/chat.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Chat } from './entities/chat.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class ChatService {
-  constructor(@InjectModel(Chat.name) private chatModel: Model<Chat>) {}
-  async createChat(users: any): Promise<Chat> {
-    const newChat = new this.chatModel(users);
-    return newChat.save();
-  }
+  constructor(
+    @InjectModel(Chat.name) private chatModel: Model<Chat>,
+    @InjectModel(User.name) private userModel: Model<User>,
+  ) {}
 
-  findAll() {
-    return `This action returns all chat`;
-  }
+  async createChatWithUser(userId: string): Promise<Chat> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
-  }
+    const createChat = new this.chatModel({ users: [user._id], messages: [] });
+    await createChat.save();
 
-  update(id: number, updateChatDto: string) {
-    return `This action updates a #${id} ${updateChatDto} chat`;
-  }
+    await user.updateOne({
+      $push: {
+        chats: createChat._id,
+      },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+    return createChat;
   }
 }
