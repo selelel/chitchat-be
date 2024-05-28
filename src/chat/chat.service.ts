@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Chat } from './entities/chat.entity';
 import { User } from 'src/user/entities/user.entity';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class ChatService {
@@ -11,23 +12,45 @@ export class ChatService {
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
-  async createChatWithUser(userId: string, title: string): Promise<Chat> {
-    const user = await this.userModel.findById(userId);
-    if (!user) {
+  async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
+    // TODO find the optimize
+    const privateRoomId = new ObjectId();
+    const user1 = await this.userModel.findOne({
+      _id: _user1,
+    });
+
+    const user2 = await this.userModel.findOne({
+      _id: _user2,
+    });
+
+    console.log(user2, user1);
+
+    if (!user1 || !user2) {
       throw new NotFoundException('User not found');
     }
 
-    const createChat = new this.chatModel({
-      usersId: [user._id],
-      title: title,
+    const privateRoom = new this.chatModel({
+      _id: privateRoomId,
+      usersId: [user1, user2],
+      text: 'Hello, World!',
     });
-    await createChat.save();
 
-    await user.updateOne({
+    await user1.updateOne({
       $push: {
-        chats: createChat._id,
+        chats: privateRoomId,
       },
     });
-    return createChat;
+
+    await user2.updateOne({
+      $push: {
+        chats: privateRoomId,
+      },
+    });
+
+    return await privateRoom.save();
+  }
+  async privateChats(_id: string): Promise<any> {
+    const user = await this.userModel.findOne({ _id }).populate('chats');
+    return user.chats;
   }
 }

@@ -45,9 +45,27 @@ enum Gender {
   undefined
 }
 
+type Message {
+  chatId: User!
+  userId: User!
+  editedAt: DateTime!
+  content: String!
+  seen: Boolean!
+  reaction: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type Chat {
+  _id: ID!
   usersId: [User!]!
+  messages: [Message!]!
   title: String!
+  isMuted: Boolean!
+  avatar: String!
 }
 
 type User {
@@ -72,12 +90,14 @@ type Query {
   testAuth: [User!]!
   logoutAll: Boolean!
   logout: Boolean!
+  privateChatsCreated: [Chat!]!
   testQuery: [User!]!
 }
 
 type Mutation {
   login(loginUserInput: LoginUserInput!): LoginResponse!
   signin(signinUserInput: UserInput!): User!
+  createChat(recipientId: String!): Chat!
   createUser(createUserInput: UserInput!): User!
 }
 

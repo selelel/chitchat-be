@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { sign, verify, decode } from 'jsonwebtoken'; // ?
-import { JWT } from 'src/utils/constant'; // ?
+import { sign, verify, decode } from 'jsonwebtoken';
+import { JWT } from 'src/utils/constant';
 import { NotFoundError, UnauthorizedError } from 'src/core/graphql.error';
 import * as bcrypt from 'bcryptjs';
 import { User } from 'src/user/entities';
@@ -89,7 +89,6 @@ export class AuthService {
       { new: true },
     );
 
-    console.log(user);
     return user;
   }
 
@@ -106,7 +105,10 @@ export class AuthService {
       { new: true },
     );
 
-    options?.removeAll ? (user.token = []) : user.token;
+    if (options?.removeAll) {
+      user.token = [];
+    }
+
     return user;
   }
 }
