@@ -45,15 +45,22 @@ enum Gender {
   undefined
 }
 
+type Chat {
+  usersId: [User!]!
+  title: String!
+}
+
 type User {
+  _id: String!
   user: PersonalObjectEntity!
-  userInfo: AccountObjectEntity
+  userInfo: AccountObjectEntity!
   email: String!
   tags: [String!]!
-  group: [String!]
-  followers: [String!]
-  following: [String!]
-  post: [String!]
+  chats: [Chat!]!
+  group: [String!]!
+  followers: [String!]!
+  following: [String!]!
+  posts: [String!]!
 }
 
 type LoginResponse {

@@ -1,34 +1,26 @@
+import { Field, ObjectType } from '@nestjs/graphql';
 import { User } from 'src/user/entities';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-} from 'typeorm';
 
-@Entity({ name: 'messages' })
+@ObjectType()
 export class Messages {
-  @CreateDateColumn()
+  @Field()
   sentAt: Date;
 
-  @PrimaryColumn()
+  @Field()
   senderId: string;
 
-  @Column()
-  content: string | Blob;
+  @Field()
+  content: string;
 
-  @Column()
+  @Field()
   seen: boolean;
 
-  @Column()
+  @Field()
   editedAt: Date | null;
 
-  @Column()
+  @Field()
   reaction: string | undefined;
 
-  @ManyToOne(() => User, (user) => user.chats)
-  @JoinColumn([{ name: 'createdBy', referencedColumnName: '_id' }])
+  @Field(() => User)
   messages: User;
 }

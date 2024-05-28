@@ -22,7 +22,7 @@ export class ChatGateway implements OnModuleInit {
   server: Server;
   @SubscribeMessage('newMessage')
   async testMessage(@MessageBody() body: any) {
-    await this.chatService.createChatWithUser('66544d18a2c835d2e44e821d');
+    await this.chatService.createChatWithUser('665580f32c6cfb62fbadc73c', body);
     this.server.emit('onMessage', body);
   }
 }

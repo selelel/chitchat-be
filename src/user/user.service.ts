@@ -29,7 +29,9 @@ export class UserService {
   }
 
   async findAll(): Promise<User[]> {
-    return await this.userModel.find();
+    const allUser = await this.userModel.find().populate('chats');
+    console.log(allUser);
+    return allUser;
   }
 
   async findOneById(_id: string): Promise<User> {

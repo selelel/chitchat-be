@@ -23,15 +23,15 @@ export class User {
   userInfo: AccountObjectEntity;
 
   @Prop({ type: String, required: true })
-  public password: string;
+  password: string;
 
   @Prop({ type: String, required: true })
   @Field()
-  public email: string;
+  email: string;
 
   @Prop({ type: [String], required: true })
   @Field(() => [String])
-  public tags: string[];
+  tags: string[];
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
   @Field(() => [Chat])

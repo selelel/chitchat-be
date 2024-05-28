@@ -11,13 +11,16 @@ export class ChatService {
     @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
-  async createChatWithUser(userId: string): Promise<Chat> {
+  async createChatWithUser(userId: string, title: string): Promise<Chat> {
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const createChat = new this.chatModel({ users: [user._id], messages: [] });
+    const createChat = new this.chatModel({
+      usersId: [user._id],
+      title: title,
+    });
     await createChat.save();
 
     await user.updateOne({
@@ -25,7 +28,6 @@ export class ChatService {
         chats: createChat._id,
       },
     });
-
     return createChat;
   }
 }
