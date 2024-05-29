@@ -1,42 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ObjectId, Repository } from 'typeorm';
 import { ConflictError } from 'src/core/graphql.error';
 import * as bcrypt from 'bcryptjs';
 import { BCRYPT } from 'src/utils/constant';
-import * as mongoDb from 'mongodb';
-import { User } from './entities';
 import { UserInput } from './dto/user.input.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { ObjectId } from 'mongodb';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(User) private userRepository: Repository<User>,
-  ) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async createUser(user: UserInput): Promise<User> {
-    const userExist = await this.findEmail(user.email);
-    // TODO Validate entity and password
-    if (userExist) {
-      throw new ConflictError('User with this email already exists');
+    try {
+      const userExist = await this.findEmail(user.email);
+
+      if (userExist) {
+        throw new ConflictError('User with this email already exists');
+      }
+      const hash = await bcrypt.hash(user.password, BCRYPT.salt);
+      user.password = hash;
+      const newUser = this.userModel.create({ _id: new ObjectId(), ...user });
+      return newUser;
+    } catch (error) {
+      return error;
     }
-    const hash = await bcrypt.hash(user.password, BCRYPT.salt);
-    user.password = hash;
-    const newUser = this.userRepository.create(user);
-    return this.userRepository.save(newUser);
   }
 
   async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
+    const allUser = await this.userModel.find().populate('chats');
+    return allUser;
   }
 
-  async findOneById(_id: ObjectId): Promise<User> {
-    return await this.userRepository.findOne({
-      where: { _id: new mongoDb.ObjectId(_id) },
-    });
+  async findOneById(_id: string): Promise<User> {
+    return await this.userModel.findOne({ _id });
   }
 
   async findEmail(email: string): Promise<User> {
-    return await this.userRepository.findOne({ where: { email } });
+    return await this.userModel.findOne({ email });
   }
 }

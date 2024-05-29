@@ -1,34 +1,37 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ObjectId,
-  ObjectIdColumn,
-} from 'typeorm';
-import { Messages } from './chat.message.entity';
-import { User } from 'src/user/entities';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
+import { Message } from './message.entity';
+import { User } from 'src/user/entities/user.entity';
 
-@Entity()
+export type ChatDocument = HydratedDocument<Chat>;
+
+@Schema()
+@ObjectType()
 export class Chat {
-  @ObjectIdColumn()
-  _id: ObjectId;
+  @Prop({ type: mongoose.Schema.ObjectId, auto: true })
+  @Field(() => ID)
+  _id: mongoose.Schema.Types.ObjectId;
 
-  @Column({ type: String })
-  chatId: string;
+  @Prop({ type: [{ type: mongoose.Schema.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  usersId: mongoose.Schema.Types.ObjectId[];
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @Prop({ type: [{ type: mongoose.Schema.ObjectId, ref: 'Message' }] })
+  @Field(() => [Message])
+  messages: Message[];
 
-  @ManyToMany(() => User, (user) => user.chats, { eager: true })
-  @JoinTable({
-    name: 'user_chats',
-    joinColumn: { name: 'chatId', referencedColumnName: '_id' },
-    inverseJoinColumn: { name: 'userId', referencedColumnName: '_id' },
-  })
-  users: User[];
+  @Prop({ type: String })
+  @Field(() => String)
+  title?: string;
 
-  @Column({ array: true })
-  massages: Messages[];
+  @Prop({ type: Boolean })
+  @Field(() => Boolean)
+  isMuted?: string | null;
+
+  @Prop({ type: String })
+  @Field(() => String)
+  avatar?: string | null;
 }
+
+export const ChatSchema = SchemaFactory.createForClass(Chat);

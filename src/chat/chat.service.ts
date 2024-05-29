@@ -1,33 +1,89 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Chat } from './entities/chat.entity';
-import { Repository } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { ObjectId } from 'mongodb';
+import { Message } from './entities/message.entity';
+import { CreatePrivateMessage } from './dto/create.private-message';
+import { GetConversation } from './dto/conversation.dto';
+import { ChatValidateUser } from './dto/chatvalidateuser.dto';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ChatService {
   constructor(
-    @InjectRepository(Chat) private chatRepository: Repository<Chat>,
+    @InjectModel(Chat.name) private chatModel: Model<Chat>,
+    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
   ) {}
-  async createChat(users: any): Promise<Chat> {
-    const newChat = new Chat();
-    newChat.users = users; // Assign user IDs directly
-
-    return await this.chatRepository.save(newChat); // Save the chat with user IDs
+  async privateChats(getConversation: GetConversation): Promise<Message[]> {
+    const message = await this.messageModel
+      .find({ chatId: getConversation.chatId })
+      .sort({ createdAt: -1 })
+      .skip(getConversation.pagination.skip || 0)
+      .limit(getConversation.pagination.limit || 2)
+      .populate('userId');
+    return message;
   }
 
-  findAll() {
-    return `This action returns all chat`;
+  async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
+    // TODO find the optimize
+    const privateRoomId = new ObjectId();
+    const [user1, user2] = await Promise.all([
+      this.userModel.findOne({ _id: _user1 }),
+      this.userModel.findOne({ _id: _user2 }),
+    ]);
+
+    if (!user1 || !user2) {
+      throw new NotFoundException('User not found');
+    }
+
+    const privateRoom = new this.chatModel({
+      _id: privateRoomId,
+      usersId: [user1, user2],
+    });
+
+    await Promise.all([
+      user1.updateOne({ $push: { chats: privateRoomId } }),
+      user2.updateOne({ $push: { chats: privateRoomId } }),
+    ]);
+
+    return await privateRoom.save();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
+  async sendMessage(
+    user: string,
+    messagePayload: CreatePrivateMessage,
+  ): Promise<any> {
+    try {
+      const chat = await this.chatModel.findOne({ usersId: user });
+      if (!chat) throw new Error('Forbidden Resource');
+
+      const payload = {
+        chatId: messagePayload.chatId,
+        userId: user,
+        content: messagePayload.content,
+      };
+
+      const message = await this.messageModel.create(payload);
+      await message.save();
+
+      await chat.updateOne({ $push: { messages: message._id } });
+      return message.populate('userId');
+    } catch (error) {
+      return error;
+    }
   }
 
-  update(id: number, updateChatDto: string) {
-    return `This action updates a #${id} ${updateChatDto} chat`;
-  }
+  async validateUserIsOnChat(validate: ChatValidateUser): Promise<boolean> {
+    try {
+      const chat = await this.chatModel.findById({ _id: validate.chatId });
 
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+      if (!chat.usersId.includes(validate.userId))
+        throw new Error('User is not a chat member');
+      return true;
+    } catch (error) {
+      return error;
+    }
   }
 }

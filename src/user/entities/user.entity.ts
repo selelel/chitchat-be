@@ -1,72 +1,64 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ObjectId,
-  ObjectIdColumn,
-} from 'typeorm';
 import { Field, ObjectType } from '@nestjs/graphql';
-import { ID } from 'type-graphql';
-import { Date } from 'mongoose';
-import { Chat } from 'src/chat/entities/chat.entity';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { PersonalObjectEntity } from './personal.object.entity';
 import { AccountObjectEntity } from './account.object.entity';
+import { Chat } from 'src/chat/entities/chat.entity';
 
-@Entity()
+export type UserDocument = HydratedDocument<User>;
+
+@Schema()
 @ObjectType()
 export class User {
-  @ObjectIdColumn()
-  @Field(() => ID, { nullable: true })
-  _id: ObjectId;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, auto: true })
+  @Field(() => String)
+  _id: mongoose.Schema.Types.ObjectId;
 
-  @CreateDateColumn()
-  joined_date: Date;
-
-  @Column({ type: 'json' })
+  @Prop({ type: PersonalObjectEntity, required: true })
   @Field(() => PersonalObjectEntity)
   user: PersonalObjectEntity;
 
-  @Column({ type: 'json' })
-  @Field(() => AccountObjectEntity, { nullable: true })
+  @Prop({ type: AccountObjectEntity, required: true })
+  @Field(() => AccountObjectEntity)
   userInfo: AccountObjectEntity;
 
-  @Column({ type: 'string' })
-  public password: string;
+  @Prop({ type: String, required: true })
+  password: string;
 
-  @Column({ type: 'string' })
+  @Prop({ type: String, required: true })
   @Field()
-  public email: string;
+  email: string;
 
-  @Column({ type: 'array', nullable: true, array: true })
+  @Prop({ type: Boolean, required: true })
+  @Field(() => Boolean)
+  public status: boolean;
+
+  @Prop({ type: [String], required: true })
   @Field(() => [String])
-  public tags: string[];
+  tags: string[];
 
-  @ManyToMany(() => Chat)
-  @JoinTable({
-    name: 'user_chats',
-    joinColumn: { name: 'userId', referencedColumnName: '_id' },
-    inverseJoinColumn: { name: 'chatId', referencedColumnName: '_id' },
-  })
-  chats: Chat[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
+  @Field(() => [Chat])
+  chats: mongoose.Schema.Types.ObjectId[];
 
-  @Column({ type: 'array', nullable: true })
-  @Field(() => [String], { nullable: true })
+  @Prop({ type: [String], required: true })
+  @Field(() => [String])
   public group: string[];
 
-  @Column({ type: 'array', nullable: true })
-  @Field(() => [String], { nullable: true })
+  @Prop({ type: [String], required: true })
+  @Field(() => [String])
   public followers: string[];
 
-  @Column({ type: 'array', nullable: true })
-  @Field(() => [String], { nullable: true })
+  @Prop({ type: [String], required: true })
+  @Field(() => [String])
   public following: string[];
 
-  @Column({ type: 'array', nullable: true })
-  @Field(() => [String], { nullable: true })
-  public post: string[];
+  @Prop({ type: [String], required: true })
+  @Field(() => [String])
+  public posts: string[];
 
-  @Column({ type: 'array', nullable: true })
+  @Prop({ type: [String], required: true })
   public token: string[];
 }
+
+export const UserSchema = SchemaFactory.createForClass(User);

@@ -1,17 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { CanActivate, ExecutionContext } from '@nestjs/common';
-import { GqlExecutionContext } from '@nestjs/graphql';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Socket } from 'socket.io';
 import { AuthService } from '../auth.service';
 
 @Injectable()
-export class GqlAuthGuard implements CanActivate {
+export class SocketAuthGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const ctx = GqlExecutionContext.create(context);
-    const { req } = ctx.getContext();
-
-    const token = req.headers.authorization?.split(' ')[1];
+    const ctx: Socket = context.switchToWs().getClient<Socket>();
+    const token = ctx.handshake.headers.authorization.split(' ')[1];
+    const [req] = context.getArgs();
     if (!token || !(await this.authService.validateToken(token))) {
       return false;
     }
