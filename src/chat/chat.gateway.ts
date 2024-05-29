@@ -3,16 +3,49 @@ import {
   SubscribeMessage,
   MessageBody,
   WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
-import { Server } from 'socket.io';
-import { OnModuleInit, UseGuards } from '@nestjs/common';
-import { SocketAuthGuard } from 'src/auth/guards/socket.auth.guard';
+import { Server, Socket } from 'socket.io';
+import { OnModuleInit } from '@nestjs/common';
+import { CreatePrivateMessage } from './dto/create.private-message';
+import { AuthService } from 'src/auth/auth.service';
+import { UnauthorizedError } from 'src/core/error/global.error';
 
 @WebSocketGateway()
 export class ChatGateway implements OnModuleInit {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly authService: AuthService,
+  ) {}
+
   onModuleInit() {
+    this.server.use(async (socket: Socket, next: (err?: any) => void) => {
+      const token = socket.handshake.headers.authorization?.split(' ')[1];
+      const chatId = socket.handshake.headers.chatid as string;
+      const tokenDecoded = await this.authService.decodeToken(token);
+
+      try {
+        if (
+          !token ||
+          !(await this.authService.validateToken(token)) ||
+          (await this.chatService.validateUserIsOnChat({
+            userId: tokenDecoded._id,
+            chatId: chatId,
+          }))
+        ) {
+          throw new UnauthorizedError();
+        }
+        socket.data.chatId = chatId;
+        socket.data.user = tokenDecoded;
+
+        next();
+      } catch (error) {
+        socket.on('disconnect', () => {});
+        next(error);
+      }
+    });
+
     this.server.on('connection', (socket) => {
       console.log(socket.id);
       console.log('Connected');
@@ -22,15 +55,21 @@ export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('newMessage')
-  async testMessage(@MessageBody() body: any) {
-    await this.chatService.createPrivateRoom('665580f32c6cfb62fbadc73c', body);
-    this.server.emit('onMessage', body);
-  }
-  @UseGuards(SocketAuthGuard)
-  @SubscribeMessage('newPrivateMassage')
-  async privateMessage(@MessageBody() body: any) {
-    await this.chatService.createPrivateRoom('665580f32c6cfb62fbadc73c', body);
-    this.server.emit('onMessage', body);
+  @SubscribeMessage('sendDirectMessage')
+  async sendDirectMessage(
+    @MessageBody() body: CreatePrivateMessage,
+    @ConnectedSocket() connect,
+  ) {
+    const { user, chatId } = connect.data;
+    try {
+      body.chatId = chatId;
+      const message = await this.chatService.sendMessage(
+        user.payload._id,
+        body,
+      );
+      this.server.emit(chatId, message.content);
+    } catch (error) {
+      this.server.emit(chatId, error);
+    }
   }
 }

@@ -2,13 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { sign, verify, decode } from 'jsonwebtoken';
 import { JWT } from 'src/utils/constant';
-import { NotFoundError, UnauthorizedError } from 'src/core/graphql.error';
 import * as bcrypt from 'bcryptjs';
 import { User } from 'src/user/entities';
 import { LoginResponse } from './dto/login.response';
 import { LoginUserInput } from './input/login.input';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from 'src/core/error/graphql.error';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +36,7 @@ export class AuthService {
     if (user && user.password === password) {
       return user;
     }
-    return new NotFoundError('User');
+    return new ForbiddenError();
   }
 
   async validateToken(validate_token: string): Promise<boolean> {
@@ -42,12 +45,11 @@ export class AuthService {
     } = this.decodeToken(validate_token);
     const user = await this.usersService.findOneById(_id);
     try {
-      if (
-        user.token.includes(validate_token) &&
-        verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
-      ) {
-        return Promise.resolve(true);
+      if (!user.token.includes(validate_token)) {
+        throw new UnauthorizedError('User not found');
       }
+      verify(validate_token, process.env.JWT_SUPER_SECRET_KEY);
+      return Promise.resolve(true);
     } catch (error) {
       this.removeUserToken(_id, validate_token);
       return Promise.resolve(false);
@@ -98,17 +100,15 @@ export class AuthService {
     options?: {
       removeAll: boolean;
     },
-  ): Promise<User | null> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { $pull: { token: tokenToRemove } },
-      { new: true },
-    );
-
+  ): Promise<void> {
     if (options?.removeAll) {
-      user.token = [];
+      await this.userModel.findByIdAndUpdate(userId, { $set: { token: [] } });
+    } else {
+      await this.userModel.findByIdAndUpdate(
+        userId,
+        { $pull: { token: tokenToRemove } },
+        { new: true },
+      );
     }
-
-    return user;
   }
 }

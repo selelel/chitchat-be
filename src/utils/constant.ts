@@ -4,7 +4,7 @@ export const USER_PROVIDER = {
 };
 export const JWT = {
   JWT_SUPER_SECRET_KEY: '_selelel',
-  JWT_EXPIRE_IN: '5min',
+  JWT_EXPIRE_IN: '1day',
 };
 
 export const BCRYPT = {

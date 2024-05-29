@@ -7,8 +7,8 @@ import { Chat, ChatSchema } from './entities/chat.entity';
 import { Message, MessageSchema } from './entities/message.entity';
 import { User, UserSchema } from 'src/user/entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
-import { AuthService } from 'src/auth/auth.service';
 import { UserService } from 'src/user/user.service';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
   imports: [
@@ -19,6 +19,13 @@ import { UserService } from 'src/user/user.service';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  providers: [ChatService, ChatResolver, ChatGateway, AuthService, UserService],
+  providers: [
+    AuthService,
+    ChatService,
+    ChatResolver,
+    ChatGateway,
+    UserService,
+    AuthService,
+  ],
 })
 export class ChatModule {}
