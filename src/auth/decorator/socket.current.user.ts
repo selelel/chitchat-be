@@ -1,13 +1,11 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { Socket } from 'socket.io';
 
 export const SocketCurrentUser = createParamDecorator(
   (data: unknown, context: ExecutionContext) => {
-    const ctx = context.switchToWs().getClient<Socket>();
-    console.log(ctx);
+    const [req] = context.getArgs();
     return {
-      user: 'ctx.getContext().req.user',
-      token: 'ctx.getContext().req.token',
+      user: req.user,
+      token: req.token,
     };
   },
 );

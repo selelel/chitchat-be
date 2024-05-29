@@ -29,6 +29,10 @@ export class User {
   @Field()
   email: string;
 
+  @Prop({ type: Boolean, required: true })
+  @Field(() => Boolean)
+  public status: boolean;
+
   @Prop({ type: [String], required: true })
   @Field(() => [String])
   tags: string[];

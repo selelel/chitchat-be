@@ -9,6 +9,9 @@ export type MessageDocument = HydratedDocument<Message>;
 @Schema({ timestamps: true })
 @ObjectType()
 export class Message {
+  @Field(() => Date)
+  createdAt: Date;
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' })
   @Field(() => User)
   chatId: Chat;
@@ -17,13 +20,13 @@ export class Message {
   @Field(() => User)
   userId: User;
 
-  @Prop({ type: Date })
-  @Field(() => Date)
-  editedAt?: Date;
-
   @Prop({ type: String })
   @Field()
   content: string;
+
+  @Prop({ type: Date })
+  @Field(() => Date)
+  editedAt?: Date;
 
   @Prop({ type: Boolean })
   @Field()

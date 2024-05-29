@@ -43,11 +43,12 @@ export class AuthService {
     const user = await this.usersService.findOneById(_id);
     try {
       if (
-        user.token.includes(validate_token) &&
-        verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
+        !user.token.includes(validate_token) &&
+        !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
       ) {
-        return Promise.resolve(true);
+        throw new Error('Authentication Error');
       }
+      return Promise.resolve(true);
     } catch (error) {
       this.removeUserToken(_id, validate_token);
       return Promise.resolve(false);
