@@ -17,7 +17,6 @@ export class ChatService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Message.name) private messageModel: Model<Message>,
   ) {}
-
   async privateChats(getConversation: GetConversation): Promise<Message[]> {
     const message = await this.messageModel
       .find({ chatId: getConversation.chatId })
