@@ -103,14 +103,25 @@ export class AuthService {
       removeAll: boolean;
     },
   ): Promise<void> {
-    if (options?.removeAll) {
-      await this.userModel.findByIdAndUpdate(userId, { $set: { token: [] } });
-    } else {
-      await this.userModel.findByIdAndUpdate(
-        userId,
-        { $pull: { token: tokenToRemove } },
-        { new: true },
-      );
+    try {
+      if (options?.removeAll) {
+        await this.userModel.findByIdAndUpdate(
+          userId,
+          { $set: { token: [] } },
+          { new: true },
+        );
+      } else {
+        await this.userModel.findByIdAndUpdate(
+          userId,
+          { $pull: { token: tokenToRemove } },
+          { new: true },
+        );
+      }
+    } catch (error) {
+      console.error(`Error removing token for user ${userId}:`, error);
+      throw error;
     }
   }
 }
+
+// TODO delete accesstoken in jwt
