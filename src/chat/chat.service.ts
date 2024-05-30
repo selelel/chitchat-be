@@ -58,7 +58,6 @@ export class ChatService {
     messagePayload: CreatePrivateMessage,
   ): Promise<Message> {
     try {
-      console.log(await this.chatModel.findOne({ _id: messagePayload.chatId }));
       const chat = await this.chatModel.findOne({ _id: messagePayload.chatId });
       if (!chat) throw new UnauthorizedError();
 
