@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { GatewayService } from './gateway.service';
-import { GatewayGateway } from './gateway.gateway';
+import { Gateway } from './gateway.gateway';
 import { PassportModule } from '@nestjs/passport';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Chat, ChatSchema } from 'src/chat/entities/chat.entity';
 import { User, UserSchema } from 'src/user/entities/user.entity';
 import { Message, MessageSchema } from 'src/chat/entities/message.entity';
+import { AuthService } from 'src/auth/auth.service';
+import { ChatService } from 'src/chat/chat.service';
+import { UserService } from 'src/user/user.service';
 
 @Module({
   imports: [
@@ -16,6 +19,6 @@ import { Message, MessageSchema } from 'src/chat/entities/message.entity';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  providers: [GatewayGateway, GatewayService],
+  providers: [Gateway, GatewayService, AuthService, ChatService, UserService],
 })
 export class GatewayModule {}

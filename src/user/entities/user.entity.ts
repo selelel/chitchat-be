@@ -33,10 +33,6 @@ export class User {
   @Field()
   email: string;
 
-  @Prop({ type: Boolean, required: true })
-  @Field(() => Boolean)
-  public status: boolean;
-
   @Prop({ type: Boolean, default: false })
   @Field()
   isActive: boolean;

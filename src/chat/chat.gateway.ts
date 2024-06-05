@@ -12,7 +12,7 @@ import { CreatePrivateMessage } from './dto/create.private-message';
 import { AuthService } from 'src/auth/auth.service';
 import { UnauthorizedError } from 'src/core/error/global.error';
 
-@WebSocketGateway()
+@WebSocketGateway(8585)
 export class ChatGateway implements OnModuleInit {
   constructor(
     private readonly chatService: ChatService,
@@ -24,13 +24,12 @@ export class ChatGateway implements OnModuleInit {
       const token = socket.handshake.headers.authorization?.split(' ')[1];
       const chatId = socket.handshake.headers.chatid as string;
       const tokenDecoded = await this.authService.decodeToken(token);
-
       try {
         if (
           !token ||
           !(await this.authService.validateToken(token)) ||
-          (await this.chatService.validateUserIsOnChat({
-            userId: tokenDecoded._id,
+          !(await this.chatService.validateUserIsOnChat({
+            userId: tokenDecoded.payload._id,
             chatId: chatId,
           }))
         ) {
@@ -44,11 +43,6 @@ export class ChatGateway implements OnModuleInit {
         socket.on('disconnect', () => {});
         next(error);
       }
-    });
-
-    this.server.on('connection', (socket) => {
-      console.log(socket.id);
-      console.log('Connected');
     });
   }
 
@@ -67,9 +61,9 @@ export class ChatGateway implements OnModuleInit {
         user.payload._id,
         body,
       );
-      this.server.emit(chatId, message.content);
+      this.server.emit('onListening', message.content);
     } catch (error) {
-      this.server.emit(chatId, error);
+      this.server.emit('onListening', error);
     }
   }
 }

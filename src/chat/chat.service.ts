@@ -18,13 +18,18 @@ export class ChatService {
     @InjectModel(Message.name) private messageModel: Model<Message>,
   ) {}
   async privateChats(getConversation: GetConversation): Promise<Message[]> {
-    const message = await this.messageModel
-      .find({ chatId: getConversation.chatId })
-      .sort({ createdAt: -1 })
-      .skip(getConversation.pagination.skip || 0)
-      .limit(getConversation.pagination.limit || 2)
-      .populate('userId');
-    return message;
+    try {
+      const message = await this.messageModel
+        .find({ chatId: getConversation.chatId })
+        .sort({ createdAt: -1 })
+        .skip(getConversation.pagination.skip || 0)
+        .limit(getConversation.pagination.limit || 2)
+        .populate('userId');
+
+      return message;
+    } catch (error) {
+      return error;
+    }
   }
 
   async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
@@ -80,8 +85,8 @@ export class ChatService {
     try {
       const chat = await this.chatModel.findById({ _id: validate.chatId });
 
-      if (!chat.usersId.includes(validate.userId))
-        throw new UnauthorizedError('User is not on the Chat');
+      if (!chat.usersId.includes(validate.userId)) throw new Error();
+
       return Promise.resolve(true);
     } catch (error) {
       return Promise.resolve(false);
