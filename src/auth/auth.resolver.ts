@@ -16,10 +16,12 @@ export class AuthResolver {
     private userService: UserService,
   ) {}
 
-  @Query(() => [User])
+  @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async testAuth() {
-    return await this.userService.findAll();
+  async testAuth(@GqlCurrentUser() { user }: any) {
+    const allUser = await this.userService.findOneById(user.payload._id);
+    console.log(allUser);
+    return allUser;
   }
 
   @Query(() => Boolean)

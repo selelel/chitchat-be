@@ -3,9 +3,10 @@ import * as bcrypt from 'bcryptjs';
 import { BCRYPT } from 'src/utils/constant';
 import { UserInput } from './dto/user.input.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
 import { User } from './entities/user.entity';
-import { ConflictError } from 'src/core/error/graphql.error';
+import { ConflictError } from 'src/core/error/global.error';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class UserService {
@@ -17,7 +18,16 @@ export class UserService {
   }
 
   async findOneById(_id: string): Promise<User> {
-    return await this.userModel.findOne({ _id });
+    try {
+      console.log('This is fine', _id);
+      return await this.userModel
+        .findOne({ _id })
+        .populate('requests.toFollowers')
+        .populate('user')
+        .exec();
+    } catch (error) {
+      return error;
+    }
   }
 
   async findEmail(email: string): Promise<User> {
@@ -44,52 +54,131 @@ export class UserService {
   }
 
   async requestToFollowUser(
-    requestingUserId: mongoose.Schema.Types.ObjectId,
-    targetUserId: mongoose.Schema.Types.ObjectId,
+    userId: string,
+    targetUserId: string,
   ): Promise<User> {
     try {
-      const [_requestingUserId, _targetUserId] = await Promise.all([
-        this.userModel.findOne({ _id: requestingUserId }),
-        this.userModel.findOne({ _id: targetUserId }),
-      ]);
+      const userUpdate = await this.userModel.updateOne(
+        { _id: userId },
+        { $addToSet: { 'requests.toFollowings': new ObjectId(targetUserId) } },
+      );
 
-      await Promise.all([
-        _requestingUserId.requests.toFollowings.push(targetUserId),
-        _targetUserId.requests.toFollowers.push(requestingUserId),
-      ]);
+      const targetUpdate = await this.userModel.updateOne(
+        { _id: targetUserId },
+        { $addToSet: { 'requests.toFollowers': new ObjectId(userId) } },
+      );
 
-      await _targetUserId.save();
-      return await _requestingUserId.save();
+      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
+        throw new ConflictError('Failed to update one or both users');
+      }
+
+      return await this.userModel
+        .findOne({ _id: userId })
+        .populate('requests.toFollowings', 'user email');
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
-  async declinesRequestToFollowUser(
-    decliningUserId: mongoose.Schema.Types.ObjectId,
-    targetUserId: mongoose.Schema.Types.ObjectId,
+  async removesUserRequest(
+    userId: string,
+    targetUserId: string,
   ): Promise<User> {
     try {
-      const [_decliningUser, _targetUser] = await Promise.all([
-        this.userModel.findOne({ _id: decliningUserId }),
-        this.userModel.findOne({ _id: targetUserId }),
-      ]);
-
-      const _declining_toFollower = _decliningUser.requests.toFollowers.filter(
-        (d) => d !== targetUserId,
+      const userUpdate = await this.userModel.updateOne(
+        { _id: userId },
+        { $pull: { 'requests.toFollowings': targetUserId } },
       );
 
-      const _targetUser_toFollowing = _targetUser.requests.toFollowings.filter(
-        (d) => d !== decliningUserId,
+      const targetUpdate = await this.userModel.updateOne(
+        { _id: targetUserId },
+        { $pull: { 'requests.toFollowers': userId } },
       );
 
-      _decliningUser.requests.toFollowers = _declining_toFollower;
-      _targetUser.requests.toFollowers = _targetUser_toFollowing;
+      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
+        throw new ConflictError('Failed to update one or both users');
+      }
 
-      await _targetUser.save();
-      return await _decliningUser.save();
+      return await this.userModel.findOne({ _id: userId });
     } catch (error) {
-      return error;
+      throw error;
+    }
+  }
+
+  async acceptsUserRequestToFollow(
+    userId: string,
+    targetUserId: string,
+  ): Promise<User> {
+    try {
+      await this.removesUserRequest(userId, targetUserId);
+
+      const userUpdate = await this.userModel.updateOne(
+        { _id: userId },
+        { $push: { followers: targetUserId } },
+      );
+
+      const targetUpdate = await this.userModel.updateOne(
+        { _id: targetUserId },
+        { $push: { following: userId } },
+      );
+
+      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
+        throw new ConflictError('Failed to update one or both users');
+      }
+
+      return await this.userModel.findOne({ _id: userId });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async removeUserFollower(
+    userId: string,
+    targetUserId: string,
+  ): Promise<User> {
+    try {
+      const userUpdate = await this.userModel.updateOne(
+        { _id: userId },
+        { $pull: { followers: targetUserId } },
+      );
+
+      const targetUpdate = await this.userModel.updateOne(
+        { _id: targetUserId },
+        { $push: { following: userId } },
+      );
+
+      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
+        throw new ConflictError('Failed to update one or both users');
+      }
+
+      return await this.userModel.findOne({ _id: userId });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async removeUserFollowing(
+    userId: string,
+    targetUserId: string,
+  ): Promise<User> {
+    try {
+      const userUpdate = await this.userModel.updateOne(
+        { _id: userId },
+        { $pull: { following: targetUserId } },
+      );
+
+      const targetUpdate = await this.userModel.updateOne(
+        { _id: targetUserId },
+        { $pull: { followers: userId } },
+      );
+
+      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
+        throw new ConflictError('Failed to update one or both users');
+      }
+
+      return await this.userModel.findOne({ _id: userId });
+    } catch (error) {
+      throw error;
     }
   }
 }

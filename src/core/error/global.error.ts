@@ -13,3 +13,10 @@ export class UnauthorizedError extends HttpException {
     Object.defineProperty(this, 'name', { value: 'UnauthorizedError' });
   }
 }
+
+export class ConflictError extends HttpException {
+  constructor(message?: string) {
+    super(message || 'ConflictError', HttpStatus.UNAUTHORIZED);
+    Object.defineProperty(this, 'name', { value: 'ConflictError' });
+  }
+}

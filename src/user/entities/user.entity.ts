@@ -33,6 +33,10 @@ export class User {
   @Field()
   email: string;
 
+  @Prop({ type: [String] })
+  @Field(() => [String])
+  tags: string[];
+
   @Prop({ type: Boolean, default: false })
   @Field()
   isActive: boolean;
@@ -45,32 +49,29 @@ export class User {
   @Field(() => Boolean)
   isPrivate: boolean;
 
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  tags: string[];
-
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
   @Field(() => [Chat])
   chats: mongoose.Schema.Types.ObjectId[];
 
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  followers: mongoose.Schema.Types.ObjectId[];
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  following: mongoose.Schema.Types.ObjectId[];
+
+  @Prop({ type: [String] })
+  token: string[];
+
+  // * Feature prototype not started yet.
   @Prop({ type: [String] })
   @Field(() => [String])
   group: string[];
 
   @Prop({ type: [String] })
   @Field(() => [String])
-  followers: string[];
-
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  following: string[];
-
-  @Prop({ type: [String] })
-  @Field(() => [String])
   posts: string[];
-
-  @Prop({ type: [String] })
-  token: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

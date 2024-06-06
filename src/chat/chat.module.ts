@@ -19,13 +19,6 @@ import { AuthService } from 'src/auth/auth.service';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  providers: [
-    AuthService,
-    ChatService,
-    ChatResolver,
-    ChatGateway,
-    UserService,
-    AuthService,
-  ],
+  providers: [ChatService, ChatResolver, ChatGateway, UserService, AuthService],
 })
 export class ChatModule {}

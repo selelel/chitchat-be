@@ -19,6 +19,7 @@ export class Gateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;
 
+  // ? Do I really need this?
   onModuleInit() {
     this.server.use(async (socket: Socket, next: (err?: any) => void) => {
       const token = socket.handshake.headers.authorization?.split(' ')[1];
