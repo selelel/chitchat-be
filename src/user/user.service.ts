@@ -5,7 +5,7 @@ import { UserInput } from './dto/user.input.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from './entities/user.entity';
-import { ConflictError } from 'src/core/error/global.error';
+import { ConflictError, UnauthorizedError } from 'src/core/error/global.error';
 import { ObjectId } from 'mongodb';
 
 @Injectable()
@@ -19,12 +19,9 @@ export class UserService {
 
   async findOneById(_id: string): Promise<User> {
     try {
-      console.log('This is fine', _id);
       return await this.userModel
         .findOne({ _id })
-        .populate('requests.toFollowers')
-        .populate('user')
-        .exec();
+        .populate(['requests.toFollowers', 'requests.toFollowings']);
     } catch (error) {
       return error;
     }
@@ -58,9 +55,15 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
+      if (await this.isUserAlreadyFollowed(userId, targetUserId)) {
+        throw new ConflictError('User is already on Following');
+      }
+
       const userUpdate = await this.userModel.updateOne(
         { _id: userId },
-        { $addToSet: { 'requests.toFollowings': new ObjectId(targetUserId) } },
+        {
+          $addToSet: { 'requests.toFollowings': new ObjectId(targetUserId) },
+        },
       );
 
       const targetUpdate = await this.userModel.updateOne(
@@ -74,7 +77,7 @@ export class UserService {
 
       return await this.userModel
         .findOne({ _id: userId })
-        .populate('requests.toFollowings', 'user email');
+        .populate(['requests.toFollowers', 'requests.toFollowings']);
     } catch (error) {
       throw error;
     }
@@ -87,19 +90,23 @@ export class UserService {
     try {
       const userUpdate = await this.userModel.updateOne(
         { _id: userId },
-        { $pull: { 'requests.toFollowings': targetUserId } },
+        { $pull: { 'requests.toFollowers': targetUserId } },
       );
 
       const targetUpdate = await this.userModel.updateOne(
         { _id: targetUserId },
-        { $pull: { 'requests.toFollowers': userId } },
+        { $pull: { 'requests.toFollowings': userId } },
       );
 
       if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
-        throw new ConflictError('Failed to update one or both users');
+        throw new ConflictError(
+          'Failed to remove user requests one or both users',
+        );
       }
 
-      return await this.userModel.findOne({ _id: userId });
+      return await this.userModel
+        .findOne({ _id: userId })
+        .populate(['requests.toFollowers', 'requests.toFollowings']);
     } catch (error) {
       throw error;
     }
@@ -110,23 +117,28 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
+      if (!(await this.isUserToAccept(userId, targetUserId)))
+        throw new UnauthorizedError("User can't accept to following");
+
       await this.removesUserRequest(userId, targetUserId);
 
       const userUpdate = await this.userModel.updateOne(
         { _id: userId },
-        { $push: { followers: targetUserId } },
+        { $addToSet: { followers: targetUserId } },
       );
 
       const targetUpdate = await this.userModel.updateOne(
         { _id: targetUserId },
-        { $push: { following: userId } },
+        { $addToSet: { following: userId } },
       );
 
       if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
         throw new ConflictError('Failed to update one or both users');
       }
 
-      return await this.userModel.findOne({ _id: userId });
+      return await this.userModel
+        .findOne({ _id: userId })
+        .populate('followers');
     } catch (error) {
       throw error;
     }
@@ -137,6 +149,14 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
+      const targetUserIdObject = new ObjectId(targetUserId);
+      const user = await this.userModel.findOne({
+        _id: userId,
+        followers: { $in: [targetUserIdObject] },
+      });
+
+      if (!user) throw new UnauthorizedError('User not a follower');
+
       const userUpdate = await this.userModel.updateOne(
         { _id: userId },
         { $pull: { followers: targetUserId } },
@@ -144,14 +164,16 @@ export class UserService {
 
       const targetUpdate = await this.userModel.updateOne(
         { _id: targetUserId },
-        { $push: { following: userId } },
+        { $pull: { following: userId } },
       );
 
       if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
         throw new ConflictError('Failed to update one or both users');
       }
 
-      return await this.userModel.findOne({ _id: userId });
+      return await this.userModel
+        .findOne({ _id: userId })
+        .populate('followers');
     } catch (error) {
       throw error;
     }
@@ -162,6 +184,14 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
+      const targetUserIdObject = new ObjectId(targetUserId);
+      const user = await this.userModel.findOne({
+        _id: userId,
+        following: { $in: [targetUserIdObject] },
+      });
+
+      if (!user) throw new UnauthorizedError('User not followed');
+
       const userUpdate = await this.userModel.updateOne(
         { _id: userId },
         { $pull: { following: targetUserId } },
@@ -176,9 +206,50 @@ export class UserService {
         throw new ConflictError('Failed to update one or both users');
       }
 
-      return await this.userModel.findOne({ _id: userId });
+      return (await this.userModel.findOne({ _id: userId })).populate(
+        'following',
+      );
     } catch (error) {
       throw error;
+    }
+  }
+
+  // Helper Function
+  async isUserToAccept(_id: string, targetUserId: string) {
+    try {
+      const targetUserIdObject = new ObjectId(targetUserId);
+
+      const user = await this.userModel.findOne({
+        _id,
+        'requests.toFollowers': { $in: [targetUserIdObject] },
+      });
+
+      if (!user) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async isUserAlreadyFollowed(_id: string, targetUserId: string) {
+    try {
+      const targetUserIdObject = new ObjectId(targetUserId);
+
+      const user = await this.userModel.findOne({
+        _id,
+        following: { $in: [targetUserIdObject] },
+      });
+
+      if (!user) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 }

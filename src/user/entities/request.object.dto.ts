@@ -1,8 +1,9 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Prop } from '@nestjs/mongoose';
+import { Prop, Schema } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { User } from './user.entity';
 
+@Schema()
 @ObjectType()
 export class RequestObjectDto {
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })

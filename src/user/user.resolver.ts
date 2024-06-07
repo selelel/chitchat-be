@@ -24,6 +24,7 @@ export class UserResolver {
   }
 
   // TODO Create Mutatations
+  // TODO if both user and targetUser was both found each request, add friend them already
   // * Handle create user to follow requests
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
@@ -34,6 +35,7 @@ export class UserResolver {
     const {
       payload: { _id },
     } = user;
+
     const userRequest = await this.userService.requestToFollowUser(
       _id,
       targetUserId,
@@ -43,6 +45,77 @@ export class UserResolver {
   }
 
   // * Handle decline request
-  // * Handle user follower
-  // * Handle use following
+  @Mutation(() => User)
+  @UseGuards(GqlAuthGuard)
+  async declineUserRequest(
+    @Args('targetUserId') targetUserId: string,
+    @GqlCurrentUser() { user },
+  ): Promise<User> {
+    const {
+      payload: { _id },
+    } = user;
+
+    const userRequest = await this.userService.removesUserRequest(
+      _id,
+      targetUserId,
+    );
+
+    return userRequest;
+  }
+
+  // * Handle to accept follower
+  @Mutation(() => User)
+  @UseGuards(GqlAuthGuard)
+  async acceptFollowRequest(
+    @Args('targetUserId') targetUserId: string,
+    @GqlCurrentUser() { user },
+  ): Promise<User> {
+    const {
+      payload: { _id },
+    } = user;
+
+    const userRequest = await this.userService.acceptsUserRequestToFollow(
+      _id,
+      targetUserId,
+    );
+
+    return userRequest;
+  }
+  // * Handle use toUnfollow
+  @Mutation(() => User)
+  @UseGuards(GqlAuthGuard)
+  async removeUserFollowing(
+    @Args('targetUserId') targetUserId: string,
+    @GqlCurrentUser() { user },
+  ): Promise<User> {
+    const {
+      payload: { _id },
+    } = user;
+
+    const userRequest = await this.userService.removeUserFollowing(
+      _id,
+      targetUserId,
+    );
+
+    return userRequest;
+  }
+
+  // * Handle remove a Follower
+  @Mutation(() => User)
+  @UseGuards(GqlAuthGuard)
+  async removeUserFollower(
+    @Args('targetUserId') targetUserId: string,
+    @GqlCurrentUser() { user },
+  ): Promise<User> {
+    const {
+      payload: { _id },
+    } = user;
+
+    const userRequest = await this.userService.removeUserFollower(
+      _id,
+      targetUserId,
+    );
+
+    return userRequest;
+  }
 }

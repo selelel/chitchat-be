@@ -20,7 +20,6 @@ export class AuthResolver {
   @UseGuards(GqlAuthGuard)
   async testAuth(@GqlCurrentUser() { user }: any) {
     const allUser = await this.userService.findOneById(user.payload._id);
-    console.log(allUser);
     return allUser;
   }
 
