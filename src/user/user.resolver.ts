@@ -23,9 +23,6 @@ export class UserResolver {
     return createdUser;
   }
 
-  // TODO Create Mutatations
-  // TODO if both user and targetUser was both found each request, add friend them already
-  // * Handle create user to follow requests
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
   async requestToFollowUser(
@@ -44,7 +41,6 @@ export class UserResolver {
     return userRequest;
   }
 
-  // * Handle decline request
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
   async declineUserRequest(
@@ -63,7 +59,6 @@ export class UserResolver {
     return userRequest;
   }
 
-  // * Handle to accept follower
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
   async acceptFollowRequest(
@@ -81,7 +76,7 @@ export class UserResolver {
 
     return userRequest;
   }
-  // * Handle use toUnfollow
+
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
   async removeUserFollowing(
@@ -100,7 +95,6 @@ export class UserResolver {
     return userRequest;
   }
 
-  // * Handle remove a Follower
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
   async removeUserFollower(

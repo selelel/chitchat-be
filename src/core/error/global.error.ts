@@ -16,7 +16,33 @@ export class UnauthorizedError extends HttpException {
 
 export class ConflictError extends HttpException {
   constructor(message?: string) {
-    super(message || 'ConflictError', HttpStatus.UNAUTHORIZED);
+    super(message || 'ConflictError', HttpStatus.CONFLICT);
     Object.defineProperty(this, 'name', { value: 'ConflictError' });
+  }
+}
+
+export class BadRequestException extends HttpException {
+  constructor(message?: string) {
+    super(message || 'BadRequestException', HttpStatus.BAD_REQUEST);
+    Object.defineProperty(this, 'name', { value: 'BadRequestException' });
+  }
+}
+
+export class NotFoundException extends HttpException {
+  constructor(message?: string) {
+    super(message || 'NotFoundException', HttpStatus.NOT_FOUND);
+    Object.defineProperty(this, 'name', { value: 'NotFoundException' });
+  }
+}
+
+export class InternalServerErrorException extends HttpException {
+  constructor(message?: string) {
+    super(
+      message || 'InternalServerErrorException',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+    Object.defineProperty(this, 'name', {
+      value: 'InternalServerErrorException',
+    });
   }
 }
