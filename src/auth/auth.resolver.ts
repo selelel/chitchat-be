@@ -16,23 +16,24 @@ export class AuthResolver {
     private userService: UserService,
   ) {}
 
-  @Query(() => [User])
+  @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async testAuth() {
-    return await this.userService.findAll();
+  async testAuth(@GqlCurrentUser() { user }: any) {
+    const allUser = await this.userService.findOneById(user.payload._id);
+    return allUser;
   }
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async logoutAll(@GqlCurrentUser() { user, token }): Promise<boolean> {
-    const decodedToken = await this.authService.decodeToken(token);
-    if (decodedToken.payload._id === user.payload._id) {
-      await this.authService.removeUserToken(decodedToken.payload._id, token, {
+    try {
+      await this.authService.removeUserToken(user.payload._id, token, {
         removeAll: true,
       });
+
       return true;
-    } else {
-      return false;
+    } catch (error) {
+      return error;
     }
   }
 

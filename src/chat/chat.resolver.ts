@@ -40,7 +40,6 @@ export class ChatResolver {
       if (validateUser !== true) {
         throw validateUser;
       }
-
       return await this.chatService.privateChats(getConversation);
     } catch (error) {
       return error;

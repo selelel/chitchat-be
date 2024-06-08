@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatModule } from './chat/chat.module';
 import { Module } from '@nestjs/common';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -16,9 +17,10 @@ import { Module } from '@nestjs/common';
     ConfigModule.forRoot({ cache: true, isGlobal: true }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/core/schema.gql'),
+      autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
     }),
     MongooseModule.forRoot(process.env.DB_URI),
+    GatewayModule,
   ],
   providers: [],
 })

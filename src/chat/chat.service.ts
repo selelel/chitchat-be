@@ -8,6 +8,7 @@ import { CreatePrivateMessage } from './dto/create.private-message';
 import { GetConversation } from './dto/conversation.dto';
 import { ChatValidateUser } from './dto/chatvalidateuser.dto';
 import { Model } from 'mongoose';
+import { UnauthorizedError } from 'src/core/error/global.error';
 
 @Injectable()
 export class ChatService {
@@ -17,13 +18,18 @@ export class ChatService {
     @InjectModel(Message.name) private messageModel: Model<Message>,
   ) {}
   async privateChats(getConversation: GetConversation): Promise<Message[]> {
-    const message = await this.messageModel
-      .find({ chatId: getConversation.chatId })
-      .sort({ createdAt: -1 })
-      .skip(getConversation.pagination.skip || 0)
-      .limit(getConversation.pagination.limit || 2)
-      .populate('userId');
-    return message;
+    try {
+      const message = await this.messageModel
+        .find({ chatId: getConversation.chatId })
+        .sort({ createdAt: -1 })
+        .skip(getConversation.pagination.skip || 0)
+        .limit(getConversation.pagination.limit || 2)
+        .populate('userId');
+
+      return message;
+    } catch (error) {
+      return error;
+    }
   }
 
   async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
@@ -54,10 +60,10 @@ export class ChatService {
   async sendMessage(
     user: string,
     messagePayload: CreatePrivateMessage,
-  ): Promise<any> {
+  ): Promise<Message> {
     try {
-      const chat = await this.chatModel.findOne({ usersId: user });
-      if (!chat) throw new Error('Forbidden Resource');
+      const chat = await this.chatModel.findOne({ _id: messagePayload.chatId });
+      if (!chat) throw new UnauthorizedError();
 
       const payload = {
         chatId: messagePayload.chatId,
@@ -79,11 +85,11 @@ export class ChatService {
     try {
       const chat = await this.chatModel.findById({ _id: validate.chatId });
 
-      if (!chat.usersId.includes(validate.userId))
-        throw new Error('User is not a chat member');
-      return true;
+      if (!chat.usersId.includes(validate.userId)) throw new Error();
+
+      return Promise.resolve(true);
     } catch (error) {
-      return error;
+      return Promise.resolve(false);
     }
   }
 }

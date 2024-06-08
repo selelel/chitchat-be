@@ -2,13 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { sign, verify, decode } from 'jsonwebtoken';
 import { JWT } from 'src/utils/constant';
-import { NotFoundError, UnauthorizedError } from 'src/core/graphql.error';
 import * as bcrypt from 'bcryptjs';
 import { User } from 'src/user/entities';
 import { LoginResponse } from './dto/login.response';
 import { LoginUserInput } from './input/login.input';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from 'src/core/error/graphql.error';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +36,7 @@ export class AuthService {
     if (user && user.password === password) {
       return user;
     }
-    return new NotFoundError('User');
+    return new ForbiddenError();
   }
 
   async validateToken(validate_token: string): Promise<boolean> {
@@ -99,17 +102,26 @@ export class AuthService {
     options?: {
       removeAll: boolean;
     },
-  ): Promise<User | null> {
-    const user = await this.userModel.findByIdAndUpdate(
-      userId,
-      { $pull: { token: tokenToRemove } },
-      { new: true },
-    );
-
-    if (options?.removeAll) {
-      user.token = [];
+  ): Promise<void> {
+    try {
+      if (options?.removeAll) {
+        await this.userModel.findByIdAndUpdate(
+          userId,
+          { $set: { token: [] } },
+          { new: true },
+        );
+      } else {
+        await this.userModel.findByIdAndUpdate(
+          userId,
+          { $pull: { token: tokenToRemove } },
+          { new: true },
+        );
+      }
+    } catch (error) {
+      console.error(`Error removing token for user ${userId}:`, error);
+      throw error;
     }
-
-    return user;
   }
 }
+
+// TODO delete accesstoken in jwt

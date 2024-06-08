@@ -4,6 +4,10 @@ import mongoose, { HydratedDocument } from 'mongoose';
 import { PersonalObjectEntity } from './personal.object.entity';
 import { AccountObjectEntity } from './account.object.entity';
 import { Chat } from 'src/chat/entities/chat.entity';
+import {
+  defaultRequestObjectDto,
+  RequestObjectDto,
+} from './request.object.dto';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -29,36 +33,45 @@ export class User {
   @Field()
   email: string;
 
-  @Prop({ type: Boolean, required: true })
-  @Field(() => Boolean)
-  public status: boolean;
-
-  @Prop({ type: [String], required: true })
+  @Prop({ type: [String] })
   @Field(() => [String])
   tags: string[];
+
+  @Prop({ type: Boolean, default: false })
+  @Field()
+  isActive: boolean;
+
+  @Prop({ type: RequestObjectDto, default: defaultRequestObjectDto })
+  @Field(() => RequestObjectDto)
+  requests: RequestObjectDto;
+
+  @Prop({ type: Boolean, default: false })
+  @Field(() => Boolean)
+  isPrivate: boolean;
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
   @Field(() => [Chat])
   chats: mongoose.Schema.Types.ObjectId[];
 
-  @Prop({ type: [String], required: true })
-  @Field(() => [String])
-  public group: string[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  followers: mongoose.Schema.Types.ObjectId[];
 
-  @Prop({ type: [String], required: true })
-  @Field(() => [String])
-  public followers: string[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  following: mongoose.Schema.Types.ObjectId[];
 
-  @Prop({ type: [String], required: true })
-  @Field(() => [String])
-  public following: string[];
+  @Prop({ type: [String] })
+  token: string[];
 
-  @Prop({ type: [String], required: true })
+  // * Feature prototype not started yet.
+  @Prop({ type: [String] })
   @Field(() => [String])
-  public posts: string[];
+  group: string[];
 
-  @Prop({ type: [String], required: true })
-  public token: string[];
+  @Prop({ type: [String] })
+  @Field(() => [String])
+  posts: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
