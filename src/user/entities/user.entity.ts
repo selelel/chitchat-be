@@ -1,6 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 import { PersonalObjectEntity } from './personal.object.entity';
 import { AccountObjectEntity } from './account.object.entity';
 import { Chat } from 'src/chat/entities/chat.entity';
@@ -9,7 +9,7 @@ import {
   RequestObjectDto,
 } from './request.object.dto';
 
-export type UserDocument = HydratedDocument<User>;
+export type UserDoc = User & Document;
 
 @Schema()
 @ObjectType()
@@ -22,7 +22,7 @@ export class User {
   @Field(() => PersonalObjectEntity)
   user: PersonalObjectEntity;
 
-  @Prop({ type: AccountObjectEntity, required: true })
+  @Prop({ type: AccountObjectEntity })
   @Field(() => AccountObjectEntity)
   userInfo: AccountObjectEntity;
 
