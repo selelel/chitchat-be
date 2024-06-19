@@ -4,13 +4,13 @@ import { BCRYPT } from 'src/utils/constant';
 import { UserInput } from './dto/user.input.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from './entities/user.entity';
+import { User, UserDoc } from './entities/user.entity';
 import { ObjectId } from 'mongodb';
 import { ConflictError, UnauthorizedError } from 'src/core/error/graphql.error';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<UserDoc>) {}
 
   async createUser(user: UserInput): Promise<User> {
     try {
@@ -197,7 +197,7 @@ export class UserService {
 
   // Helper Function
   async findAll(): Promise<User[]> {
-    const allUser = await this.userModel.find().populate('chats');
+    const allUser = await this.userModel.find().exec();
     return allUser;
   }
 
@@ -205,14 +205,15 @@ export class UserService {
     try {
       return await this.userModel
         .findOne({ _id })
-        .populate(['requests.toFollowers', 'requests.toFollowings']);
+        .populate(['requests.toFollowers', 'requests.toFollowings'])
+        .exec();
     } catch (error) {
       return error;
     }
   }
 
   async findEmail(email: string): Promise<User> {
-    return await this.userModel.findOne({ email });
+    return await this.userModel.findOne({ email }).exec();
   }
 
   async isUserToAccept(_id: string, targetUserId: string) {

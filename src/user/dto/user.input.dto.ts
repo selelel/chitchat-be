@@ -7,12 +7,12 @@ export class UserInput {
   @Field(() => GraphQLJSONObject)
   public user: PersonalObjectEntity;
 
-  @Field(() => GraphQLJSONObject)
-  public userInfo: AccountObjectEntity;
-
   @Field(() => String)
   public password: string;
 
   @Field(() => String)
   public email: string;
+
+  // @Field(() => GraphQLJSONObject)
+  // public userInfo: AccountObjectEntity;
 }
