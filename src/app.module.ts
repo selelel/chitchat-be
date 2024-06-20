@@ -8,6 +8,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChatModule } from './chat/chat.module';
 import { Module } from '@nestjs/common';
 import { GatewayModule } from './gateway/gateway.module';
+import { PostResolver } from './post/post.resolver';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -21,7 +23,8 @@ import { GatewayModule } from './gateway/gateway.module';
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     GatewayModule,
+    PostModule,
   ],
-  providers: [],
+  providers: [PostResolver],
 })
 export class AppModule {}

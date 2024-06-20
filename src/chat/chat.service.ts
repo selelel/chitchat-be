@@ -33,7 +33,6 @@ export class ChatService {
   }
 
   async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
-    // TODO find the optimize
     const privateRoomId = new ObjectId();
     const [user1, user2] = await Promise.all([
       this.userModel.findOne({ _id: _user1 }),
@@ -52,6 +51,29 @@ export class ChatService {
     await Promise.all([
       user1.updateOne({ $push: { chats: privateRoomId } }),
       user2.updateOne({ $push: { chats: privateRoomId } }),
+    ]);
+
+    return await privateRoom.save();
+  }
+
+  async addUserOnRoom(chatUserIds: any, _targetUser: string): Promise<Chat> {
+    const [user1, user2] = chatUserIds;
+    const targetUser = this.userModel.findOne({ _id: _targetUser });
+    const privateRoomId = new ObjectId();
+
+    if (!targetUser) {
+      throw new NotFoundException('To add user not found');
+    }
+
+    const privateRoom = new this.chatModel({
+      _id: privateRoomId,
+      usersId: [user1, user2, targetUser],
+    });
+
+    await Promise.all([
+      user1.updateOne({ $push: { chats: privateRoomId } }),
+      user2.updateOne({ $push: { chats: privateRoomId } }),
+      targetUser.updateOne({ $push: { chats: privateRoomId } }),
     ]);
 
     return await privateRoom.save();
