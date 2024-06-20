@@ -1,13 +1,14 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { PersonalObjectEntity } from './personal.object.entity';
-import { AccountObjectEntity } from './account.object.entity';
 import { Chat } from 'src/chat/entities/chat.entity';
+import { Post } from 'src/post/entity/post.schema';
+import { AccountObjectEntity } from '../dto/account.object.entity';
+import { PersonalObjectEntity } from '../dto/personal.object.entity';
 import {
-  defaultRequestObjectDto,
   RequestObjectDto,
-} from './request.object.dto';
+  defaultRequestObjectDto,
+} from '../dto/request.object.dto';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -69,9 +70,9 @@ export class User {
   @Field(() => [String])
   group: string[];
 
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  posts: string[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }] })
+  @Field(() => [Post])
+  posts: Post[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

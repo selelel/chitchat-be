@@ -1,7 +1,7 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
-import { AccountObjectEntity, PersonalObjectEntity } from '../entities';
-
+import { AccountObjectEntity } from './account.object.entity';
+import { PersonalObjectEntity } from './personal.object.entity';
 @InputType()
 export class UserInput {
   @Field(() => GraphQLJSONObject)

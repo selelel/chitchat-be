@@ -3,7 +3,6 @@ import { UserService } from 'src/user/user.service';
 import { sign, verify, decode } from 'jsonwebtoken';
 import { JWT } from 'src/utils/constant';
 import * as bcrypt from 'bcryptjs';
-import { User } from 'src/user/entities';
 import { LoginResponse } from './dto/login.response';
 import { LoginUserInput } from './input/login.input';
 import { InjectModel } from '@nestjs/mongoose';
@@ -12,6 +11,7 @@ import {
   ForbiddenError,
   UnauthorizedError,
 } from 'src/core/error/graphql.error';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class AuthService {
