@@ -2,6 +2,9 @@ import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Audience } from '../interfaces/post.audience.enums';
+import { Comments } from './comments.schema';
+import { ContentType } from '../interfaces/post.content_type';
+import { User } from 'src/user/entities/user.entity';
 
 export type PostDocument = HydratedDocument<Post>;
 
@@ -12,6 +15,9 @@ export class Post {
   @Field(() => String)
   _id: mongoose.Schema.Types.ObjectId;
 
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Post' })
+  shared_post_ref: mongoose.Schema.Types.ObjectId;
+
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   @Field(() => String)
   author: mongoose.Schema.Types.ObjectId;
@@ -20,16 +26,16 @@ export class Post {
   @Field(() => [String])
   tags: string[];
 
-  @Prop({ type: String, required: true })
-  @Field(() => String)
-  content: string;
+  @Prop({ type: ContentType, required: true })
+  @Field(() => ContentType)
+  content: ContentType;
 
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }] })
-  @Field(() => [String])
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comments' }] })
+  @Field(() => [Comments])
   comments: mongoose.Schema.Types.ObjectId[];
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
-  @Field(() => [String])
+  @Field(() => [User])
   likes: mongoose.Schema.Types.ObjectId[];
 
   @Prop({ type: Number, default: 0 })

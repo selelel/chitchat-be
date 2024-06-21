@@ -252,4 +252,10 @@ export class UserService {
       return false;
     }
   }
+
+  async foundUser(_id: string) {
+    const user = await this.userModel.findOne({ _id });
+
+    if (!user) throw new ConflictError('User not Found');
+  }
 }
