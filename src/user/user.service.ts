@@ -253,7 +253,7 @@ export class UserService {
     }
   }
 
-  async foundUser(_id: string) {
+  async isUserExisted(_id: string) {
     const user = await this.userModel.findOne({ _id });
 
     if (!user) throw new ConflictError('User not Found');

@@ -32,6 +32,11 @@ export class Chat {
   @Prop({ type: String })
   @Field(() => String)
   avatar?: string | null;
+
+  // TODO [USER_BLOCKED, RESTRICTED]
+  // @Prop({ type: [USER_BLOCKED, RESTRICTED] })
+  // @Field(() => [USER_BLOCKED, RESTRICTED])
+  // status?: [USER_BLOCKED, RESTRICTED];
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);

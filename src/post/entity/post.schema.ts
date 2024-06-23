@@ -19,7 +19,7 @@ export class Post {
   shared_post_ref: mongoose.Schema.Types.ObjectId;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  @Field(() => String)
+  @Field(() => User)
   author: mongoose.Schema.Types.ObjectId;
 
   @Prop({ type: [String] })

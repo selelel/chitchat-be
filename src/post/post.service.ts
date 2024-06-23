@@ -6,6 +6,8 @@ import { ConflictError } from 'src/core/error/global.error';
 import { User, UserDocument } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Comments, CommentsDocument } from './entity/comments.schema';
+import { Audience } from './interfaces/post.audience.enums';
+import { Pagination } from 'src/utils/global_dto/pagination.dto';
 
 @Injectable()
 export class PostService {
@@ -16,8 +18,67 @@ export class PostService {
     private usersService: UserService,
   ) {}
 
+  // TODO implement [TAGS, MBTI, AND OTHER] when getting post recommendations (future features)
+
+  private async getUserFollowingPost(userId: string, pagination: Pagination) {
+    this.usersService.isUserExisted(userId);
+
+    const { following } = (
+      await this.userModel.findOne({ _id: userId })
+    ).populated('following');
+
+    return await this.postModel
+      .find({
+        author: { $in: following },
+        audience: {
+          $in: [Audience.FRIENDS, Audience.PUBLIC, Audience.PRIVATE],
+        },
+        createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+      })
+      .skip(pagination.skip || 5)
+      .limit(pagination.limit || 5)
+      .populate('comments')
+      .exec();
+  }
+
+  async getRecommendations(userId: string, pagination: Pagination) {
+    this.usersService.isUserExisted(userId);
+
+    const { following } = await this.userModel.findOne({ _id: userId });
+
+    const posts = (await this.postModel
+      .find({
+        author: { $nin: following },
+        audience: Audience.PUBLIC,
+      })
+      .skip(pagination.skip || 5)
+      .limit(pagination.limit || 5)
+      .populate('author')
+      .exec()) as any[];
+
+    // ! Type brute force (I'm sorry)
+    const filteredPosts = posts.filter((post) => !post.author?.isPrivate);
+
+    return filteredPosts;
+  }
+
+  async #getRecommendations() {
+    // Todo How? to do it
+    // * Constraint: If the post has a lot of activities(not created yet feature) and 7 days ago don't show it often (but if there is no activity just pull anything from the post, but not a private post tho~)
+    // * Get all the followings post
+    // * Public post will come out as long as its user is not private along with its post (if the user is a private acc, post's audience will be [DEFAULT FOLLOWERS] )
+    //? How to access though?
+    // * { followingList } = userModel.find(_id) // did destructuring don't get confused
+    // * map all following list? and loop over it's post and see if it's a latest post (the post should be 7 days ago <)
+    // * Implement:
+    // * QUERY PAGINATION
+    // * LATEST POST FIRST!
+    // ? Get all the followers post
+    // ? if user shared a private post would everyone see it?
+  }
+
   async createPost(userId: string, content: string) {
-    await this.usersService.foundUser(userId);
+    await this.usersService.isUserExisted(userId);
     const user = await this.userModel.findOne({ _id: userId });
 
     const post = await this.postModel.create({ content });
@@ -32,7 +93,7 @@ export class PostService {
 
   async updatePost(postId: string, content: string) {
     const post = await this.postModel.create({ content });
-    await this.foundPost(postId);
+    await this.isPostExisted(postId);
     post.updateOne({
       content,
       updatedAt: Date.now(),
@@ -98,8 +159,11 @@ export class PostService {
     }
   }
 
-  async foundPost(postId: string) {
-    const post = await this.postModel.create({ _id: postId });
-    if (!post) throw new ConflictError('Post not Found!');
+  private async isPostExisted(postId: string): Promise<PostDocument> {
+    const post = await this.postModel.findById(postId);
+    if (!post) {
+      throw new ConflictError('Post not Found!');
+    }
+    return post;
   }
 }
