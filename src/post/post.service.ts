@@ -62,21 +62,6 @@ export class PostService {
     return filteredPosts;
   }
 
-  async #getRecommendations() {
-    // Todo How? to do it
-    // * Constraint: If the post has a lot of activities(not created yet feature) and 7 days ago don't show it often (but if there is no activity just pull anything from the post, but not a private post tho~)
-    // * Get all the followings post
-    // * Public post will come out as long as its user is not private along with its post (if the user is a private acc, post's audience will be [DEFAULT FOLLOWERS] )
-    //? How to access though?
-    // * { followingList } = userModel.find(_id) // did destructuring don't get confused
-    // * map all following list? and loop over it's post and see if it's a latest post (the post should be 7 days ago <)
-    // * Implement:
-    // * QUERY PAGINATION
-    // * LATEST POST FIRST!
-    // ? Get all the followers post
-    // ? if user shared a private post would everyone see it?
-  }
-
   async createPost(userId: string, content: string) {
     await this.usersService.isUserExisted(userId);
     const user = await this.userModel.findOne({ _id: userId });
