@@ -3,8 +3,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Audience } from '../interfaces/post.audience.enums';
 import { Comments } from './comments.schema';
-import { ContentType } from '../interfaces/post.content_type';
 import { User } from 'src/user/entities/user.entity';
+import { PostContentObject } from '../interfaces/post.content_object';
 
 export type PostDocument = HydratedDocument<Post>;
 
@@ -26,9 +26,9 @@ export class Post {
   @Field(() => [String])
   tags: string[];
 
-  @Prop({ type: ContentType, required: true })
-  @Field(() => ContentType)
-  content: ContentType;
+  @Prop({ type: PostContentObject, required: true })
+  @Field(() => PostContentObject)
+  content: PostContentObject;
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comments' }] })
   @Field(() => [Comments])

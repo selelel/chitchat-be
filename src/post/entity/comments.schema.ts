@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
+import { CommentContentObject } from '../interfaces/comment.content_object';
 
 export type CommentsDocument = HydratedDocument<Comments>;
 
@@ -15,14 +16,15 @@ export class Comments {
   @Field(() => String)
   user: mongoose.Schema.Types.ObjectId;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   @Field(() => String)
   reaction: mongoose.Schema.Types.ObjectId;
 
-  @Prop({ type: String, required: true })
-  @Field(() => String)
-  content: string;
+  @Prop({ type: CommentContentObject, required: true })
+  @Field(() => CommentContentObject)
+  content: CommentContentObject;
 
+  @Prop({ type: Date })
   @Field(() => Date)
   updatedAt: Date;
 }
