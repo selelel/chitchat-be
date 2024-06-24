@@ -3,11 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument } from './entity/post.schema';
 import { Model } from 'mongoose';
 import { ConflictError } from 'src/core/error/global.error';
-import { User, UserDocument } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Comments, CommentsDocument } from './entity/comments.schema';
 import { Audience } from './interfaces/post.audience.enums';
 import { Pagination } from 'src/utils/global_dto/pagination.dto';
+import { User, UserDocument } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class PostService {
@@ -20,7 +20,7 @@ export class PostService {
 
   // TODO implement [TAGS, MBTI, AND OTHER] when getting post recommendations (future features)
 
-  private async getUserFollowingPost(userId: string, pagination: Pagination) {
+  async getUserFollowingPost(userId: string, pagination: Pagination) {
     this.usersService.isUserExisted(userId);
 
     const { following } = (

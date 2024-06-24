@@ -23,7 +23,7 @@ export class User {
   @Field(() => PersonalObjectEntity)
   user: PersonalObjectEntity;
 
-  @Prop({ type: AccountObjectEntity, required: true })
+  @Prop({ type: AccountObjectEntity })
   @Field(() => AccountObjectEntity)
   userInfo: AccountObjectEntity;
 
