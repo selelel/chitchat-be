@@ -116,12 +116,8 @@ describe('Testing the PostService', () => {
   it('Should comment on post', async () => {
     const mock = '_TEST_COMMENT_';
     const {
-      comments: [
-        {
-          _id,
-          content: { text },
-        },
-      ],
+      _id,
+      content: { text },
     } = await service.addPostComments(__id2__, __postId__, {
       text: mock,
       image: ['__IMAGE__'],
@@ -141,10 +137,7 @@ describe('Testing the PostService', () => {
   });
 
   it('Should remove a comment on post', async () => {
-    const { comments } = await service.removePostComments(
-      __postId__,
-      __commentId__,
-    );
+    const { comments } = await service.removePostComments(__commentId__);
 
     expect(comments).toHaveLength(0);
   });
@@ -168,11 +161,22 @@ describe('Testing the PostService', () => {
       },
       { new: true },
     );
+
     const followingPost = await service.getUserFollowingPost(__id__, {
       skip: 0,
       limit: 10,
     });
 
     expect(followingPost).toBeDefined();
+  });
+
+  it('Should remove post', async () => {
+    let prev_number = 0;
+    const { posts } = await user_model.findById(__id__);
+    prev_number = posts.length;
+
+    const user = await service.removePost(__postId__, __id__);
+
+    expect(user.posts).toHaveLength(prev_number - 1);
   });
 });

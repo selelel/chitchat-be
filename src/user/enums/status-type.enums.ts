@@ -1,9 +1,10 @@
 import { registerEnumType } from '@nestjs/graphql';
 
 export enum Status {
-  PERMISSION_NEEDED = 'permission_needed',
-  BLOCK = 'block',
-  VALID = 'valid',
+  ONLINE = 'online',
+  OFFLINE = 'offline',
+  IDLE = 'idle',
+  INVINCIBLE = 'invincible',
 }
 
 registerEnumType(Status, { name: 'Status' });

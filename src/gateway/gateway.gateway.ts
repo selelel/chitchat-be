@@ -1,66 +1,74 @@
-import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { ChatService } from 'src/chat/chat.service';
-import { AuthService } from 'src/auth/auth.service';
+// gateway.ts
+
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { UnauthorizedError } from 'src/core/error/global.error';
-import { OnModuleInit } from '@nestjs/common';
+import { Inject, OnModuleInit } from '@nestjs/common';
+import { AuthService } from 'src/auth/auth.service'; // Adjust path as needed
+import { UserService } from 'src/user/user.service'; // Adjust path as needed
 import { GatewayService } from './gateway.service';
-import { UserService } from 'src/user/user.service';
+import { GatewayMiddleware } from './gateway.middleware';
+import { Status } from 'src/user/enums';
 
 @WebSocketGateway()
-export class Gateway implements OnModuleInit {
-  constructor(
-    private readonly gatewayService: GatewayService,
-    private readonly chatService: ChatService,
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-  ) {}
-
+export class Gateway
+  implements OnModuleInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
-  // ? Do I really need this?
+  private readonly middleware: GatewayMiddleware;
+
+  constructor(
+    @Inject(GatewayService) private readonly gatewayService: GatewayService,
+    @Inject(AuthService) private readonly authService: AuthService,
+    @Inject(UserService) private readonly userService: UserService,
+  ) {
+    this.middleware = new GatewayMiddleware(authService, userService);
+  }
+
   onModuleInit() {
-    this.server.use(async (socket: Socket, next: (err?: any) => void) => {
-      const token = socket.handshake.headers.authorization?.split(' ')[1];
-      const tokenDecoded = await this.authService.decodeToken(token);
-      try {
-        if (!token || !(await this.authService.validateToken(token))) {
-          throw new UnauthorizedError();
-        }
-        socket.data.user = tokenDecoded.payload;
+    this.server.use(this.middleware.middleware.bind(this.middleware));
+  }
 
-        next();
-      } catch (error) {
-        socket.on('disconnect', () => {
-          this.gatewayService.setUserInActive(tokenDecoded.payload._id);
-        });
-        next(error);
-      }
-    });
+  async handleConnection(socket: Socket) {
+    const { user } = socket.data;
+    const {
+      user: { username },
+    } = await this.userService.findOneById(user._id);
+    console.log(user._id);
 
-    this.server.on('connection', async (socket) => {
-      const { user } = socket.data;
-      const {
-        user: { username },
-      } = await this.userService.findOneById(user._id);
+    try {
+      await this.userService.updateUserStatus(user._id, Status.ONLINE);
+      this.notifyFriends(user._id, `User ${username} is online`);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-      try {
-        await this.gatewayService.setUserActive(user._id);
-        this.server.emit('onNotify', `User ${username} is online`);
+  async handleDisconnect(socket: Socket) {
+    const { user } = socket.data;
+    const {
+      user: { username },
+    } = await this.userService.findOneById(user._id);
 
-        console.log(`User ${username} is online`);
-        socket.on('disconnect', async () => {
-          try {
-            await this.gatewayService.setUserInActive(user._id);
-            this.server.emit('onNotify', `User ${username} is disconnect`);
-          } catch (error) {
-            console.log(error);
-          }
-        });
-      } catch (error) {
-        console.log(error);
-      }
+    try {
+      this.notifyFriends(user._id, `User ${username} is offline`);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async notifyFriends(_id: string, message: string) {
+    const userRecord = await this.userService.findOneById(_id);
+    const { followers, following } = userRecord;
+    [...followers, ...following].forEach((friend) => {
+      this.server.emit(friend.toString(), message);
+      console.log(message);
     });
   }
 }

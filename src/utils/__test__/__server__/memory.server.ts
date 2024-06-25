@@ -1,4 +1,3 @@
-// mongo-memory-server.singleton.ts
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 class MongoMemoryServerSingleton {

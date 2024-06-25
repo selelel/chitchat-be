@@ -9,6 +9,7 @@ import {
   RequestObjectDto,
   defaultRequestObjectDto,
 } from '../dto/request.object.dto';
+import { Status } from '../enums';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -38,9 +39,9 @@ export class User {
   @Field(() => [String])
   tags: string[];
 
-  @Prop({ type: Boolean, default: false })
-  @Field()
-  isActive: boolean;
+  @Prop({ type: String, enum: Status, default: Status.OFFLINE })
+  @Field(() => Status)
+  status: Status;
 
   @Prop({ type: RequestObjectDto, default: defaultRequestObjectDto })
   @Field(() => RequestObjectDto)
@@ -65,14 +66,14 @@ export class User {
   @Prop({ type: [String] })
   token: string[];
 
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }] })
+  @Field(() => [Post])
+  posts: Post[];
+
   // * Feature prototype not started yet.
   @Prop({ type: [String] })
   @Field(() => [String])
   group: string[];
-
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }] })
-  @Field(() => [Post])
-  posts: Post[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

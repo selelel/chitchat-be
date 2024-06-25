@@ -5,6 +5,8 @@ import { Post, PostSchema } from './entity/post.schema';
 import { User, UserSchema } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Comments, CommentsSchema } from './entity/comments.schema';
+import { PostResolver } from './post.resolver';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
   imports: [
@@ -14,6 +16,6 @@ import { Comments, CommentsSchema } from './entity/comments.schema';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  providers: [PostService, UserService],
+  providers: [PostService, UserService, PostResolver, AuthService],
 })
 export class PostModule {}

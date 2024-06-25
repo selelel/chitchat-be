@@ -6,7 +6,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { ObjectId } from 'mongodb';
-import { ConflictError, UnauthorizedError } from 'src/core/error/graphql.error';
+import {
+  ConflictError,
+  UnauthorizedError,
+} from 'src/utils/error/graphql.error';
+import { Status } from './enums';
 
 @Injectable()
 export class UserService {
@@ -254,9 +258,19 @@ export class UserService {
     }
   }
 
+  async updateUserStatus(_id: string, status: Status): Promise<void> {
+    await this.userModel.findByIdAndUpdate(_id, {
+      status,
+    });
+  }
+
   async isUserExisted(_id: string) {
     const user = await this.userModel.findOne({ _id });
 
     if (!user) throw new ConflictError('User not Found');
+  }
+
+  async findByIds(ids: any): Promise<User[]> {
+    return this.userModel.find({ _id: { $in: ids } }).exec();
   }
 }

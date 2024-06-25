@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument } from './entity/post.schema';
 import { Model } from 'mongoose';
-import { ConflictError } from 'src/core/error/global.error';
+import { ConflictError } from 'src/utils/error/global.error';
 import { UserService } from 'src/user/user.service';
 import { Comments, CommentsDocument } from './entity/comments.schema';
 import { Audience } from './interfaces/post.audience.enums';
@@ -11,6 +11,7 @@ import { User, UserDocument } from 'src/user/entities/user.entity';
 import { PostContentObject } from './interfaces/post.content_object';
 import { CommentContentObject } from './interfaces/comment.content_object';
 import { ObjectId } from 'mongodb';
+import { PostOptionInput } from './dto/post.option_input';
 
 @Injectable()
 export class PostService {
@@ -21,9 +22,10 @@ export class PostService {
     private usersService: UserService,
   ) {}
 
-  // TODO implement [TAGS, MBTI, AND OTHER] when getting post recommendations (future features)
-
-  async getUserFollowingPost(userId: string, pagination: Pagination) {
+  async getUserFollowingPost(
+    userId: string,
+    pagination: Pagination,
+  ): Promise<Post[]> {
     this.usersService.isUserExisted(userId);
 
     const { following } = await this.userModel.findOne({ _id: userId });
@@ -37,12 +39,15 @@ export class PostService {
         createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
       })
       .skip(pagination.skip || 0)
-      .limit(pagination.limit || 0)
+      .limit(pagination.limit || 5)
       .populate('comments')
       .exec();
   }
 
-  async getRecommendations(userId: string, pagination: Pagination) {
+  async getRecommendations(
+    userId: string,
+    pagination: Pagination,
+  ): Promise<Post[]> {
     this.usersService.isUserExisted(userId);
 
     const user = await this.userModel.findOne({ _id: userId });
@@ -53,7 +58,7 @@ export class PostService {
         audience: Audience.PUBLIC,
       })
       .skip(pagination.skip || 0)
-      .limit(pagination.limit)
+      .limit(pagination.limit || 5)
       .exec()) as any[];
 
     const filteredPosts = posts.filter((post) => !post.author?.isPrivate);
@@ -61,13 +66,17 @@ export class PostService {
     return filteredPosts;
   }
 
-  // TODO options
-  async createPost(userId: string, content: PostContentObject, option?: any) {
+  async createPost(
+    userId: string,
+    content: PostContentObject,
+    option?: PostOptionInput,
+  ): Promise<Post> {
     await this.usersService.isUserExisted(userId);
     const post = await this.postModel.create({
       content,
       author: userId,
       audience: option?.audience || Audience.PUBLIC,
+      tags: option?.tags?.map((d) => new ObjectId(d)) || [],
     });
 
     await this.userModel.findByIdAndUpdate(
@@ -80,30 +89,64 @@ export class PostService {
       { new: true },
     );
 
-    return post.populate('author');
+    return post.populate(['author', 'tags']);
   }
 
-  async updatePost(postId: string, content: Partial<PostContentObject>) {
-    const post = await this.doesPostExist(postId);
-    const updatedPost = await this.postModel.findByIdAndUpdate(
-      postId,
-      {
-        $set: {
-          content: { ...post.content, ...content },
-          updatedAt: Date.now(),
+  async updatePost(
+    postId: string,
+    content: Partial<PostContentObject>,
+    option?: PostOptionInput,
+  ): Promise<Post> {
+    const { content: prevContent, audience: prevAudience } =
+      await this.doesPostExist(postId);
+
+    const updatedPost = await this.postModel
+      .findByIdAndUpdate(
+        postId,
+        {
+          $set: {
+            content: { ...prevContent, ...content },
+            audience: option?.audience || prevAudience,
+            updatedAt: Date.now(),
+          },
+          $addToSet: {
+            tags: option?.tags || [],
+          },
         },
-      },
-      { new: true },
-    );
+        { new: true },
+      )
+      .populate(['author', 'tags']);
 
     return updatedPost;
+  }
+
+  async removePost(postId: string, userId: string): Promise<User> {
+    try {
+      await this.doesPostExist(postId);
+      await this.usersService.isUserExisted(userId);
+
+      const post = await this.postModel.findByIdAndDelete(postId);
+
+      const user = await this.userModel.findByIdAndUpdate(
+        userId,
+        {
+          $pull: { posts: postId },
+        },
+        { new: true },
+      );
+
+      await this.commentModel.deleteMany({ postId: post._id });
+      return user;
+    } catch (error) {
+      return error;
+    }
   }
 
   async addPostComments(
     userId: string,
     postId: string,
     content: CommentContentObject,
-  ) {
+  ): Promise<Comments> {
     try {
       await this.doesPostExist(postId);
       await this.usersService.isUserExisted(userId);
@@ -112,9 +155,10 @@ export class PostService {
         content,
         createdAt: Date.now(),
         user: new ObjectId(userId),
+        postId: postId,
       });
 
-      const post = await this.postModel.findByIdAndUpdate(
+      await this.postModel.findByIdAndUpdate(
         postId,
         {
           $push: { comments: comment._id },
@@ -122,14 +166,15 @@ export class PostService {
         { new: true },
       );
 
-      return post.populate('comments');
+      return comment;
     } catch (error) {
       return error;
     }
   }
 
-  async removePostComments(postId: string, commentId: string) {
+  async removePostComments(commentId: string): Promise<Post> {
     try {
+      const { postId } = await this.doesCommentExist(commentId);
       await this.doesPostExist(postId);
       const post = await this.postModel.findByIdAndUpdate(
         postId,
@@ -147,7 +192,10 @@ export class PostService {
     }
   }
 
-  async editPostComments(commentId: string, content: CommentContentObject) {
+  async editPostComments(
+    commentId: string,
+    content: CommentContentObject,
+  ): Promise<Comments> {
     try {
       const comment = await this.doesCommentExist(commentId);
 
@@ -168,7 +216,7 @@ export class PostService {
     }
   }
 
-  private async doesPostExist(postId: string): Promise<PostDocument> {
+  private async doesPostExist(postId: any): Promise<PostDocument> {
     const post = await this.postModel.findById(postId);
     if (!post) {
       throw new ConflictError('Post not Found!');
@@ -180,7 +228,7 @@ export class PostService {
     const comment = await this.commentModel.findOne({ _id: commentId });
 
     if (!comment) {
-      throw new ConflictError('comment not Found!');
+      throw new ConflictError('Comment not Found!');
     }
     return comment;
   }

@@ -8,7 +8,7 @@ import { CreatePrivateMessage } from './dto/create.private-message';
 import { GetConversation } from './dto/conversation.dto';
 import { ChatValidateUser } from './dto/chatvalidateuser.dto';
 import { Model } from 'mongoose';
-import { UnauthorizedError } from 'src/core/error/global.error';
+import { UnauthorizedError } from 'src/utils/error/global.error';
 
 @Injectable()
 export class ChatService {

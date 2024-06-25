@@ -22,9 +22,9 @@ export class Post {
   @Field(() => User)
   author: mongoose.Schema.Types.ObjectId;
 
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  tags: string[];
+  @Prop({ type: [{ type: mongoose.Schema.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  tags: mongoose.Schema.Types.ObjectId[];
 
   @Prop({ type: PostContentObject, required: true })
   @Field(() => PostContentObject)

@@ -1,10 +1,7 @@
 import { Field, InputType } from '@nestjs/graphql';
 
 @InputType()
-export class PostContentInput {
-  @Field(() => String)
-  description?: string;
-
+export class CommentContentInput {
   @Field(() => [String], { nullable: true })
   image?: string[];
 

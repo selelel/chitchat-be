@@ -10,7 +10,7 @@ import mongoose, { Model } from 'mongoose';
 import {
   ForbiddenError,
   UnauthorizedError,
-} from 'src/core/error/graphql.error';
+} from 'src/utils/error/graphql.error';
 import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
@@ -123,5 +123,3 @@ export class AuthService {
     }
   }
 }
-
-// TODO delete accesstoken in jwt
