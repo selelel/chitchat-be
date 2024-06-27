@@ -40,7 +40,6 @@ export class Gateway
     const {
       user: { username },
     } = await this.userService.findOneById(user._id);
-    console.log(user._id);
 
     try {
       await this.userService.updateUserStatus(user._id, Status.ONLINE);
@@ -68,7 +67,6 @@ export class Gateway
     const { followers, following } = userRecord;
     [...followers, ...following].forEach((friend) => {
       this.server.emit(friend.toString(), message);
-      console.log(message);
     });
   }
 }

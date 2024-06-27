@@ -264,10 +264,10 @@ export class UserService {
     });
   }
 
-  async isUserExisted(_id: string) {
+  async isUserExisted(_id: string): Promise<User> {
     const user = await this.userModel.findOne({ _id });
-
     if (!user) throw new ConflictError('User not Found');
+    return user;
   }
 
   async findByIds(ids: any): Promise<User[]> {

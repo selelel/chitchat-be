@@ -13,6 +13,7 @@ export class ChatMiddleware {
     const token = socket.handshake.headers.authorization?.split(' ')[1];
     const chatId = socket.handshake.headers.chatid as string;
     const tokenDecoded = await this.authService.decodeToken(token);
+
     try {
       if (
         !token ||

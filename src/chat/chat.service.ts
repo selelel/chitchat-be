@@ -8,7 +8,8 @@ import { CreatePrivateMessage } from './dto/create.private-message';
 import { GetConversation } from './dto/conversation.dto';
 import { ChatValidateUser } from './dto/chatvalidateuser.dto';
 import { Model } from 'mongoose';
-import { UnauthorizedError } from 'src/utils/error/global.error';
+import { ConflictError, UnauthorizedError } from 'src/utils/error/global.error';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ChatService {
@@ -16,6 +17,7 @@ export class ChatService {
     @InjectModel(Chat.name) private chatModel: Model<Chat>,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Message.name) private messageModel: Model<Message>,
+    private usersService: UserService,
   ) {}
   async privateChats(getConversation: GetConversation): Promise<Message[]> {
     try {
@@ -56,27 +58,39 @@ export class ChatService {
     return await privateRoom.save();
   }
 
-  async addUserOnRoom(chatUserIds: any, _targetUser: string): Promise<Chat> {
-    const [user1, user2] = chatUserIds;
-    const targetUser = this.userModel.findOne({ _id: _targetUser });
-    const privateRoomId = new ObjectId();
+  async createUsersRoom(userIds: string[]): Promise<Chat> {
+    const users = [];
 
-    if (!targetUser) {
-      throw new NotFoundException('To add user not found');
+    for (const userId of userIds) {
+      try {
+        const user = await this.isChatExisted(userId);
+        users.push(user._id);
+      } catch (error) {
+        console.log(error);
+      }
     }
 
-    const privateRoom = new this.chatModel({
-      _id: privateRoomId,
-      usersId: [user1, user2, targetUser],
+    const room = await this.chatModel.create({
+      usersId: users,
     });
 
-    await Promise.all([
-      user1.updateOne({ $push: { chats: privateRoomId } }),
-      user2.updateOne({ $push: { chats: privateRoomId } }),
-      targetUser.updateOne({ $push: { chats: privateRoomId } }),
-    ]);
+    return room;
+  }
 
-    return await privateRoom.save();
+  // Todo create test here
+  async addUserOnRoom(chatId: string, _targetUser: string): Promise<Chat> {
+    await this.usersService.isUserExisted(_targetUser);
+    await this.isChatExisted(chatId);
+
+    await this.userModel.findByIdAndUpdate(_targetUser, {
+      $push: { chats: chatId },
+    });
+
+    const room = await this.chatModel.findByIdAndUpdate(chatId, {
+      $push: { usersId: chatId },
+    });
+
+    return room;
   }
 
   async sendMessage(
@@ -113,5 +127,12 @@ export class ChatService {
     } catch (error) {
       return Promise.resolve(false);
     }
+  }
+
+  async isChatExisted(_id: string) {
+    const chat = await this.chatModel.findById(_id);
+    if (!chat) throw new ConflictError('Chat not found');
+
+    return chat;
   }
 }
