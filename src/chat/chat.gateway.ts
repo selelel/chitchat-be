@@ -8,9 +8,9 @@ import {
 import { ChatService } from './chat.service';
 import { Server } from 'socket.io';
 import { OnModuleInit } from '@nestjs/common';
-import { CreatePrivateMessage } from './dto/create.private-message';
 import { AuthService } from 'src/auth/auth.service';
 import { ChatMiddleware } from './chat.middleware';
+import { MessageContentInput } from './dto/message.content_input';
 
 @WebSocketGateway(8585)
 export class ChatGateway implements OnModuleInit {
@@ -30,17 +30,21 @@ export class ChatGateway implements OnModuleInit {
 
   @SubscribeMessage('sendDirectMessage')
   async sendDirectMessage(
-    @MessageBody() body: CreatePrivateMessage,
+    @MessageBody() messageContent: MessageContentInput,
     @ConnectedSocket() connect,
   ) {
     const { user, chatId } = connect.data;
     try {
-      body.chatId = chatId;
       const message = await this.chatService.sendMessage(
+        chatId,
         user.payload._id,
-        body,
+        messageContent,
       );
-      this.server.emit('onListening', message.content);
+      this.server.emit(
+        'onListening',
+        message.content.text,
+        message.content.images,
+      );
     } catch (error) {
       this.server.emit('onListening', error);
     }

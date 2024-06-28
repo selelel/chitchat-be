@@ -10,6 +10,8 @@ import { AuthService } from 'src/auth/auth.service';
 import { ChatService } from 'src/chat/chat.service';
 import { UserService } from 'src/user/user.service';
 import { GatewayMiddleware } from './gateway.middleware';
+import { BucketsService } from 'src/utils/utils_modules/third_party/buckets.service';
+import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { GatewayMiddleware } from './gateway.middleware';
     ChatService,
     UserService,
     GatewayMiddleware,
+    FileUploadService,
+    BucketsService,
   ],
 })
 export class GatewayModule {}

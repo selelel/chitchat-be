@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { BCRYPT } from 'src/utils/constant';
 import { UserInput } from './dto/user.input.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -11,6 +10,7 @@ import {
   UnauthorizedError,
 } from 'src/utils/error/graphql.error';
 import { Status } from './enums';
+import { BCRYPT } from 'src/utils/constant/constant';
 
 @Injectable()
 export class UserService {

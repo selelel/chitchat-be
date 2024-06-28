@@ -9,6 +9,7 @@ import { ChatModule } from './chat/chat.module';
 import { UserModule } from './user/user.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PostModule } from './post/post.module';
+import { UtilModules } from './utils/utils_modules/utils.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PostModule } from './post/post.module';
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
     }),
     MongooseModule.forRoot(process.env.DB_URI),
+    UtilModules,
   ],
 })
 export class AppModule {}
