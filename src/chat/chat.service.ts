@@ -60,6 +60,8 @@ export class ChatService {
     return privateRoom;
   }
 
+  // Todo create endpoints here
+
   async createUsersRoom(userIds: string[]): Promise<Chat> {
     const users = [];
 
@@ -76,20 +78,25 @@ export class ChatService {
       usersId: users,
     });
 
+    for (const user of users) {
+      await this.userModel.findByIdAndUpdate(user._id, {
+        $push: { rooms: room._id },
+      });
+    }
+
     return room;
   }
 
-  // Todo create test here
-  async addUserOnRoom(chatId: string, _targetUser: string): Promise<Chat> {
+  async addUserOnRoom(roomId: string, _targetUser: string): Promise<Chat> {
     await this.usersService.isUserExisted(_targetUser);
-    await this.isChatExisted(chatId);
+    await this.isChatExisted(roomId);
 
     await this.userModel.findByIdAndUpdate(_targetUser, {
-      $push: { chats: chatId },
+      $push: { rooms: roomId },
     });
 
-    const room = await this.chatModel.findByIdAndUpdate(chatId, {
-      $push: { usersId: chatId },
+    const room = await this.chatModel.findByIdAndUpdate(roomId, {
+      $push: { usersId: _targetUser },
     });
 
     return room;

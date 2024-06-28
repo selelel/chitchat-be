@@ -70,10 +70,9 @@ export class User {
   @Field(() => [Post])
   posts: Post[];
 
-  // * Feature prototype not started yet.
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  group: string[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
+  @Field(() => [Chat])
+  rooms: mongoose.Schema.Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
