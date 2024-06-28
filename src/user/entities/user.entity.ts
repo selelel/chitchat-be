@@ -1,15 +1,17 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
-import { PersonalObjectEntity } from './personal.object.entity';
-import { AccountObjectEntity } from './account.object.entity';
+import mongoose, { HydratedDocument } from 'mongoose';
 import { Chat } from 'src/chat/entities/chat.entity';
+import { Post } from 'src/post/entity/post.schema';
+import { AccountObjectEntity } from '../dto/account.object.entity';
+import { PersonalObjectEntity } from '../dto/personal.object.entity';
 import {
-  defaultRequestObjectDto,
   RequestObjectDto,
-} from './request.object.dto';
+  defaultRequestObjectDto,
+} from '../dto/request.object.dto';
+import { Status } from '../enums';
 
-export type UserDoc = User & Document;
+export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 @ObjectType()
@@ -37,9 +39,9 @@ export class User {
   @Field(() => [String])
   tags: string[];
 
-  @Prop({ type: Boolean, default: false })
-  @Field()
-  isActive: boolean;
+  @Prop({ type: String, enum: Status, default: Status.OFFLINE })
+  @Field(() => Status)
+  status: Status;
 
   @Prop({ type: RequestObjectDto, default: defaultRequestObjectDto })
   @Field(() => RequestObjectDto)
@@ -64,14 +66,13 @@ export class User {
   @Prop({ type: [String] })
   token: string[];
 
-  // * Feature prototype not started yet.
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  group: string[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }] })
+  @Field(() => [Post])
+  posts: Post[];
 
-  @Prop({ type: [String] })
-  @Field(() => [String])
-  posts: string[];
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
+  @Field(() => [Chat])
+  rooms: mongoose.Schema.Types.ObjectId[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

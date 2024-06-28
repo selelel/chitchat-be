@@ -1,6 +1,7 @@
 import mongoose, { Document } from 'mongoose';
-import { PersonalObjectEntity, AccountObjectEntity } from '../entities';
-import { RequestObjectDto } from '../entities/request.object.dto';
+import { AccountObjectEntity } from './account.object.entity';
+import { PersonalObjectEntity } from './personal.object.entity';
+import { RequestObjectDto } from './request.object.dto';
 
 export class UserDoc extends Document {
   _id: mongoose.Schema.Types.ObjectId;

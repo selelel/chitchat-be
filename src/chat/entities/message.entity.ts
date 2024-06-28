@@ -1,14 +1,19 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
 import { Chat } from './chat.entity';
 import { User } from 'src/user/entities/user.entity';
+import { MessageContentObject } from '../interfaces/message.content_object';
 
 export type MessageDocument = HydratedDocument<Message>;
 
 @Schema({ timestamps: true })
 @ObjectType()
 export class Message {
+  @Prop({ type: mongoose.Schema.ObjectId, auto: true })
+  @Field(() => ID)
+  _id: mongoose.Schema.Types.ObjectId;
+
   @Field(() => Date)
   createdAt: Date;
 
@@ -20,9 +25,9 @@ export class Message {
   @Field(() => User)
   userId: User;
 
-  @Prop({ type: String })
-  @Field()
-  content: string;
+  @Prop({ type: MessageContentObject, required: true })
+  @Field(() => MessageContentObject)
+  content: MessageContentObject;
 
   @Prop({ type: Date })
   @Field(() => Date)

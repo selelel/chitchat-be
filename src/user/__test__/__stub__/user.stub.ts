@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { UserDoc } from '../../dto/user-document.interface';
-import { User } from 'src/user/entities';
+import { User } from 'src/user/entities/user.entity';
 
 const someObjectId = new Types.ObjectId();
 
