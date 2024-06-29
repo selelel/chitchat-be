@@ -8,7 +8,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   app.use(
     '/graphql',
-    graphqlUploadExpress({ maxFileSize: 1000000, maxFiles: 5 }),
+    graphqlUploadExpress({ maxFileSize: 5000000, maxFiles: 5 }),
   );
   await app.listen(configService.get('PORT'));
 }

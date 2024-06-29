@@ -6,7 +6,7 @@ import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { Message } from './entities/message.entity';
 import { GetConversation } from './dto/conversation.dto';
-import { GraphQLUpload, Upload } from 'graphql-upload-ts';
+import { FileUpload, GraphQLUpload, Upload } from 'graphql-upload-ts';
 import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
 
 @Resolver()
@@ -19,14 +19,18 @@ export class ChatResolver {
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async uploadImageOnMessage(
-    @Args({ name: 'image', type: () => GraphQLUpload }) image: Upload,
+    @Args({ name: 'image', type: () => GraphQLUpload }) image: FileUpload,
     @Args('messageId') messageId: string,
     @GqlCurrentUser() { user },
   ): Promise<boolean> {
     try {
-      console.log(await image, messageId);
+      const stream = image.createReadStream();
+      console.log(image);
+      const link = await this.chatService.appendImageOnMessage(messageId, [
+        stream,
+      ]);
+      console.log(link.content);
 
-      // await this.chatService.appendImageOnMessage(messageId, []);
       return true;
     } catch (error) {
       return error;

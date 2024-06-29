@@ -11,6 +11,7 @@ import { ConflictError, UnauthorizedError } from 'src/utils/error/global.error';
 import { UserService } from 'src/user/user.service';
 import { MessageContentInput } from './dto/message.content_input';
 import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
+import { Readable } from 'node:stream';
 
 @Injectable()
 export class ChatService {
@@ -127,11 +128,18 @@ export class ChatService {
 
   async appendImageOnMessage(
     messageId: string,
-    images: Buffer[],
+    streams: Readable[],
   ): Promise<Message> {
     try {
+      console.log(streams);
+      const images = await this.fileUploadService.uploadFileMessages(
+        [...streams],
+        messageId,
+        'heic',
+      );
+      console.log(images);
       const message = await this.messageModel.findByIdAndUpdate(messageId, {
-        $push: { 'content.images': images },
+        'content.images': images,
       });
 
       return message;
