@@ -4,7 +4,4 @@ import { Field, InputType } from '@nestjs/graphql';
 export class MessageContentInput {
   @Field(() => String, { nullable: true })
   text?: string;
-
-  @Field(() => [String], { nullable: true })
-  images?: string[];
 }

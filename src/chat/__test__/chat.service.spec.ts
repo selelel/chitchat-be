@@ -13,6 +13,8 @@ import {
 } from '@nestjs/mongoose';
 import { Message, MessageSchema } from '../entities/message.entity';
 import { UserStub } from 'src/user/__test__/__stub__/user.stub';
+import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
+import { BucketsService } from 'src/utils/utils_modules/third_party/buckets.service';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let __id__: any;
@@ -42,7 +44,7 @@ describe('Testing the PostService', () => {
           { name: User.name, schema: UserSchema },
         ]),
       ],
-      providers: [ChatService, UserService],
+      providers: [ChatService, UserService, FileUploadService, BucketsService],
     }).compile();
 
     service = module.get<ChatService>(ChatService);
@@ -54,8 +56,8 @@ describe('Testing the PostService', () => {
   });
 
   afterAll(async () => {
-    await connection.dropDatabase();
     await MongoMemoryServerSingleton.stopInstance();
+    await connection.dropDatabase();
     await connection.close();
   });
 

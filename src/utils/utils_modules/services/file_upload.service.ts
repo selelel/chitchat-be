@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import * as sharp from 'sharp';
 import { BucketsService } from '../third_party/buckets.service';
 import { Folders } from '../third_party/dto/bucket.folder';
 import { UUID } from 'mongodb';
+import Jimp from 'jimp';
 @Injectable()
 export class FileUploadService {
   constructor(private bucketService: BucketsService) {}
@@ -43,11 +43,15 @@ export class FileUploadService {
   }
 
   private async processBase64Image(base64Image: string): Promise<Buffer> {
-    const buffer = Buffer.from(base64Image, 'base64');
+    let buffer: Buffer = Buffer.from(base64Image, 'base64');
     try {
-      const resizedImageBuffer = await sharp(buffer).resize(1000).toBuffer();
+      const resizedImageBuffer = (await Jimp.read(buffer)).quality(1000);
 
-      return resizedImageBuffer;
+      resizedImageBuffer.getBuffer(Jimp.MIME_PNG, async (error, buffered) => {
+        buffer = buffered;
+      });
+
+      return buffer;
     } catch (error) {
       console.error('Error processing image:', error);
       throw error;

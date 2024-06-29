@@ -60,8 +60,6 @@ export class ChatService {
     return privateRoom;
   }
 
-  // Todo create endpoints here
-
   async createUsersRoom(userIds: string[]): Promise<Chat> {
     const users = [];
 
@@ -108,16 +106,6 @@ export class ChatService {
     messagePayload: MessageContentInput,
   ): Promise<Message> {
     try {
-      if (messagePayload.images) {
-        const filenames = await this.fileUploadService.uploadFileMessages(
-          [...messagePayload.images],
-          chatId,
-          'heic',
-        );
-        delete messagePayload.images;
-        messagePayload.images = filenames;
-      }
-
       const chat = await this.chatModel.findOne({ _id: chatId });
       if (!chat) throw new UnauthorizedError();
 
@@ -131,6 +119,21 @@ export class ChatService {
       await message.save();
 
       await chat.updateOne({ $push: { messages: message._id } });
+      return message;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async appendImageOnMessage(
+    messageId: string,
+    images: Buffer[],
+  ): Promise<Message> {
+    try {
+      const message = await this.messageModel.findByIdAndUpdate(messageId, {
+        $push: { 'content.images': images },
+      });
+
       return message;
     } catch (error) {
       return error;
@@ -163,7 +166,6 @@ export class ChatService {
       if (!message) throw new ConflictError('Chat not found');
       return true;
     } catch (error) {
-      // BOGO APPROACH
       throw error;
     }
   }
