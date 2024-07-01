@@ -6,7 +6,7 @@ import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { Message } from './entities/message.entity';
 import { GetConversation } from './dto/conversation.dto';
-import { FileUpload, GraphQLUpload, Upload } from 'graphql-upload-ts';
+import { FileUpload, GraphQLUpload } from 'graphql-upload-ts';
 import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
 
 @Resolver()
@@ -16,6 +16,7 @@ export class ChatResolver {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
+  //! This is full of bug and spaghetti code
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async uploadImageOnMessage(
@@ -24,16 +25,19 @@ export class ChatResolver {
     @GqlCurrentUser() { user },
   ): Promise<boolean> {
     try {
+      await this.chatService.verifyUserInMessage(messageId, user.payload._id);
       const stream = image.createReadStream();
-      console.log(image);
       const link = await this.chatService.appendImageOnMessage(messageId, [
         stream,
       ]);
-      console.log(link.content);
+
+      if (!link) {
+        throw new Error();
+      }
 
       return true;
     } catch (error) {
-      return error;
+      return false;
     }
   }
   @Mutation(() => Chat)

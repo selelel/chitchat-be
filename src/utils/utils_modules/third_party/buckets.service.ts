@@ -26,7 +26,7 @@ export class BucketsService {
 
       return uploadResult;
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 

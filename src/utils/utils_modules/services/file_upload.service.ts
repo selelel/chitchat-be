@@ -13,11 +13,14 @@ export class FileUploadService {
     streams: Readable[],
     filename: string,
     type: string,
-  ): Promise<string[]> {
+  ): Promise<string[] | boolean> {
     try {
       const filenames = [];
       const buffers = await this.processMultipleBase64Images([...streams]);
       console.log(buffers);
+      if (!buffers) {
+        throw new Error();
+      }
       for (let i = 0; i < buffers.length; i++) {
         const id = new UUID();
         try {
@@ -30,11 +33,11 @@ export class FileUploadService {
           filenames.push(`${process.env.AWS_BASE_LINK}/messages/${place}`);
           return filenames;
         } catch (error) {
-          console.log(error);
+          return false;
         }
       }
     } catch (error) {
-      return error;
+      return false;
     }
   }
 
@@ -45,6 +48,10 @@ export class FileUploadService {
       const buffers = [];
       for (const stream of streams) {
         const outputPath = await this.processBase64Image(stream);
+
+        if (!outputPath) {
+          throw new Error();
+        }
         buffers.push(outputPath);
       }
       return buffers;
@@ -53,20 +60,20 @@ export class FileUploadService {
     }
   }
 
-  private async processBase64Image(stream: Readable): Promise<Buffer> {
-    let buffer: Buffer = await this.streamToBuffer(stream);
+  private async processBase64Image(
+    stream: Readable,
+  ): Promise<Buffer | boolean> {
+    const buffer: Buffer = await this.streamToBuffer(stream);
     try {
       const resizedImageBuffer = await Jimp.read(buffer);
-
       resizedImageBuffer.resize(1000, Jimp.AUTO).quality(50);
-
       const resizedBuffer = await resizedImageBuffer.getBufferAsync(
-        Jimp.MIME_PNG,
+        resizedImageBuffer.getMIME(),
       );
+
       return resizedBuffer;
     } catch (error) {
-      console.error('Error processing image:', error);
-      throw error;
+      return false;
     }
   }
 

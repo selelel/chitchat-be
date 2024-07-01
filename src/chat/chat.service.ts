@@ -69,7 +69,7 @@ export class ChatService {
         const user = await this.isChatExisted(userId);
         users.push(user._id);
       } catch (error) {
-        console.log(error);
+        throw new Error(error);
       }
     }
 
@@ -129,22 +129,24 @@ export class ChatService {
   async appendImageOnMessage(
     messageId: string,
     streams: Readable[],
-  ): Promise<Message> {
+  ): Promise<Message | boolean> {
     try {
-      console.log(streams);
       const images = await this.fileUploadService.uploadFileMessages(
         [...streams],
         messageId,
         'heic',
       );
-      console.log(images);
+      if (!images) {
+        throw new ConflictError('Error processing image');
+      }
+      console.log(images, 'Hello');
       const message = await this.messageModel.findByIdAndUpdate(messageId, {
         'content.images': images,
       });
 
       return message;
     } catch (error) {
-      return error;
+      return false;
     }
   }
 
@@ -175,6 +177,18 @@ export class ChatService {
       return true;
     } catch (error) {
       throw error;
+    }
+  }
+
+  async verifyUserInMessage(messageId: string, userId: string) {
+    try {
+      const userMessage = this.messageModel.findById(messageId, { userId });
+
+      if (!userMessage) {
+        throw new ConflictError('Message with user id not found');
+      }
+    } catch (error) {
+      return error;
     }
   }
 }
