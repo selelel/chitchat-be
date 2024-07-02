@@ -4,66 +4,66 @@ import { Folders } from '../third_party/dto/bucket.folder';
 import { UUID } from 'mongodb';
 import Jimp from 'jimp';
 import { Readable } from 'node:stream';
+import { ConflictError } from 'src/utils/error/graphql.error';
 
 @Injectable()
 export class FileUploadService {
   constructor(private bucketService: BucketsService) {}
 
   async uploadFileMessages(
-    streams: Readable[],
+    buffers: Buffer[],
     filename: string,
     type: string,
   ): Promise<string[] | boolean> {
     try {
       const filenames = [];
-      const buffers = await this.processMultipleBase64Images([...streams]);
-      console.log(buffers);
-      if (!buffers) {
-        throw new Error();
+      const buffered = await this.processMultipleBase64Images(buffers);
+
+      if (!buffered) {
+        throw new ConflictError('Error processing image');
       }
-      for (let i = 0; i < buffers.length; i++) {
+      for (let i = 0; i < buffered.length; i++) {
         const id = new UUID();
         try {
           const place = `message-${filename}-${id}.${type}`;
           await this.bucketService.uploadFile(
-            buffers[i],
+            buffered[i],
             place,
             Folders.MESSAGES,
           );
           filenames.push(`${process.env.AWS_BASE_LINK}/messages/${place}`);
-          return filenames;
         } catch (error) {
-          return false;
+          return error;
         }
       }
+
+      console.log(filenames);
+      return filenames;
     } catch (error) {
       return false;
     }
   }
 
   private async processMultipleBase64Images(
-    streams: Readable[],
+    buffers: Buffer[],
   ): Promise<Buffer[]> {
     try {
-      const buffers = [];
-      for (const stream of streams) {
-        const outputPath = await this.processBase64Image(stream);
+      const buffered = [];
+      for (const buffer of buffers) {
+        const outputPath = await this.processBase64Image(buffer);
 
         if (!outputPath) {
           throw new Error();
         }
-        buffers.push(outputPath);
+        buffered.push(outputPath);
       }
-      return buffers;
+      return buffered;
     } catch (error) {
       return error;
     }
   }
 
-  private async processBase64Image(
-    stream: Readable,
-  ): Promise<Buffer | boolean> {
-    const buffer: Buffer = await this.streamToBuffer(stream);
+  private async processBase64Image(buffer: Buffer): Promise<Buffer | boolean> {
     try {
       const resizedImageBuffer = await Jimp.read(buffer);
       resizedImageBuffer.resize(1000, Jimp.AUTO).quality(50);

@@ -11,6 +11,7 @@ import { UserService } from 'src/user/user.service';
 import { AuthService } from 'src/auth/auth.service';
 import { BucketsService } from 'src/utils/utils_modules/third_party/buckets.service';
 import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
+import { ChatController } from './chat.controller';
 
 @Module({
   imports: [
@@ -30,5 +31,6 @@ import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.
     FileUploadService,
     BucketsService,
   ],
+  controllers: [ChatController],
 })
 export class ChatModule {}

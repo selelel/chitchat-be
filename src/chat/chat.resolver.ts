@@ -6,40 +6,35 @@ import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { Message } from './entities/message.entity';
 import { GetConversation } from './dto/conversation.dto';
-import { FileUpload, GraphQLUpload } from 'graphql-upload-ts';
-import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
 
 @Resolver()
 export class ChatResolver {
-  constructor(
-    private readonly chatService: ChatService,
-    private readonly fileUploadService: FileUploadService,
-  ) {}
+  constructor(private readonly chatService: ChatService) {}
 
   //! This is full of bug and spaghetti code
-  @Mutation(() => Boolean)
-  @UseGuards(GqlAuthGuard)
-  async uploadImageOnMessage(
-    @Args({ name: 'image', type: () => GraphQLUpload }) image: FileUpload,
-    @Args('messageId') messageId: string,
-    @GqlCurrentUser() { user },
-  ): Promise<boolean> {
-    try {
-      await this.chatService.verifyUserInMessage(messageId, user.payload._id);
-      const stream = image.createReadStream();
-      const link = await this.chatService.appendImageOnMessage(messageId, [
-        stream,
-      ]);
+  // @Mutation(() => Boolean)
+  // @UseGuards(GqlAuthGuard)
+  // async uploadImageOnMessage(
+  //   @Args({ name: 'image', type: () => GraphQLUpload }) image: FileUpload,
+  //   @Args('messageId') messageId: string,
+  //   @GqlCurrentUser() { user },
+  // ): Promise<boolean> {
+  //   try {
+  //     await this.chatService.verifyUserInMessage(messageId, user.payload._id);
+  //     const stream = image.createReadStream();
+  //     const link = await this.chatService.appendImageOnMessage(messageId, [
+  //       stream,
+  //     ]);
 
-      if (!link) {
-        throw new Error();
-      }
+  //     if (!link) {
+  //       throw new Error();
+  //     }
 
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
+  //     return true;
+  //   } catch (error) {
+  //     return false;
+  //   }
+  // }
   @Mutation(() => Chat)
   @UseGuards(GqlAuthGuard)
   async createChat(

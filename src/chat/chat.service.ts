@@ -11,7 +11,6 @@ import { ConflictError, UnauthorizedError } from 'src/utils/error/global.error';
 import { UserService } from 'src/user/user.service';
 import { MessageContentInput } from './dto/message.content_input';
 import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
-import { Readable } from 'node:stream';
 
 @Injectable()
 export class ChatService {
@@ -128,24 +127,27 @@ export class ChatService {
 
   async appendImageOnMessage(
     messageId: string,
-    streams: Readable[],
+    buffers: Buffer[],
   ): Promise<Message | boolean> {
     try {
       const images = await this.fileUploadService.uploadFileMessages(
-        [...streams],
+        buffers,
         messageId,
-        'heic',
+        'png',
       );
+
+      console.log(images);
       if (!images) {
         throw new ConflictError('Error processing image');
       }
-      console.log(images, 'Hello');
+
       const message = await this.messageModel.findByIdAndUpdate(messageId, {
         'content.images': images,
       });
 
       return message;
     } catch (error) {
+      console.log(error);
       return false;
     }
   }
@@ -181,14 +183,10 @@ export class ChatService {
   }
 
   async verifyUserInMessage(messageId: string, userId: string) {
-    try {
-      const userMessage = this.messageModel.findById(messageId, { userId });
+    const userMessage = await this.messageModel.findById(messageId, { userId });
 
-      if (!userMessage) {
-        throw new ConflictError('Message with user id not found');
-      }
-    } catch (error) {
-      return error;
+    if (!userMessage) {
+      throw new ConflictError('Message with user id not found');
     }
   }
 }
