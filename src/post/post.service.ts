@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument } from './entity/post.schema';
 import { Model } from 'mongoose';
@@ -12,6 +12,7 @@ import { PostContentObject } from './interfaces/post.content_object';
 import { CommentContentObject } from './interfaces/comment.content_object';
 import { ObjectId } from 'mongodb';
 import { PostOptionInput } from './dto/post.option_input';
+import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
 
 @Injectable()
 export class PostService {
@@ -19,7 +20,8 @@ export class PostService {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @InjectModel(Comments.name) private commentModel: Model<CommentsDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private usersService: UserService,
+    private readonly usersService: UserService,
+    private readonly fileUploadService: FileUploadService,
   ) {}
 
   async getUserFollowingPost(
@@ -216,11 +218,46 @@ export class PostService {
     }
   }
 
+  async appendImageOnPost(
+    postId: string,
+    buffers: Buffer[],
+  ): Promise<Post | boolean> {
+    try {
+      const images = await this.fileUploadService.uploadFileImagePost(
+        buffers,
+        postId,
+        'png',
+      );
+
+      if (!images) {
+        throw new ConflictError('Error processing image');
+      }
+
+      const post = await this.postModel.findByIdAndUpdate(postId, {
+        'content.images': images,
+      });
+
+      return post;
+    } catch (error) {
+      return false;
+    }
+  }
+
   private async doesPostExist(postId: any): Promise<PostDocument> {
     const post = await this.postModel.findById(postId);
     if (!post) {
       throw new ConflictError('Post not Found!');
     }
+    return post;
+  }
+
+  async isUserAuthor(postId: string, userId: string): Promise<PostDocument> {
+    const post = await this.postModel.findOne({ _id: postId, author: userId });
+
+    if (!post) {
+      throw new ConflictException('User is not the author of the post!');
+    }
+
     return post;
   }
 

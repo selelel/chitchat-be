@@ -5,8 +5,8 @@ export class PostContentObject {
   @Field(() => String)
   description?: string;
 
-  @Field(() => [String], { nullable: true })
-  image?: string[];
+  @Field(() => [String], { nullable: true, defaultValue: null })
+  images?: string[];
 
   @Field({ nullable: true })
   text?: string;
