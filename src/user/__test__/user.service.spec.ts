@@ -3,9 +3,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Model, Connection } from 'mongoose';
 import { User, UserSchema } from '../entities/user.entity';
 import { UserService } from '../user.service';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { getConnectionToken } from '@nestjs/mongoose';
 import { UserStub } from './__stub__/user.stub';
+import { MongoMemoryServerSingleton } from 'src/utils/__test__/__server__/memory.server';
 
 let __id__: any;
 let __id2__: any;
@@ -13,12 +13,10 @@ let __id2__: any;
 describe('Testing the UserService', () => {
   let service: UserService;
   let model: Model<User>;
-  let mongod: MongoMemoryServer;
   let connection: Connection;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
-    const uri = mongod.getUri();
+    const uri = await MongoMemoryServerSingleton.getInstance();
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         MongooseModule.forRoot(uri),
@@ -34,8 +32,8 @@ describe('Testing the UserService', () => {
 
   afterAll(async () => {
     await connection.dropDatabase();
+    await MongoMemoryServerSingleton.stopInstance();
     await connection.close();
-    await mongod.stop();
   });
 
   it('Should be defined', () => {

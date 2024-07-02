@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { sign, verify, decode } from 'jsonwebtoken';
-import { JWT } from 'src/utils/constant';
 import * as bcrypt from 'bcryptjs';
-import { User } from 'src/user/entities';
 import { LoginResponse } from './dto/login.response';
 import { LoginUserInput } from './input/login.input';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,7 +9,9 @@ import mongoose, { Model } from 'mongoose';
 import {
   ForbiddenError,
   UnauthorizedError,
-} from 'src/core/error/graphql.error';
+} from 'src/utils/error/graphql.error';
+import { User } from 'src/user/entities/user.entity';
+import { JWT } from 'src/utils/constant/constant';
 
 @Injectable()
 export class AuthService {
@@ -123,5 +123,3 @@ export class AuthService {
     }
   }
 }
-
-// TODO delete accesstoken in jwt
