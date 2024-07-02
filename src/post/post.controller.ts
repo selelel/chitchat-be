@@ -43,7 +43,7 @@ export class PostController {
       }, []) as Buffer[];
 
       const link = await this.postService.appendImageOnPost(postId, buffers);
-
+      console.log(link);
       return link;
     } catch (error) {
       return error;

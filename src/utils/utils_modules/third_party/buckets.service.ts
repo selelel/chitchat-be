@@ -41,7 +41,7 @@ export class BucketsService {
 
       return deletedFile;
     } catch (error) {
-      console.log(error);
+      return error;
     }
   }
 }

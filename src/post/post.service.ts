@@ -129,6 +129,10 @@ export class PostService {
 
       const post = await this.postModel.findByIdAndDelete(postId);
 
+      if (post.content.images) {
+        await this.fileUploadService.removeFileImage(post.content?.images);
+      }
+
       const user = await this.userModel.findByIdAndUpdate(
         userId,
         {
@@ -233,9 +237,13 @@ export class PostService {
         throw new ConflictError('Error processing image');
       }
 
-      const post = await this.postModel.findByIdAndUpdate(postId, {
-        'content.images': images,
-      });
+      const post = await this.postModel.findByIdAndUpdate(
+        postId,
+        {
+          'content.images': images,
+        },
+        { new: true },
+      );
 
       return post;
     } catch (error) {

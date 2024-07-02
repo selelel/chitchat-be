@@ -125,6 +125,28 @@ export class ChatService {
     }
   }
 
+  async unsentMessage(messageId: string): Promise<Message> {
+    try {
+      const message = await this.messageModel.findById(messageId);
+      if (!message) throw new ConflictError('Message not found');
+
+      if (message.content.images) {
+        await this.fileUploadService.removeFileImage(message.content?.images);
+      }
+
+      await message.updateOne(
+        {
+          content: false,
+        },
+        { new: true },
+      );
+
+      return message;
+    } catch (error) {
+      return error;
+    }
+  }
+
   async appendImageOnMessage(
     messageId: string,
     buffers: Buffer[],

@@ -9,6 +9,26 @@ import { ConflictError } from 'src/utils/error/graphql.error';
 @Injectable()
 export class FileUploadService {
   constructor(private bucketService: BucketsService) {}
+  async removeFileImage(filename: string[]): Promise<string[] | boolean> {
+    try {
+      filename.forEach(async (d) => {
+        const key = d.replace(`${process.env.AWS_BASE_LINK}/`, '');
+        await this.bucketService.deletePublicFile(key);
+      });
+    } catch (error) {
+      return error;
+    }
+  }
+  async removeFileImagMessage(filename: string[]): Promise<string[] | boolean> {
+    try {
+      filename.forEach(async (d) => {
+        const key = d.replace(`${process.env.AWS_BASE_LINK}/`, '');
+        await this.bucketService.deletePublicFile(key);
+      });
+    } catch (error) {
+      return error;
+    }
+  }
 
   async uploadFileImagePost(
     buffers: Buffer[],
@@ -38,8 +58,6 @@ export class FileUploadService {
           return error;
         }
       }
-
-      console.log(filenames);
       return filenames;
     } catch (error) {
       return error;
