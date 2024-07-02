@@ -9,6 +9,60 @@ import { ConflictError } from 'src/utils/error/graphql.error';
 @Injectable()
 export class FileUploadService {
   constructor(private bucketService: BucketsService) {}
+  async removeFileImage(filename: string[]): Promise<string[] | boolean> {
+    try {
+      filename.forEach(async (d) => {
+        const key = d.replace(`${process.env.AWS_BASE_LINK}/`, '');
+        await this.bucketService.deletePublicFile(key);
+      });
+    } catch (error) {
+      return error;
+    }
+  }
+  async removeFileImagMessage(filename: string[]): Promise<string[] | boolean> {
+    try {
+      filename.forEach(async (d) => {
+        const key = d.replace(`${process.env.AWS_BASE_LINK}/`, '');
+        await this.bucketService.deletePublicFile(key);
+      });
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async uploadFileImagePost(
+    buffers: Buffer[],
+    filename: string,
+    type: string,
+  ): Promise<string[] | boolean> {
+    try {
+      const filenames = [];
+      const buffered = await this.processMultipleBase64Images(buffers);
+
+      if (!buffered) {
+        throw new ConflictError('Error processing image');
+      }
+      for (let i = 0; i < buffered.length; i++) {
+        const id = new UUID();
+        try {
+          const place = `post-${filename}-${id}.${type}`;
+          await this.bucketService.uploadFile(
+            buffered[i],
+            place,
+            Folders.POSTS,
+          );
+          filenames.push(
+            `${process.env.AWS_BASE_LINK}/${Folders.POSTS}/${place}`,
+          );
+        } catch (error) {
+          return error;
+        }
+      }
+      return filenames;
+    } catch (error) {
+      return error;
+    }
+  }
 
   async uploadFileMessages(
     buffers: Buffer[],
@@ -31,7 +85,9 @@ export class FileUploadService {
             place,
             Folders.MESSAGES,
           );
-          filenames.push(`${process.env.AWS_BASE_LINK}/messages/${place}`);
+          filenames.push(
+            `${process.env.AWS_BASE_LINK}/${Folders.MESSAGES}/${place}`,
+          );
         } catch (error) {
           return error;
         }

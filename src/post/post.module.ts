@@ -7,6 +7,9 @@ import { UserService } from 'src/user/user.service';
 import { Comments, CommentsSchema } from './entity/comments.schema';
 import { PostResolver } from './post.resolver';
 import { AuthService } from 'src/auth/auth.service';
+import { PostController } from './post.controller';
+import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
+import { BucketsService } from 'src/utils/utils_modules/third_party/buckets.service';
 
 @Module({
   imports: [
@@ -16,6 +19,14 @@ import { AuthService } from 'src/auth/auth.service';
       { name: User.name, schema: UserSchema },
     ]),
   ],
-  providers: [PostService, UserService, PostResolver, AuthService],
+  providers: [
+    PostService,
+    UserService,
+    PostResolver,
+    AuthService,
+    FileUploadService,
+    BucketsService,
+  ],
+  controllers: [PostController],
 })
 export class PostModule {}

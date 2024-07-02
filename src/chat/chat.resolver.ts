@@ -11,30 +11,6 @@ import { GetConversation } from './dto/conversation.dto';
 export class ChatResolver {
   constructor(private readonly chatService: ChatService) {}
 
-  //! This is full of bug and spaghetti code
-  // @Mutation(() => Boolean)
-  // @UseGuards(GqlAuthGuard)
-  // async uploadImageOnMessage(
-  //   @Args({ name: 'image', type: () => GraphQLUpload }) image: FileUpload,
-  //   @Args('messageId') messageId: string,
-  //   @GqlCurrentUser() { user },
-  // ): Promise<boolean> {
-  //   try {
-  //     await this.chatService.verifyUserInMessage(messageId, user.payload._id);
-  //     const stream = image.createReadStream();
-  //     const link = await this.chatService.appendImageOnMessage(messageId, [
-  //       stream,
-  //     ]);
-
-  //     if (!link) {
-  //       throw new Error();
-  //     }
-
-  //     return true;
-  //   } catch (error) {
-  //     return false;
-  //   }
-  // }
   @Mutation(() => Chat)
   @UseGuards(GqlAuthGuard)
   async createChat(

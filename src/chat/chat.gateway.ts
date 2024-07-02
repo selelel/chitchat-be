@@ -40,7 +40,23 @@ export class ChatGateway implements OnModuleInit {
         user.payload._id,
         messageContent,
       );
-      this.server.emit('onListening', `${message._id}-${message.content.text}`);
+      this.server.emit(
+        'onListening',
+        `${message._id}-${message.content.toString()}`,
+      );
+    } catch (error) {
+      this.server.emit('onListening', error);
+    }
+  }
+
+  @SubscribeMessage('unsentDirectMessage')
+  async unsentDirectMessage(@MessageBody() { messageId }) {
+    try {
+      const message = await this.chatService.unsentMessage(messageId);
+      this.server.emit(
+        'onListening',
+        `Unsent ${message._id}-${message.content}`,
+      );
     } catch (error) {
       this.server.emit('onListening', error);
     }
