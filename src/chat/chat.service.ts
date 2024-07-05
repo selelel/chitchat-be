@@ -163,9 +163,13 @@ export class ChatService {
         throw new ConflictError('Error processing image');
       }
 
-      const message = await this.messageModel.findByIdAndUpdate(messageId, {
-        'content.images': images,
-      });
+      const message = await this.messageModel.findByIdAndUpdate(
+        messageId,
+        {
+          'content.images': images,
+        },
+        { new: true },
+      );
 
       return message;
     } catch (error) {
