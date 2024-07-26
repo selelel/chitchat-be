@@ -12,7 +12,4 @@ export class UserInput {
 
   @Field(() => String)
   public email: string;
-
-  // @Field(() => GraphQLJSONObject)
-  // public userInfo: AccountObjectEntity;
 }
