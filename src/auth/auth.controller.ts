@@ -14,6 +14,7 @@ export class AuthController {
 
 
 @Get('google/redirect')
+@UseGuards(GoogleOAuthGuard)
   async redirect() {
     return "WOMP_WOMP";
   }

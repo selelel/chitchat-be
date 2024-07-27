@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { JWT } from 'src/utils/constant/constant';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { GoogleStrategy } from './strategy/google.strategy';
 
 @Module({
   imports: [JwtModule.register({
@@ -18,7 +19,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
     PassportModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  providers: [AuthService, AuthResolver, UserService, JwtStrategy],
+  providers: [AuthService, AuthResolver, UserService, JwtStrategy, GoogleStrategy],
   exports:[JwtStrategy],
   controllers: [AuthController],
 })
