@@ -12,6 +12,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
+import { JwtPayload } from './dto/jwt_payload.dto';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,7 @@ export class AuthService {
     _id: mongoose.Schema.Types.ObjectId,
     password: string,
   ): Promise<string> {
-    const accesstoken = sign({ _id, password }, JWT.JWT_SUPER_SECRET_KEY, {
+    const accesstoken = sign({ _id, password }, JWT.JWT_SECRET_KEY, {
       expiresIn: JWT.JWT_EXPIRE_IN,
     });
     await this.updateUserToken(_id, accesstoken);
@@ -38,7 +39,24 @@ export class AuthService {
     }
     return new ForbiddenError();
   }
+  // async validate(jwt_payload: JwtPayload): Promise<boolean> {
+  //   const { _id } = jwt_payload;
+  //   const user = await this.usersService.findOneById(_id);
+  //   try {
+  //     if (
+  //       !user.token.includes(validate_token) &&
+  //       !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
+  //     ) {
+  //       throw new Error('Authentication Error');
+  //     }
+  //     return Promise.resolve(true);
+  //   } catch (error) {
+  //     this.removeUserToken(_id, validate_token);
+  //     return Promise.resolve(false);
+  //   }
+  // }
 
+  // ! Deprecated lol
   async validateToken(validate_token: string): Promise<boolean> {
     const {
       payload: { _id },

@@ -26,7 +26,7 @@ import { UtilModules } from './utils/utils_modules/utils.module';
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
-    }),
+      context: ({ req, res }) => ({ req, res }),}),
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,
   ],

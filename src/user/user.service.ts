@@ -200,6 +200,11 @@ export class UserService {
   }
 
   // Helper Function
+  async findById(_id?:string) {
+    const user = await this.userModel.findById(_id)
+    return user;
+  }
+
   async findAll(): Promise<User[]> {
     const allUser = await this.userModel.find().exec();
     return allUser;

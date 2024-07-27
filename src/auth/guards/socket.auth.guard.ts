@@ -1,10 +1,13 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { AuthService } from '../auth.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class SocketAuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
+export class SocketAuthGuard extends AuthGuard('jwt'){
+  constructor(private readonly authService: AuthService) {
+    super()
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx: Socket = context.switchToWs().getClient<Socket>();

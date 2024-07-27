@@ -8,6 +8,7 @@ import { LoginUserInput } from './input/login.input';
 import { UserInput } from 'src/user/dto/user.input.dto';
 import { User } from 'src/user/entities/user.entity';
 import { GqlCurrentUser } from './decorator/gql.current.user';
+import { JwtAuthGuard } from './guards/jwt.auth.guard';
 
 @Resolver()
 export class AuthResolver {
@@ -19,7 +20,8 @@ export class AuthResolver {
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
   async testAuth(@GqlCurrentUser() { user }: any) {
-    const allUser = await this.userService.findOneById(user.payload._id);
+    console.log(user);
+    const allUser = await this.userService.findOneById(user._id);
     return allUser;
   }
 
