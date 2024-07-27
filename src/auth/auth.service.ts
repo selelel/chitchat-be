@@ -39,24 +39,7 @@ export class AuthService {
     }
     return new ForbiddenError();
   }
-  // async validate(jwt_payload: JwtPayload): Promise<boolean> {
-  //   const { _id } = jwt_payload;
-  //   const user = await this.usersService.findOneById(_id);
-  //   try {
-  //     if (
-  //       !user.token.includes(validate_token) &&
-  //       !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
-  //     ) {
-  //       throw new Error('Authentication Error');
-  //     }
-  //     return Promise.resolve(true);
-  //   } catch (error) {
-  //     this.removeUserToken(_id, validate_token);
-  //     return Promise.resolve(false);
-  //   }
-  // }
 
-  // ! Deprecated lol
   async validateToken(validate_token: string): Promise<boolean> {
     const {
       payload: { _id },
@@ -68,7 +51,7 @@ export class AuthService {
         !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
       ) {
         throw new Error('Authentication Error');
-      }
+      } 
       return Promise.resolve(true);
     } catch (error) {
       this.removeUserToken(_id, validate_token);

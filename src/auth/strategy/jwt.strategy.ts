@@ -4,7 +4,6 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JWT } from 'src/utils/constant/constant';
 import { UserService } from 'src/user/user.service';
 import { JwtPayload } from '../dto/jwt_payload.dto';
-import { Request } from 'express';
 import { AuthService } from '../auth.service';
 
 @Injectable()
