@@ -9,13 +9,18 @@ export class AuthController {
   @Get('google/login')
   @UseGuards(GoogleOAuthGuard)
   async login() {
-    return "WOMP_WOMP";
+    return 'log_in';
   }
 
+  @Get('google/signin')
+  @UseGuards(GoogleOAuthGuard)
+  async signin() {
+    return 'signIn';
+  }
 
-@Get('google/redirect')
-@UseGuards(GoogleOAuthGuard)
+  @Get('google/redirect')
+  @UseGuards(GoogleOAuthGuard)
   async redirect() {
-    return "WOMP_WOMP";
+    return 'redirect';
   }
 }

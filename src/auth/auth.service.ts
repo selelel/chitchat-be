@@ -12,7 +12,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
-import { JwtPayload } from './dto/jwt_payload.dto';
+import { UserProfile } from './dto/google_payload.dto';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +30,14 @@ export class AuthService {
     });
     await this.updateUserToken(_id, accesstoken);
     return accesstoken;
+  }
+
+  async validateGoogleLogInUser(details: UserProfile): Promise<any> {
+      const user = await this.usersService.findEmail(details.email)
+      if(!user){
+        return await this.usersService.createGoggleAccountUser(details)
+      }
+      return user
   }
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -122,5 +130,11 @@ export class AuthService {
       console.error(`Error removing token for user ${userId}:`, error);
       throw error;
     }
+  }
+
+  async findUserById(_id){
+    const user = await this.userModel.findById(_id)
+    if(!user) throw new UnauthorizedError("User was not found.")
+    return user
   }
 }

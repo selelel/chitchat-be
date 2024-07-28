@@ -11,6 +11,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { Status } from './enums';
 import { BCRYPT } from 'src/utils/constant/constant';
+import { PassportProfile, UserProfile } from 'src/auth/dto/google_payload.dto';
 
 @Injectable()
 export class UserService {
@@ -26,6 +27,28 @@ export class UserService {
       const newUser = await this.userModel.create({
         ...user,
         password: await bcrypt.hash(user.password, BCRYPT.salt),
+      });
+
+      return newUser;
+    } catch (error) {
+      return error;
+    }
+  }
+  
+  async createGoggleAccountUser(details: UserProfile){
+    const {email, displayName, given_name, family_name} = details
+
+    const user_details = {
+      firstname: given_name,
+      lastname: family_name,
+      username: displayName.replace(" ", "_"),
+      hide_name: false
+    }
+
+    try {
+      const newUser = await this.userModel.create({
+        user: user_details,
+        email
       });
 
       return newUser;
@@ -199,8 +222,8 @@ export class UserService {
   }
 
   // Helper Function
-  async findById(_id?:string) {
-    const user = await this.userModel.findById(_id)
+  async findById(_id?: string) {
+    const user = await this.userModel.findById(_id);
     return user;
   }
 

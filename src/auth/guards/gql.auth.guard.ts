@@ -7,7 +7,7 @@ import { AuthGuard } from '@nestjs/passport';
 @Injectable()
 export class GqlAuthGuard extends AuthGuard('jwt') {
   constructor(private readonly authService: AuthService) {
-    super()
+    super();
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

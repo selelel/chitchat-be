@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Folders } from './dto/bucket.folder';
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 
 @Injectable()
 export class BucketsService {
@@ -24,7 +27,7 @@ export class BucketsService {
           Key: `${folder}/${filename}`,
           ACL: 'public-read',
           ContentDisposition: 'inline',
-        })
+        }),
       );
 
       return uploadResult;
@@ -39,7 +42,7 @@ export class BucketsService {
         new DeleteObjectCommand({
           Bucket: this.bucketName,
           Key: fileKey,
-        })
+        }),
       );
 
       return deletedFile;
