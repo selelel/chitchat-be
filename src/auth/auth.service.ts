@@ -13,6 +13,7 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
 import { UserProfile } from './dto/google_payload.dto';
+import { decodeJwt } from 'src/utils/helpers/jwt_helper' 
 
 @Injectable()
 export class AuthService {
@@ -69,10 +70,20 @@ export class AuthService {
 
   decodeToken(token: string): any {
     try {
+      console.log(decode(token));
       const decodedToken = decode(token, { complete: true });
       return decodedToken;
     } catch (error) {
       return null;
+    }
+  }
+
+  decodeTokenGoogleToken(token: string) {
+    try {
+      console.log(decodeJwt(token));
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return null; // Return null if verification fails
     }
   }
 

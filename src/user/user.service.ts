@@ -36,7 +36,7 @@ export class UserService {
   }
   
   async createGoggleAccountUser(details: UserProfile){
-    const {email, displayName, given_name, family_name} = details
+    const {email, displayName, given_name, family_name,} = details
 
     const user_details = {
       firstname: given_name,
