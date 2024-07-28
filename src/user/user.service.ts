@@ -36,12 +36,12 @@ export class UserService {
   }
   
   async createGoggleAccountUser(details: UserProfile){
-    const {email, displayName, given_name, family_name,} = details
+    const {email, displayName, given_name, family_name} = details
 
     const user_details = {
       firstname: given_name,
       lastname: family_name,
-      username: displayName.replace(" ", "_"),
+      username: displayName.replaceAll(" ", "_").toLowerCase(),
       hide_name: false
     }
 
@@ -223,6 +223,7 @@ export class UserService {
 
   // Helper Function
   async findById(_id?: string) {
+    console.log(_id);
     const user = await this.userModel.findById(_id);
     return user;
   }

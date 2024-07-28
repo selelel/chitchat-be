@@ -1,6 +1,7 @@
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleOAuthGuard } from './guards/google.auth.guard';
+import { GoogleCurrentUser } from './decorator/google.current.user';
 
 @Controller('auth')
 export class AuthController {
@@ -12,15 +13,10 @@ export class AuthController {
     return 'log_in';
   }
 
-  @Get('google/signin')
-  @UseGuards(GoogleOAuthGuard)
-  async signin() {
-    return 'signIn';
-  }
-
   @Get('google/redirect')
   @UseGuards(GoogleOAuthGuard)
-  async redirect() {
-    return {msg: 'ok'};
+  async redirect(@GoogleCurrentUser() data: any) {
+    console.log("redirect", data);
+    return {msg: `user: ${data.user.displayName} is logged in.`};
   }
 }

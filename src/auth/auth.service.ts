@@ -14,6 +14,7 @@ import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
 import { UserProfile } from './dto/google_payload.dto';
 import { decodeJwt } from 'src/utils/helpers/jwt_helper' 
+import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
 
 @Injectable()
 export class AuthService {
@@ -22,36 +23,28 @@ export class AuthService {
     private usersService: UserService,
   ) {}
 
-  async createAccessToken(
-    _id: mongoose.Schema.Types.ObjectId,
-    password: string,
-  ): Promise<string> {
-    const accesstoken = sign({ _id, password }, JWT.JWT_SECRET_KEY, {
+  async createAccessToken( payload : AccessTokenGeneration ): Promise<string> {
+    const { _id } = payload 
+    const accesstoken = sign(payload, JWT.JWT_SECRET_KEY, {
       expiresIn: JWT.JWT_EXPIRE_IN,
     });
     await this.updateUserToken(_id, accesstoken);
     return accesstoken;
   }
 
-  async validateGoogleLogInUser(details: UserProfile): Promise<any> {
+  async validateGoogleLogInUser(details: UserProfile): Promise<User> {
       const user = await this.usersService.findEmail(details.email)
       if(!user){
         return await this.usersService.createGoggleAccountUser(details)
       }
       return user
   }
-
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findEmail(email);
-    if (user && user.password === password) {
-      return user;
-    }
-    return new ForbiddenError();
-  }
+  // Random question
+  // What if the user decided to change his authentication with just jwt or vice versa, jwt to google?
 
   async validateToken(validate_token: string): Promise<boolean> {
     const {
-      payload: { _id },
+      payload: { _id, provider},
     } = this.decodeToken(validate_token);
     const user = await this.usersService.findOneById(_id);
     try {
@@ -70,7 +63,6 @@ export class AuthService {
 
   decodeToken(token: string): any {
     try {
-      console.log(decode(token));
       const decodedToken = decode(token, { complete: true });
       return decodedToken;
     } catch (error) {
@@ -87,7 +79,7 @@ export class AuthService {
     }
   }
 
-  async login(loginUserInput: LoginUserInput): Promise<LoginResponse> {
+  async login(loginUserInput: LoginUserInput, provider: "jwt" | "google" = "jwt"): Promise<LoginResponse> {
     try {
       const { email, password } = loginUserInput;
       const user = await this.usersService.findEmail(email);
@@ -96,10 +88,10 @@ export class AuthService {
         throw new UnauthorizedError();
       }
 
-      const accesstoken = await this.createAccessToken(user._id, password);
+      const accesstoken = await this.createAccessToken({_id: user._id, password, provider});
       return { accesstoken, user };
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -143,7 +135,7 @@ export class AuthService {
     }
   }
 
-  async findUserById(_id){
+  async findUserById(_id:string){
     const user = await this.userModel.findById(_id)
     if(!user) throw new UnauthorizedError("User was not found.")
     return user
