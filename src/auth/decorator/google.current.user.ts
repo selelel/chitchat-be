@@ -3,10 +3,12 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 export const GoogleCurrentUser = createParamDecorator(
   (data: unknown, context: ExecutionContext) => {
     const [req] = context.getArgs();
-    console.log(req);
+    let temp_token: string;
+    temp_token = req.user.token
+    delete req.user.token
     return {
       user: req.user,
-      token: req.token || req.user.token,
+      token: temp_token,
     };
   },
 )

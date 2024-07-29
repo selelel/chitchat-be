@@ -85,10 +85,10 @@ export class AuthService {
       const user = await this.usersService.findEmail(email);
 
       if (!(await bcrypt.compare(password, user.password)) || !user) {
-        throw new UnauthorizedError();
+        throw new UnauthorizedError("Error upon user login");
       }
 
-      const accesstoken = await this.createAccessToken({_id: user._id, password, provider});
+      const accesstoken = await this.createAccessToken({_id: user._id, provider});
       return { accesstoken, user };
     } catch (error) {
       throw error;
@@ -116,7 +116,7 @@ export class AuthService {
     },
   ): Promise<void> {
     try {
-      if (options?.removeAll) {
+      if (options.removeAll) {
         await this.userModel.findByIdAndUpdate(
           userId,
           { $set: { token: [] } },
@@ -130,8 +130,7 @@ export class AuthService {
         );
       }
     } catch (error) {
-      console.error(`Error removing token for user ${userId}:`, error);
-      throw error;
+      return error;
     }
   }
 

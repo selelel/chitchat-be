@@ -18,7 +18,6 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
     if (!token || !(await this.authService.validateToken(token))) {
       return false;
     }
-    console.log();
 
     req.user = this.authService.decodeToken(token);
     req.token = token;

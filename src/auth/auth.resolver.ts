@@ -9,6 +9,7 @@ import { UserInput } from 'src/user/dto/user.input.dto';
 import { User } from 'src/user/entities/user.entity';
 import { GqlCurrentUser } from './decorator/gql.current.user';
 import { JwtAuthGuard } from './guards/jwt.auth.guard';
+import { ChangePasswordInput } from './input/change.password.input';
 
 @Resolver()
 export class AuthResolver {
@@ -24,6 +25,17 @@ export class AuthResolver {
     const user_ = await this.userService.findById(user.payload._id);
     console.log(user_);
     return user_;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async changePassword(
+    @GqlCurrentUser() user: any, 
+    @Args('changePassword') { oldPass, newPass }: ChangePasswordInput) {
+    const {_id, provider } = user.user.payload
+
+    const status = await this.userService.userChangePassword(_id, oldPass, newPass, provider);
+    return !!status;
   }
 
   @Query(() => Boolean)
@@ -44,13 +56,25 @@ export class AuthResolver {
   @UseGuards(GqlAuthGuard)
   async logout(@GqlCurrentUser() { user, token }): Promise<boolean> {
     const decodedToken = await this.authService.decodeToken(token);
-    if (decodedToken.payload._id === user.payload._id) {
-      await this.authService.removeUserToken(decodedToken.payload._id, token);
-      return true;
-    } else {
-      return false;
+    try {
+      if (decodedToken.payload._id === user.payload._id) {
+        await this.authService.removeUserToken(decodedToken.payload._id, token, {removeAll: user.payload.provider === "google"});
+        return true;
+      }
+    } catch (error) {
+      return false
     }
+    
   }
+
+  // @Query(() => Boolean)
+  // @UseGuards(GqlAuthGuard)
+  // async logout(@GqlCurrentUser() { user, token }): Promise<boolean> {
+  //   console.log(this.authService.decodeToken(token), user, user.payload.provider === "google");
+    
+  //   await this.authService.removeUserToken(user._id, token, {removeAll: user.payload.provider === "google"});
+  //   return true;
+  // }
 
   @Mutation(() => LoginResponse)
   async login(@Args('loginUserInput') loginUserInput: LoginUserInput) {

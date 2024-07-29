@@ -221,6 +221,29 @@ export class UserService {
     }
   }
 
+  async userChangePassword(_id: string, oldPass: string | null, newPass: string, provider: "jwt" | "google" = "jwt"): Promise<Boolean> {
+    const user = await this.userModel.findById(_id);
+    try {
+      // Check if the old password is valid for non-Google users
+      const isPasswordValid = user.password === null && provider === 'google' 
+        || (oldPass && await bcrypt.compare(oldPass, user.password));
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedError("Invalid password.");
+      }
+
+      if(oldPass === newPass) {
+        throw new ConflictError("The new password cannot be the same as the old password. Please choose a different password.");
+      } 
+
+      // Update the password
+      await this.userModel.findByIdAndUpdate(_id, { password: await bcrypt.hash(newPass, BCRYPT.salt), token: [] });
+      return true;
+    } catch (e) {
+      throw e; // Propagate the error
+    }
+  }
+
   // Helper Function
   async findById(_id?: string) {
     console.log(_id);
