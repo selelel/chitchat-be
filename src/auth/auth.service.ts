@@ -12,6 +12,9 @@ import {
 } from 'src/utils/error/graphql.error';
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
+import { UserProfile } from './dto/google_payload.dto';
+import { decodeJwt } from 'src/utils/helpers/jwt_helper' 
+import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
 
 @Injectable()
 export class AuthService {
@@ -20,28 +23,28 @@ export class AuthService {
     private usersService: UserService,
   ) {}
 
-  async createAccessToken(
-    _id: mongoose.Schema.Types.ObjectId,
-    password: string,
-  ): Promise<string> {
-    const accesstoken = sign({ _id, password }, JWT.JWT_SUPER_SECRET_KEY, {
+  async createAccessToken( payload : AccessTokenGeneration ): Promise<string> {
+    const { _id } = payload 
+    const accesstoken = sign(payload, JWT.JWT_SECRET_KEY, {
       expiresIn: JWT.JWT_EXPIRE_IN,
     });
     await this.updateUserToken(_id, accesstoken);
     return accesstoken;
   }
 
-  async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findEmail(email);
-    if (user && user.password === password) {
-      return user;
-    }
-    return new ForbiddenError();
+  async validateGoogleLogInUser(details: UserProfile): Promise<User> {
+      const user = await this.usersService.findEmail(details.email)
+      if(!user){
+        return await this.usersService.createGoggleAccountUser(details)
+      }
+      return user
   }
+  // Random question
+  // What if the user decided to change his authentication with just jwt or vice versa, jwt to google?
 
   async validateToken(validate_token: string): Promise<boolean> {
     const {
-      payload: { _id },
+      payload: { _id, provider},
     } = this.decodeToken(validate_token);
     const user = await this.usersService.findOneById(_id);
     try {
@@ -50,7 +53,7 @@ export class AuthService {
         !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
       ) {
         throw new Error('Authentication Error');
-      }
+      } 
       return Promise.resolve(true);
     } catch (error) {
       this.removeUserToken(_id, validate_token);
@@ -67,19 +70,28 @@ export class AuthService {
     }
   }
 
-  async login(loginUserInput: LoginUserInput): Promise<LoginResponse> {
+  decodeTokenGoogleToken(token: string) {
+    try {
+      console.log(decodeJwt(token));
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      return null; // Return null if verification fails
+    }
+  }
+
+  async login(loginUserInput: LoginUserInput, provider: "jwt" | "google" = "jwt"): Promise<LoginResponse> {
     try {
       const { email, password } = loginUserInput;
       const user = await this.usersService.findEmail(email);
 
       if (!(await bcrypt.compare(password, user.password)) || !user) {
-        throw new UnauthorizedError();
+        throw new UnauthorizedError("Error upon user login");
       }
 
-      const accesstoken = await this.createAccessToken(user._id, password);
+      const accesstoken = await this.createAccessToken({_id: user._id, provider});
       return { accesstoken, user };
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -104,7 +116,7 @@ export class AuthService {
     },
   ): Promise<void> {
     try {
-      if (options?.removeAll) {
+      if (options.removeAll) {
         await this.userModel.findByIdAndUpdate(
           userId,
           { $set: { token: [] } },
@@ -118,8 +130,13 @@ export class AuthService {
         );
       }
     } catch (error) {
-      console.error(`Error removing token for user ${userId}:`, error);
-      throw error;
+      return error;
     }
+  }
+
+  async findUserById(_id:string){
+    const user = await this.userModel.findById(_id)
+    if(!user) throw new UnauthorizedError("User was not found.")
+    return user
   }
 }

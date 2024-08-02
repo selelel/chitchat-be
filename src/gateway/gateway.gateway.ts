@@ -64,6 +64,7 @@ export class Gateway
 
   async notifyFriends(_id: string, message: string) {
     const userRecord = await this.userService.findOneById(_id);
+    console.log(_id);
     const { followers, following } = userRecord;
     [...followers, ...following].forEach((friend) => {
       this.server.emit(friend.toString(), message);

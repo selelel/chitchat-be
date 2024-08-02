@@ -42,9 +42,8 @@ export class ChatGateway implements OnModuleInit {
       );
       this.server.emit(
         'onListening',
-        `${message._id}-${message.content.toString()}`,
+        `${message._id}-${message.content.text.toString()}`,
       );
-
     } catch (error) {
       this.server.emit('onListening', error);
     }

@@ -28,7 +28,7 @@ export class User {
   @Field(() => AccountObjectEntity)
   userInfo: AccountObjectEntity;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String })
   password: string;
 
   @Prop({ type: String, required: true })

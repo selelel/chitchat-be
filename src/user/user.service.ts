@@ -11,6 +11,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { Status } from './enums';
 import { BCRYPT } from 'src/utils/constant/constant';
+import { PassportProfile, UserProfile } from 'src/auth/dto/google_payload.dto';
 
 @Injectable()
 export class UserService {
@@ -19,7 +20,6 @@ export class UserService {
   async createUser(user: UserInput): Promise<User> {
     try {
       const userExist = await this.userModel.findOne({ email: user.email });
-
       if (userExist) {
         throw new ConflictError('User with this email already exists');
       }
@@ -27,6 +27,28 @@ export class UserService {
       const newUser = await this.userModel.create({
         ...user,
         password: await bcrypt.hash(user.password, BCRYPT.salt),
+      });
+
+      return newUser;
+    } catch (error) {
+      return error;
+    }
+  }
+  
+  async createGoggleAccountUser(details: UserProfile){
+    const {email, displayName, given_name, family_name} = details
+
+    const user_details = {
+      firstname: given_name,
+      lastname: family_name,
+      username: displayName.replaceAll(" ", "_").toLowerCase(),
+      hide_name: false
+    }
+
+    try {
+      const newUser = await this.userModel.create({
+        user: user_details,
+        email
       });
 
       return newUser;
@@ -199,7 +221,36 @@ export class UserService {
     }
   }
 
+  async userChangePassword(_id: string, oldPass: string | null, newPass: string, provider: "jwt" | "google" = "jwt"): Promise<Boolean> {
+    const user = await this.userModel.findById(_id);
+    try {
+      // Check if the old password is valid for non-Google users
+      const isPasswordValid = user.password === null && provider === 'google' 
+        || (oldPass && await bcrypt.compare(oldPass, user.password));
+
+      if (!isPasswordValid) {
+        throw new UnauthorizedError("Invalid password.");
+      }
+
+      if(oldPass === newPass) {
+        throw new ConflictError("The new password cannot be the same as the old password. Please choose a different password.");
+      } 
+
+      // Update the password
+      await this.userModel.findByIdAndUpdate(_id, { password: await bcrypt.hash(newPass, BCRYPT.salt), token: [] });
+      return true;
+    } catch (e) {
+      throw e; // Propagate the error
+    }
+  }
+
   // Helper Function
+  async findById(_id?: string) {
+    console.log(_id);
+    const user = await this.userModel.findById(_id);
+    return user;
+  }
+
   async findAll(): Promise<User[]> {
     const allUser = await this.userModel.find().exec();
     return allUser;

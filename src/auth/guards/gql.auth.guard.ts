@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { AuthService } from '../auth.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class GqlAuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
+export class GqlAuthGuard extends AuthGuard('jwt') {
+  constructor(private readonly authService: AuthService) {
+    super();
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = GqlExecutionContext.create(context);

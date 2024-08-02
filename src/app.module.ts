@@ -10,6 +10,7 @@ import { UserModule } from './user/user.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { PostModule } from './post/post.module';
 import { UtilModules } from './utils/utils_modules/utils.module';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
@@ -23,9 +24,11 @@ import { UtilModules } from './utils/utils_modules/utils.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    PassportModule.register({ session:true }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
+      context: ({ req, res }) => ({ req, res }),
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,

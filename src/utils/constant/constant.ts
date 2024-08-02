@@ -3,7 +3,7 @@ export const USER_PROVIDER = {
   userInject: 'DATABASE_CONNECTION',
 };
 export const JWT = {
-  JWT_SUPER_SECRET_KEY: '_selelel',
+  JWT_SECRET_KEY: '_selelel',
   JWT_EXPIRE_IN: '1day',
 };
 
