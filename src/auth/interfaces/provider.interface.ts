@@ -1,3 +1,3 @@
 export type AuthProvider = {
-    provider: "jwt" | "google";
-}
+  provider: 'jwt' | 'google';
+};

@@ -24,7 +24,7 @@ import { PassportModule } from '@nestjs/passport';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    PassportModule.register({ session:true }),
+    PassportModule.register({ session: true }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),

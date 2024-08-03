@@ -13,7 +13,7 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
 import { UserProfile } from './dto/google_payload.dto';
-import { decodeJwt } from 'src/utils/helpers/jwt_helper' 
+import { decodeJwt } from 'src/utils/helpers/jwt_helper';
 import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
 
 @Injectable()
@@ -23,8 +23,8 @@ export class AuthService {
     private usersService: UserService,
   ) {}
 
-  async createAccessToken( payload : AccessTokenGeneration ): Promise<string> {
-    const { _id } = payload 
+  async createAccessToken(payload: AccessTokenGeneration): Promise<string> {
+    const { _id } = payload;
     const accesstoken = sign(payload, JWT.JWT_SECRET_KEY, {
       expiresIn: JWT.JWT_EXPIRE_IN,
     });
@@ -33,18 +33,18 @@ export class AuthService {
   }
 
   async validateGoogleLogInUser(details: UserProfile): Promise<User> {
-      const user = await this.usersService.findEmail(details.email)
-      if(!user){
-        return await this.usersService.createGoggleAccountUser(details)
-      }
-      return user
+    const user = await this.usersService.findEmail(details.email);
+    if (!user) {
+      return await this.usersService.createGoggleAccountUser(details);
+    }
+    return user;
   }
   // Random question
   // What if the user decided to change his authentication with just jwt or vice versa, jwt to google?
 
   async validateToken(validate_token: string): Promise<boolean> {
     const {
-      payload: { _id, provider},
+      payload: { _id, provider },
     } = this.decodeToken(validate_token);
     const user = await this.usersService.findOneById(_id);
     try {
@@ -53,7 +53,7 @@ export class AuthService {
         !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
       ) {
         throw new Error('Authentication Error');
-      } 
+      }
       return Promise.resolve(true);
     } catch (error) {
       this.removeUserToken(_id, validate_token);
@@ -79,16 +79,22 @@ export class AuthService {
     }
   }
 
-  async login(loginUserInput: LoginUserInput, provider: "jwt" | "google" = "jwt"): Promise<LoginResponse> {
+  async login(
+    loginUserInput: LoginUserInput,
+    provider: 'jwt' | 'google' = 'jwt',
+  ): Promise<LoginResponse> {
     try {
       const { email, password } = loginUserInput;
       const user = await this.usersService.findEmail(email);
 
       if (!(await bcrypt.compare(password, user.password)) || !user) {
-        throw new UnauthorizedError("Error upon user login");
+        throw new UnauthorizedError('Error upon user login');
       }
 
-      const accesstoken = await this.createAccessToken({_id: user._id, provider});
+      const accesstoken = await this.createAccessToken({
+        _id: user._id,
+        provider,
+      });
       return { accesstoken, user };
     } catch (error) {
       throw error;
@@ -134,9 +140,9 @@ export class AuthService {
     }
   }
 
-  async findUserById(_id:string){
-    const user = await this.userModel.findById(_id)
-    if(!user) throw new UnauthorizedError("User was not found.")
-    return user
+  async findUserById(_id: string) {
+    const user = await this.userModel.findById(_id);
+    if (!user) throw new UnauthorizedError('User was not found.');
+    return user;
   }
 }

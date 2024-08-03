@@ -22,6 +22,7 @@ import { ChatController } from './chat.controller';
       { name: User.name, schema: UserSchema },
     ]),
   ],
+  exports:[ChatService],
   providers: [
     ChatService,
     ChatResolver,

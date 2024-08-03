@@ -11,6 +11,7 @@ import { ConflictError, UnauthorizedError } from 'src/utils/error/global.error';
 import { UserService } from 'src/user/user.service';
 import { MessageContentInput } from './dto/message.content_input';
 import { FileUploadService } from 'src/utils/utils_modules/services/file_upload.service';
+import { Category } from './interfaces/chat.category.enums';
 
 @Injectable()
 export class ChatService {
@@ -37,27 +38,35 @@ export class ChatService {
   }
 
   async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
-    const privateRoomId = new ObjectId();
-    const [user1, user2] = await Promise.all([
-      this.userModel.findOne({ _id: _user1 }),
-      this.userModel.findOne({ _id: _user2 }),
-    ]);
+    try {
+      const privateRoomId = new ObjectId();
+      const [user1, user2] = await Promise.all([
+        this.userModel.findOne({ _id: _user1 }),
+        this.userModel.findOne({ _id: _user2 }),
+      ]);
 
-    if (!user1 || !user2) {
-      throw new NotFoundException('User not found');
+      if (!user1 || !user2) {
+        throw new NotFoundException('User not found');
+      }
+      // ! Might cause problem.
+      if (await this.usersPrivateChatFinder(_user1, _user2)) {
+        throw new ConflictError('Has already created room.');
+      }
+
+      const privateRoom = await this.chatModel.create({
+        _id: privateRoomId,
+        usersId: [user1, user2],
+      });
+
+      await Promise.all([
+        user1.updateOne({ $push: { chats: privateRoomId } }),
+        user2.updateOne({ $push: { chats: privateRoomId } }),
+      ]);
+
+      return privateRoom;
+    } catch (error) {
+      throw new ConflictError();
     }
-
-    const privateRoom = await this.chatModel.create({
-      _id: privateRoomId,
-      usersId: [user1, user2],
-    });
-
-    await Promise.all([
-      user1.updateOne({ $push: { chats: privateRoomId } }),
-      user2.updateOne({ $push: { chats: privateRoomId } }),
-    ]);
-
-    return privateRoom;
   }
 
   async createUsersRoom(userIds: string[]): Promise<Chat> {
@@ -213,6 +222,18 @@ export class ChatService {
 
     if (!userMessage) {
       throw new ConflictError('Message with user id not found');
+    }
+  }
+
+  async usersPrivateChatFinder(userId1: string, userId2: string) : Promise<Chat> {
+    try {
+      const detect = await this.chatModel.findOne({
+        category: Category.PRIVATE,
+        usersId: { $all: [userId1, userId2] },
+      });
+      return detect;
+    } catch (error) {
+      return error;
     }
   }
 }

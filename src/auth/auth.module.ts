@@ -11,7 +11,6 @@ import { JWT } from 'src/utils/constant/constant';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { GoogleStrategy } from './strategy/google.strategy';
 import { SessionSerializer } from 'src/utils/helpers/auth.serializer';
-import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -29,8 +28,8 @@ import { UserModule } from 'src/user/user.module';
     JwtStrategy,
     GoogleStrategy,
     SessionSerializer,
-    { provide: "AuthService", useClass: AuthService },
-    { provide: "UserService", useClass: UserService }
+    { provide: 'AuthService', useClass: AuthService },
+    { provide: 'UserService', useClass: UserService },
   ],
   exports: [AuthService, JwtStrategy, UserService],
   controllers: [AuthController],

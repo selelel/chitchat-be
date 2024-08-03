@@ -34,21 +34,21 @@ export class UserService {
       return error;
     }
   }
-  
-  async createGoggleAccountUser(details: UserProfile){
-    const {email, displayName, given_name, family_name} = details
+
+  async createGoggleAccountUser(details: UserProfile) {
+    const { email, displayName, given_name, family_name } = details;
 
     const user_details = {
       firstname: given_name,
       lastname: family_name,
-      username: displayName.replaceAll(" ", "_").toLowerCase(),
-      hide_name: false
-    }
+      username: displayName.replaceAll(' ', '_').toLowerCase(),
+      hide_name: false,
+    };
 
     try {
       const newUser = await this.userModel.create({
         user: user_details,
-        email
+        email,
       });
 
       return newUser;
@@ -221,23 +221,34 @@ export class UserService {
     }
   }
 
-  async userChangePassword(_id: string, oldPass: string | null, newPass: string, provider: "jwt" | "google" = "jwt"): Promise<Boolean> {
+  async userChangePassword(
+    _id: string,
+    oldPass: string | null,
+    newPass: string,
+    provider: 'jwt' | 'google' = 'jwt',
+  ): Promise<boolean> {
     const user = await this.userModel.findById(_id);
     try {
       // Check if the old password is valid for non-Google users
-      const isPasswordValid = user.password === null && provider === 'google' 
-        || (oldPass && await bcrypt.compare(oldPass, user.password));
+      const isPasswordValid =
+        (user.password === null && provider === 'google') ||
+        (oldPass && (await bcrypt.compare(oldPass, user.password)));
 
       if (!isPasswordValid) {
-        throw new UnauthorizedError("Invalid password.");
+        throw new UnauthorizedError('Invalid password.');
       }
 
-      if(oldPass === newPass) {
-        throw new ConflictError("The new password cannot be the same as the old password. Please choose a different password.");
-      } 
+      if (oldPass === newPass) {
+        throw new ConflictError(
+          'The new password cannot be the same as the old password. Please choose a different password.',
+        );
+      }
 
       // Update the password
-      await this.userModel.findByIdAndUpdate(_id, { password: await bcrypt.hash(newPass, BCRYPT.salt), token: [] });
+      await this.userModel.findByIdAndUpdate(_id, {
+        password: await bcrypt.hash(newPass, BCRYPT.salt),
+        token: [],
+      });
       return true;
     } catch (e) {
       throw e; // Propagate the error

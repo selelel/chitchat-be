@@ -9,4 +9,4 @@ export const NestCurrentUser = createParamDecorator(
       token: req.token || req.user.token,
     };
   },
-)
+);
