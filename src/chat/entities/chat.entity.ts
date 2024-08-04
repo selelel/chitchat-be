@@ -3,6 +3,7 @@ import mongoose, { HydratedDocument } from 'mongoose';
 import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { Message } from './message.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Category } from '../interfaces/chat.category.enums';
 
 export type ChatDocument = HydratedDocument<Chat>;
 
@@ -16,6 +17,10 @@ export class Chat {
   @Prop({ type: [{ type: mongoose.Schema.ObjectId, ref: 'User' }] })
   @Field(() => [User])
   usersId: mongoose.Schema.Types.ObjectId[];
+
+  @Prop({ type: String, enum: Category, default: Category.PRIVATE })
+  @Field(() => Category)
+  category: Category;
 
   @Prop({ type: [{ type: mongoose.Schema.ObjectId, ref: 'Message' }] })
   @Field(() => [Message])
@@ -32,11 +37,6 @@ export class Chat {
   @Prop({ type: String })
   @Field(() => String)
   avatar?: string | null;
-
-  // TODO [USER_BLOCKED, RESTRICTED]
-  // @Prop({ type: [USER_BLOCKED, RESTRICTED] })
-  // @Field(() => [USER_BLOCKED, RESTRICTED])
-  // status?: [USER_BLOCKED, RESTRICTED];
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);

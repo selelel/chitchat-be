@@ -5,10 +5,11 @@ import { User } from './entities/user.entity';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
+import { ChatService } from 'src/chat/chat.service';
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService, private readonly chatService: ChatService, ) {}
 
   @Query(() => [User])
   async testQuery(): Promise<User[]> {
@@ -74,6 +75,8 @@ export class UserResolver {
       targetUserId,
     );
 
+    // create private chat is there is it isn't created.
+    await this.chatService.createPrivateRoom(_id, targetUserId)
     return userRequest;
   }
 

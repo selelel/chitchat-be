@@ -25,6 +25,20 @@ export class ChatResolver {
     return createChat;
   }
 
+  @Mutation(() => Chat)
+  @UseGuards(GqlAuthGuard)
+  async getUserPrivateChat(
+    @Args('targetUser') targetUser: string,
+    @GqlCurrentUser() { user },
+  ): Promise<Chat> {
+    try {
+      const room = await this.chatService.usersPrivateChatFinder(targetUser, user.payload._id);
+      return room
+    } catch (error) {
+      return error;
+    }
+  }
+
   @Mutation(() => [Message])
   @UseGuards(GqlAuthGuard)
   async getConversation(

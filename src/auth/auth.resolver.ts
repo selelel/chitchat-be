@@ -30,11 +30,17 @@ export class AuthResolver {
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async changePassword(
-    @GqlCurrentUser() user: any, 
-    @Args('changePassword') { oldPass, newPass }: ChangePasswordInput) {
-    const {_id, provider } = user.user.payload
+    @GqlCurrentUser() user: any,
+    @Args('changePassword') { oldPass, newPass }: ChangePasswordInput,
+  ) {
+    const { _id, provider } = user.user.payload;
 
-    const status = await this.userService.userChangePassword(_id, oldPass, newPass, provider);
+    const status = await this.userService.userChangePassword(
+      _id,
+      oldPass,
+      newPass,
+      provider,
+    );
     return !!status;
   }
 
@@ -58,20 +64,23 @@ export class AuthResolver {
     const decodedToken = await this.authService.decodeToken(token);
     try {
       if (decodedToken.payload._id === user.payload._id) {
-        await this.authService.removeUserToken(decodedToken.payload._id, token, {removeAll: user.payload.provider === "google"});
+        await this.authService.removeUserToken(
+          decodedToken.payload._id,
+          token,
+          { removeAll: user.payload.provider === 'google' },
+        );
         return true;
       }
     } catch (error) {
-      return false
+      return false;
     }
-    
   }
 
   // @Query(() => Boolean)
   // @UseGuards(GqlAuthGuard)
   // async logout(@GqlCurrentUser() { user, token }): Promise<boolean> {
   //   console.log(this.authService.decodeToken(token), user, user.payload.provider === "google");
-    
+
   //   await this.authService.removeUserToken(user._id, token, {removeAll: user.payload.provider === "google"});
   //   return true;
   // }
