@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { assert } from 'node:console';
 import * as session from 'express-session';
 import * as passport from 'passport';
+import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,6 +26,7 @@ async function bootstrap() {
   );
   app.use(passport.initialize());
   app.use(passport.session());
+  app.useGlobalPipes(new ValidationPipe());
   app.listen(port, '0.0.0.0', () => {
     assert(`Server is running at http://localhost:${port}/graphql`);
   });

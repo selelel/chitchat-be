@@ -3,7 +3,7 @@ import { UserService } from 'src/user/user.service';
 import { sign, verify, decode } from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 import { LoginResponse } from './dto/login.response';
-import { LoginUserInput } from './input/login.input';
+import { LoginUserInput } from './dto/login.input';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import {

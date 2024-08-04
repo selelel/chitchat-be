@@ -7,9 +7,9 @@ import { AccountObjectEntity } from '../dto/account.object.entity';
 import { PersonalObjectEntity } from '../dto/personal.object.entity';
 import {
   RequestObjectDto,
-  defaultRequestObjectDto,
 } from '../dto/request.object.dto';
 import { Status } from '../enums';
+import { IsEmail } from 'class-validator';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -32,7 +32,8 @@ export class User {
   password: string;
 
   @Prop({ type: String, required: true })
-  @Field()
+  @Field(() => String)
+  @IsEmail({}, { message: 'Please provide a valid email address.' })
   email: string;
 
   @Prop({ type: [String] })
@@ -43,7 +44,7 @@ export class User {
   @Field(() => Status)
   status: Status;
 
-  @Prop({ type: RequestObjectDto, default: defaultRequestObjectDto })
+  @Prop({ type: RequestObjectDto, default: { toFollowings: [], toFollowers: [] }})
   @Field(() => RequestObjectDto)
   requests: RequestObjectDto;
 

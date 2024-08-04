@@ -4,12 +4,11 @@ import { UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { LoginResponse } from './dto/login.response';
 import { GqlAuthGuard } from './guards/gql.auth.guard';
-import { LoginUserInput } from './input/login.input';
+import { LoginUserInput } from './dto/login.input';
 import { UserInput } from 'src/user/dto/user.input.dto';
 import { User } from 'src/user/entities/user.entity';
 import { GqlCurrentUser } from './decorator/gql.current.user';
-import { JwtAuthGuard } from './guards/jwt.auth.guard';
-import { ChangePasswordInput } from './input/change.password.input';
+import { ChangePasswordInput } from './dto/change.password.input';
 
 @Resolver()
 export class AuthResolver {
@@ -21,7 +20,6 @@ export class AuthResolver {
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
   async testAuth(@GqlCurrentUser() { user }: any) {
-    console.log(user);
     const user_ = await this.userService.findById(user.payload._id);
     console.log(user_);
     return user_;
@@ -75,15 +73,6 @@ export class AuthResolver {
       return false;
     }
   }
-
-  // @Query(() => Boolean)
-  // @UseGuards(GqlAuthGuard)
-  // async logout(@GqlCurrentUser() { user, token }): Promise<boolean> {
-  //   console.log(this.authService.decodeToken(token), user, user.payload.provider === "google");
-
-  //   await this.authService.removeUserToken(user._id, token, {removeAll: user.payload.provider === "google"});
-  //   return true;
-  // }
 
   @Mutation(() => LoginResponse)
   async login(@Args('loginUserInput') loginUserInput: LoginUserInput) {
