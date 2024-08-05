@@ -12,7 +12,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { ChatMiddleware } from './chat.middleware';
 import { MessageContentInput } from './dto/message.content_input';
 
-@WebSocketGateway(8585)
+@WebSocketGateway(Number(process.env.CHAT_PORT) || 8585)
 export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;

@@ -19,24 +19,23 @@ export class AuthResolver {
 
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async testAuth(@GqlCurrentUser() { user }: any) {
+  async getUserById(@GqlCurrentUser() { user }: any) {
     const user_ = await this.userService.findById(user.payload._id);
-    console.log(user_);
     return user_;
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async changePassword(
+  async updateUserPassword(
     @GqlCurrentUser() user: any,
-    @Args('changePassword') { oldPass, newPass }: ChangePasswordInput,
+    @Args('passwordInput') { oldPassword, newPassword }: ChangePasswordInput,
   ) {
     const { _id, provider } = user.user.payload;
 
     const status = await this.userService.userChangePassword(
       _id,
-      oldPass,
-      newPass,
+      oldPassword,
+      newPassword,
       provider,
     );
     return !!status;
@@ -44,7 +43,7 @@ export class AuthResolver {
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logoutAll(@GqlCurrentUser() { user, token }): Promise<boolean> {
+  async logoutAllDevices(@GqlCurrentUser() { user, token }): Promise<boolean> {
     try {
       await this.authService.removeUserToken(user.payload._id, token, {
         removeAll: true,
@@ -58,7 +57,7 @@ export class AuthResolver {
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logout(@GqlCurrentUser() { user, token }): Promise<boolean> {
+  async logoutDevice(@GqlCurrentUser() { user, token }): Promise<boolean> {
     const decodedToken = await this.authService.decodeToken(token);
     try {
       if (decodedToken.payload._id === user.payload._id) {
@@ -75,14 +74,14 @@ export class AuthResolver {
   }
 
   @Mutation(() => LoginResponse)
-  async login(@Args('loginUserInput') loginUserInput: LoginUserInput) {
-    const token = await this.authService.login(loginUserInput);
+  async loginUser(@Args('userInput') userInput: LoginUserInput) {
+    const token = await this.authService.login(userInput);
     return token;
   }
 
   @Mutation(() => User)
-  async signin(@Args('signinUserInput') signinUserInput: UserInput) {
-    const createdUser = await this.userService.createUser(signinUserInput);
+  async registerUser(@Args('userInput') userInput: UserInput) {
+    const createdUser = await this.userService.createUser(userInput);
     return createdUser;
   }
 }

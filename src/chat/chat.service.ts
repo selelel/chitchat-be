@@ -167,7 +167,6 @@ export class ChatService {
         'png',
       );
 
-      console.log(images);
       if (!images) {
         throw new ConflictError('Error processing image');
       }
@@ -182,7 +181,6 @@ export class ChatService {
 
       return message;
     } catch (error) {
-      console.log(error);
       return false;
     }
   }

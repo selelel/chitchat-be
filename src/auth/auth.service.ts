@@ -72,10 +72,10 @@ export class AuthService {
 
   decodeTokenGoogleToken(token: string) {
     try {
-      console.log(decodeJwt(token));
+      return token
     } catch (error) {
       console.error('Token verification failed:', error);
-      return null; // Return null if verification fails
+      return null;
     }
   }
 

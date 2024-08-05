@@ -26,7 +26,7 @@ export class UserResolver {
 
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
-  async requestToFollowUser(
+  async followUser(
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { user },
   ): Promise<User> {
@@ -44,7 +44,7 @@ export class UserResolver {
 
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
-  async declineUserRequest(
+  async cancelFollowRequest(
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { user },
   ): Promise<User> {
@@ -66,18 +66,21 @@ export class UserResolver {
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { user },
   ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
+    try {
+      const {
+        payload: { _id },
+      } = user;
 
-    const userRequest = await this.userService.acceptsUserRequestToFollow(
-      _id,
-      targetUserId,
-    );
+      const userRequest = await this.userService.acceptsUserRequestToFollow(
+        _id,
+        targetUserId,
+      );
 
-    // create private chat is there is it isn't created.
-    await this.chatService.createPrivateRoom(_id, targetUserId)
-    return userRequest;
+      await this.chatService.createPrivateRoom(_id, targetUserId);
+      return userRequest;
+    } catch (error) {
+      return error;
+    }
   }
 
   @Mutation(() => User)

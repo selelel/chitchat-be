@@ -13,62 +13,58 @@ import { Pagination } from 'src/utils/global_dto/pagination.dto';
 
 @Resolver(() => Post)
 export class PostResolver {
-  constructor(private readonly postService: PostService) {}
+  constructor(private readonly postService: PostService) {
+    console.log("Invoked!");
+  }
 
   @Mutation(() => [Post])
   @UseGuards(GqlAuthGuard)
-  async getPostsFromFollowedUsers(
-    @Args('paginate') paginate: Pagination,
+  async getUserFollowingPosts(
+    @Args('pagination') pagination: Pagination,
     @GqlCurrentUser() { user },
   ): Promise<Post[]> {
     const { payload } = user;
-    const post = await this.postService.getUserFollowingPost(
-      payload._id,
-      paginate,
-    );
-    return post;
+    const posts = await this.postService.getUserFollowingPost(payload._id, pagination);
+    return posts;
   }
 
   @Mutation(() => [Post])
   @UseGuards(GqlAuthGuard)
   async getRecommendedPosts(
-    @Args('paginate') paginate: Pagination,
+    @Args('pagination') pagination: Pagination,
     @GqlCurrentUser() { user },
   ): Promise<Post[]> {
     const { payload } = user;
-    const post = await this.postService.getRecommendations(
-      payload._id,
-      paginate,
-    );
-    return post;
+    const posts = await this.postService.getRecommendations(payload._id, pagination);
+    return posts;
   }
 
   @Mutation(() => Post)
   @UseGuards(GqlAuthGuard)
-  async createPost(
+  async createNewPost(
+    @GqlCurrentUser() { user },
     @Args('postContent') content: PostContentInput,
     @Args('postOption') option: PostOptionInput,
-    @GqlCurrentUser() { user },
   ): Promise<Post> {
     const { payload } = user;
-    const post = await this.postService.createPost(
-      payload._id,
-      content,
-      option,
-    );
-    return post;
+    const newPost = await this.postService.createPost(payload._id, content, option);
+    return newPost;
   }
 
   @Mutation(() => Post)
   @UseGuards(GqlAuthGuard)
   async updatePost(
     @Args('postId') postId: string,
-    @Args('postContent') content: PostContentInput,
+    @Args('updatedPost') updatedPost: PostContentInput,
     @Args('postOption') option: PostOptionInput,
+    @GqlCurrentUser() { user },
   ): Promise<Post> {
-    const post = await this.postService.updatePost(postId, content, option);
-    console.log(post);
-    return post;
+    try {
+      const updatedUser = await this.postService.updatePost(postId, user.payload._id, option);
+      return updatedUser;
+    } catch (error) {
+      return error;
+    }
   }
 
   @Mutation(() => User)
@@ -92,7 +88,7 @@ export class PostResolver {
 
   @Mutation(() => Comments)
   @UseGuards(GqlAuthGuard)
-  async commentOnPost(
+  async addCommentToPost(
     @Args('postId') postId: string,
     @Args('commentContent') commentContent: CommentContentInput,
     @GqlCurrentUser()
@@ -103,11 +99,7 @@ export class PostResolver {
     },
   ): Promise<Comments> {
     try {
-      const comment = await this.postService.addPostComments(
-        _id,
-        postId,
-        commentContent,
-      );
+      const comment = await this.postService.addPostComments(_id, postId, commentContent);
       return comment;
     } catch (error) {
       return error;
@@ -116,16 +108,13 @@ export class PostResolver {
 
   @Mutation(() => Comments)
   @UseGuards(GqlAuthGuard)
-  async editCommentOnPost(
+  async editPostComment(
     @Args('commentId') commentId: string,
-    @Args('commentContent') commentContent: CommentContentInput,
+    @Args('updatedComment') updatedComment: CommentContentInput,
   ): Promise<Comments> {
     try {
-      const comment = await this.postService.editPostComments(
-        commentId,
-        commentContent,
-      );
-      return comment;
+      const editedComment = await this.postService.editPostComments(commentId, updatedComment);
+      return editedComment;
     } catch (error) {
       return error;
     }
@@ -133,7 +122,7 @@ export class PostResolver {
 
   @Mutation(() => Post)
   @UseGuards(GqlAuthGuard)
-  async removeCommentOnPost(
+  async removePostComment(
     @Args('commentId') commentId: string,
   ): Promise<Post> {
     try {

@@ -16,7 +16,6 @@ export class AuthController {
   @Get('google/redirect')
   @UseGuards(GoogleOAuthGuard)
   async redirect(@GoogleCurrentUser() data: any) {
-    console.log('redirect', data);
     return { msg: `user: ${data.user.displayName} is logged in.` };
   }
 }

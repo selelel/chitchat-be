@@ -93,7 +93,6 @@ export class FileUploadService {
         }
       }
 
-      console.log(filenames);
       return filenames;
     } catch (error) {
       return false;

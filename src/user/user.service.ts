@@ -95,21 +95,17 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
-      const userUpdate = await this.userModel.updateOne(
-        { _id: userId },
+      await this.userModel.findByIdAndUpdate(
+        userId,
         { $pull: { 'requests.toFollowers': targetUserId } },
+        { new: true }
       );
 
-      const targetUpdate = await this.userModel.updateOne(
-        { _id: targetUserId },
+      await this.userModel.findByIdAndUpdate(
+        targetUserId,
         { $pull: { 'requests.toFollowings': userId } },
+        { new: true }
       );
-
-      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
-        throw new ConflictError(
-          'Failed to remove user requests one or both users',
-        );
-      }
 
       return await this.userModel
         .findOne({ _id: userId })
@@ -124,24 +120,23 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
+      await this.isUserExisted(targetUserId)
       if (!(await this.isUserToAccept(userId, targetUserId)))
         throw new UnauthorizedError("User can't accept to following");
 
       await this.removesUserRequest(userId, targetUserId);
 
-      const userUpdate = await this.userModel.updateOne(
-        { _id: userId },
+      await this.userModel.findByIdAndUpdate(
+         userId ,
         { $addToSet: { followers: targetUserId } },
+        { new: true }
       );
 
-      const targetUpdate = await this.userModel.updateOne(
-        { _id: targetUserId },
-        { $addToSet: { following: userId } },
+      await this.userModel.findByIdAndUpdate(
+        targetUserId,
+        { $addToSet: { following: userId }},
+        { new: true }
       );
-
-      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
-        throw new ConflictError('Failed to update one or both users');
-      }
 
       return await this.userModel
         .findOne({ _id: userId })
@@ -257,7 +252,6 @@ export class UserService {
 
   // Helper Function
   async findById(_id?: string) {
-    console.log(_id);
     const user = await this.userModel.findById(_id);
     return user;
   }
