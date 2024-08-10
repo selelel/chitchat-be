@@ -6,7 +6,7 @@ export class LoginUserInput {
   @Field()
   @IsString()
   password: string;
-  
+
   @Field()
   @IsEmail()
   email: string;

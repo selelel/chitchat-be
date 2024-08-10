@@ -14,7 +14,7 @@ import { AuthModule } from 'src/auth/auth.module';
     Passport,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     ChatModule,
-    AuthModule
+    AuthModule,
   ],
   exports: [UserService],
   providers: [UserService, UserResolver],

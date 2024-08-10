@@ -27,6 +27,11 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
   app.useGlobalPipes(new ValidationPipe());
+  app.enableCors({
+    origin: 'http://localhost:3000', // Replace with your frontend URL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
   app.listen(port, '0.0.0.0', () => {
     assert(`Server is running at http://localhost:${port}/graphql`);
   });

@@ -32,7 +32,10 @@ export class ChatResolver {
     @GqlCurrentUser() { user },
   ): Promise<Chat> {
     try {
-      const room = await this.chatService.usersPrivateChatFinder(targetUser, user.payload._id);
+      const room = await this.chatService.usersPrivateChatFinder(
+        targetUser,
+        user.payload._id,
+      );
       return room;
     } catch (error) {
       return error;

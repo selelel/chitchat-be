@@ -1,6 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Audience } from '../interfaces/post.audience.enums';
-import { IsArray, IsString, IsObject, IsOptional, IsIn, Validate } from 'class-validator';
+import {
+  IsArray,
+  IsString,
+  IsOptional,
+  Validate,
+} from 'class-validator';
 
 export interface PostOption {
   audience: Audience;
@@ -11,7 +16,7 @@ export interface PostOption {
 export class PostOptionInput {
   @Field(() => String)
   @Validate((value: string) => {
-    const enumKeys = Object.keys(Audience).map(key => Audience[key]);
+    const enumKeys = Object.keys(Audience).map((key) => Audience[key]);
     if (!enumKeys.includes(value)) {
       return 'Invalid audience value';
     }

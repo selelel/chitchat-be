@@ -14,7 +14,7 @@ import { Pagination } from 'src/utils/global_dto/pagination.dto';
 @Resolver(() => Post)
 export class PostResolver {
   constructor(private readonly postService: PostService) {
-    console.log("Invoked!");
+    console.log('Invoked!');
   }
 
   @Mutation(() => [Post])
@@ -24,7 +24,10 @@ export class PostResolver {
     @GqlCurrentUser() { user },
   ): Promise<Post[]> {
     const { payload } = user;
-    const posts = await this.postService.getUserFollowingPost(payload._id, pagination);
+    const posts = await this.postService.getUserFollowingPost(
+      payload._id,
+      pagination,
+    );
     return posts;
   }
 
@@ -35,7 +38,10 @@ export class PostResolver {
     @GqlCurrentUser() { user },
   ): Promise<Post[]> {
     const { payload } = user;
-    const posts = await this.postService.getRecommendations(payload._id, pagination);
+    const posts = await this.postService.getRecommendations(
+      payload._id,
+      pagination,
+    );
     return posts;
   }
 
@@ -47,7 +53,11 @@ export class PostResolver {
     @Args('postOption') option: PostOptionInput,
   ): Promise<Post> {
     const { payload } = user;
-    const newPost = await this.postService.createPost(payload._id, content, option);
+    const newPost = await this.postService.createPost(
+      payload._id,
+      content,
+      option,
+    );
     return newPost;
   }
 
@@ -60,7 +70,11 @@ export class PostResolver {
     @GqlCurrentUser() { user },
   ): Promise<Post> {
     try {
-      const updatedUser = await this.postService.updatePost(postId, user.payload._id, option);
+      const updatedUser = await this.postService.updatePost(
+        postId,
+        user.payload._id,
+        option,
+      );
       return updatedUser;
     } catch (error) {
       return error;
@@ -99,7 +113,11 @@ export class PostResolver {
     },
   ): Promise<Comments> {
     try {
-      const comment = await this.postService.addPostComments(_id, postId, commentContent);
+      const comment = await this.postService.addPostComments(
+        _id,
+        postId,
+        commentContent,
+      );
       return comment;
     } catch (error) {
       return error;
@@ -113,7 +131,10 @@ export class PostResolver {
     @Args('updatedComment') updatedComment: CommentContentInput,
   ): Promise<Comments> {
     try {
-      const editedComment = await this.postService.editPostComments(commentId, updatedComment);
+      const editedComment = await this.postService.editPostComments(
+        commentId,
+        updatedComment,
+      );
       return editedComment;
     } catch (error) {
       return error;
@@ -122,9 +143,7 @@ export class PostResolver {
 
   @Mutation(() => Post)
   @UseGuards(GqlAuthGuard)
-  async removePostComment(
-    @Args('commentId') commentId: string,
-  ): Promise<Post> {
+  async removePostComment(@Args('commentId') commentId: string): Promise<Post> {
     try {
       const post = await this.postService.removePostComments(commentId);
       return post;

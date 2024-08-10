@@ -6,7 +6,7 @@ export class Pagination {
   @Field(() => Int)
   @IsNumber()
   skip: number;
-  
+
   @Field(() => Int)
   @IsNumber()
   limit: number;

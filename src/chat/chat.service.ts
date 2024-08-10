@@ -223,7 +223,10 @@ export class ChatService {
     }
   }
 
-  async usersPrivateChatFinder(userId1: string, userId2: string) : Promise<Chat> {
+  async usersPrivateChatFinder(
+    userId1: string,
+    userId2: string,
+  ): Promise<Chat> {
     try {
       const detect = await this.chatModel.findOne({
         category: Category.PRIVATE,

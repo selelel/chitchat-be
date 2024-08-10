@@ -6,7 +6,7 @@ export class ChangePasswordInput {
   @Field(() => String, { nullable: true })
   @IsString()
   oldPassword?: string;
-  
+
   @Field(() => String)
   @IsString()
   newPassword: string;

@@ -45,7 +45,7 @@ export class Gateway
       await this.userService.updateUserStatus(user._id, Status.ONLINE);
       this.notifyFriends(user._id, `User ${username} is online`);
     } catch (error) {
-      console.assert(error); 
+      console.assert(error);
     }
   }
 

@@ -1,6 +1,12 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { GraphQLJSONObject } from 'graphql-scalars';
-import { IsEmail, IsString, MinLength, ValidateNested, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  ValidateNested,
+  MaxLength,
+} from 'class-validator';
 import { PersonalObjectInput } from './personal.input';
 import { Type } from 'class-transformer';
 

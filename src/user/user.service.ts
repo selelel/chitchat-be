@@ -98,13 +98,13 @@ export class UserService {
       await this.userModel.findByIdAndUpdate(
         userId,
         { $pull: { 'requests.toFollowers': targetUserId } },
-        { new: true }
+        { new: true },
       );
 
       await this.userModel.findByIdAndUpdate(
         targetUserId,
         { $pull: { 'requests.toFollowings': userId } },
-        { new: true }
+        { new: true },
       );
 
       return await this.userModel
@@ -120,22 +120,22 @@ export class UserService {
     targetUserId: string,
   ): Promise<User> {
     try {
-      await this.isUserExisted(targetUserId)
+      await this.isUserExisted(targetUserId);
       if (!(await this.isUserToAccept(userId, targetUserId)))
         throw new UnauthorizedError("User can't accept to following");
 
       await this.removesUserRequest(userId, targetUserId);
 
       await this.userModel.findByIdAndUpdate(
-         userId ,
+        userId,
         { $addToSet: { followers: targetUserId } },
-        { new: true }
+        { new: true },
       );
 
       await this.userModel.findByIdAndUpdate(
         targetUserId,
-        { $addToSet: { following: userId }},
-        { new: true }
+        { $addToSet: { following: userId } },
+        { new: true },
       );
 
       return await this.userModel

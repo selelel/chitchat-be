@@ -72,7 +72,7 @@ export class AuthService {
 
   decodeTokenGoogleToken(token: string) {
     try {
-      return token
+      return token;
     } catch (error) {
       console.error('Token verification failed:', error);
       return null;

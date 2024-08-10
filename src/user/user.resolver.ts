@@ -9,7 +9,10 @@ import { ChatService } from 'src/chat/chat.service';
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private readonly userService: UserService, private readonly chatService: ChatService, ) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly chatService: ChatService,
+  ) {}
 
   @Query(() => [User])
   async testQuery(): Promise<User[]> {
