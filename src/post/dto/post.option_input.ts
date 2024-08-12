@@ -1,11 +1,6 @@
 import { Field, InputType } from '@nestjs/graphql';
 import { Audience } from '../interfaces/post.audience.enums';
-import {
-  IsArray,
-  IsString,
-  IsOptional,
-  Validate,
-} from 'class-validator';
+import { IsArray, IsString, IsOptional, Validate } from 'class-validator';
 
 export interface PostOption {
   audience: Audience;

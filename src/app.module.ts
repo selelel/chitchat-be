@@ -11,6 +11,7 @@ import { GatewayModule } from './gateway/gateway.module';
 import { PostModule } from './post/post.module';
 import { UtilModules } from './utils/utils_modules/utils.module';
 import { PassportModule } from '@nestjs/passport';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -33,5 +34,6 @@ import { PassportModule } from '@nestjs/passport';
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
