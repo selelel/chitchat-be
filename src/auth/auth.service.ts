@@ -42,10 +42,10 @@ export class AuthService {
   // What if the user decided to change his authentication with just jwt or vice versa, jwt to google?
 
   async validateToken(validate_token: string): Promise<boolean> {
-    console.log(validate_token)
     const {
       payload: { _id },
     } = this.decodeToken(validate_token);
+    
     const user = await this.usersService.findOneById(_id);
     try {
       if (

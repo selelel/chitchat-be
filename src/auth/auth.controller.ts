@@ -21,35 +21,16 @@ export class AuthController {
   @Get('google/redirect')
   @UseGuards(GoogleOAuthGuard)
   async redirect(
-    @GoogleCurrentUser() { token }: any,
+    @GoogleCurrentUser() { token, user }: any,
     @Res() res: Response,
-    @Query() query: any,
-    @Req() req: Request
   ) {
-    try {
-      if (query.error === 'access_denied') {
-        console.warn('OAuth access denied by user.');
-        res.redirect('http://localhost:3000/auth/error?message=Unauthorized');
-      }
-
-      if (!token) {
-        console.warn('Token is missing, possible authorization failure.');
-        return res.redirect(301, 'http://localhost:3000/auth/error?message=Unauthorized');
-      }
-
-      // Redirect with the token if authorization was successful
-      const redirectUrl = `http://localhost:3000/auth/callback?token=${token}`;
+      const redirectUrl = `http://localhost:3000/auth/callback?token=${token}&user_id=${user._id}`
       res.redirect(redirectUrl);
-    } catch (error) {
-      console.error('Error during Google OAuth redirect:', error);
-      // Redirect to an error page with a 401 status code in case of server error
-      res.redirect(301, 'http://localhost:3000/auth/error?message=Unauthorized');
-    }
   }
 
   @Get('google/logout')
   @UseGuards(NestAuthGuard)
-  async logout(@NestCurrentUser() { user: { payload: { google_tkn, _id } }, token }: any) {
+  async logout(@NestCurrentUser() { user: { payload: { _id, google_tkn} }, token}: any) {
     const revokeUrl = `https://accounts.google.com/o/oauth2/revoke?token=${google_tkn}`;
     try {
       const response: AxiosResponse = await this.httpService.post(revokeUrl).toPromise();

@@ -6,15 +6,15 @@ export const GoogleCurrentUser = createParamDecorator(
     const [req] = context.getArgs();
     let temp_token: string;
     let temp_google_tkn: string;
-    temp_token = req.user.token;
-    temp_google_tkn = req.user.tkn
 
-    console.log(req.user)
+    temp_token = req.user.token;
+    temp_google_tkn = req.user.google_tkn
+    
     delete req.user.token;
     return {
       user: req.user as User,
       token: temp_token,
-
+      google_tkn : temp_google_tkn
     };
   },
 );
