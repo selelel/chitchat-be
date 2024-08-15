@@ -21,8 +21,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
   // ! Google OAuth Integration is full of drawbacks.
   // ! Note for need to take into serious considerations.
   async validate(
-    openid: string,
-    _: string,
+    _accesstoken: string,
+    _refreshtoken: string,
     profile: PassportProfile,
     done: VerifyCallback,
   ) {
@@ -38,12 +38,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       family_name,
       picture,
     };
-    const user =
-      await this.authService.validateGoogleLogInUser(payload_details);
+      const user =
+        await this.authService.validateGoogleLogInUser(payload_details);
     const create_accesstoken = await this.authService.createAccessToken({
       _id: user._id,
       provider: 'google',
+      google_tkn: _accesstoken,
     });
-    done(null, { ...profile, token: create_accesstoken });
+    done(null, { ...profile, token: create_accesstoken, google_tkn: _accesstoken });
   }
 }

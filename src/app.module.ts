@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module, OnModuleInit } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -12,6 +12,7 @@ import { PostModule } from './post/post.module';
 import { UtilModules } from './utils/utils_modules/utils.module';
 import { PassportModule } from '@nestjs/passport';
 import { AppController } from './app.controller';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -33,7 +34,9 @@ import { AppController } from './app.controller';
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,
+    HttpModule
   ],
+  providers:[ConfigService],
   controllers: [AppController],
 })
 export class AppModule {}

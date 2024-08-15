@@ -12,8 +12,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
-import { UserProfile } from './dto/google_payload.dto';
-import { decodeJwt } from 'src/utils/helpers/jwt_helper';
+import { UserProfile } from './dto/google_payload.dto';;
 import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
 
 @Injectable()
@@ -43,8 +42,9 @@ export class AuthService {
   // What if the user decided to change his authentication with just jwt or vice versa, jwt to google?
 
   async validateToken(validate_token: string): Promise<boolean> {
+    console.log(validate_token)
     const {
-      payload: { _id, provider },
+      payload: { _id },
     } = this.decodeToken(validate_token);
     const user = await this.usersService.findOneById(_id);
     try {
@@ -87,8 +87,15 @@ export class AuthService {
       const { email, password } = loginUserInput;
       const user = await this.usersService.findEmail(email);
 
+      if (!user) {
+        throw new Error('Email address does not exist');
+      }
+      if (!user.password) {
+        throw new UnauthorizedError('It looks like you signed up using Google. Please log in using Google to access your account.');
+      }      
+
       if (!(await bcrypt.compare(password, user.password)) || !user) {
-        throw new UnauthorizedError('Error upon user login');
+        throw new UnauthorizedError('The password you entered is incorrect.');
       }
 
       const accesstoken = await this.createAccessToken({

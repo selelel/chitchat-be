@@ -75,8 +75,14 @@ export class AuthResolver {
 
   @Mutation(() => LoginResponse)
   async loginUser(@Args('userInput') userInput: LoginUserInput) {
-    const token = await this.authService.login(userInput);
-    return token;
+
+    try {
+      const token = await this.authService.login(userInput);
+      return token;
+    } catch (error) {
+      return error
+    }
+    
   }
 
   @Mutation(() => User)

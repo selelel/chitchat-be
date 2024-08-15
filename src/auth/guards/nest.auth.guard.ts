@@ -13,6 +13,9 @@ export class NestAuthGuard extends AuthGuard('jwt') {
     const req = context.switchToHttp().getRequest();
     const [, token] = req.headers.authorization.split(' ');
 
+    console.log(token)
+
+
     if (!token || !(await this.authService.validateToken(token))) {
       return false;
     }

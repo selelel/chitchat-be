@@ -11,9 +11,11 @@ import { JWT } from 'src/utils/constant/constant';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { GoogleStrategy } from './strategy/google.strategy';
 import { SessionSerializer } from 'src/utils/helpers/auth.serializer';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
+    HttpModule,
     JwtModule.register({
       secret: JWT.JWT_SECRET_KEY,
       signOptions: { expiresIn: JWT.JWT_EXPIRE_IN },
