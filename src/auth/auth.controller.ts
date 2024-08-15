@@ -21,11 +21,12 @@ export class AuthController {
   @Get('google/redirect')
   @UseGuards(GoogleOAuthGuard)
   async redirect(
-    @GoogleCurrentUser() { token, user }: any,
+    @GoogleCurrentUser() { token }: any,
     @Res() res: Response,
   ) {
-      const redirectUrl = `http://localhost:3000/auth/callback?token=${token}&user_id=${user._id}`
-      res.redirect(redirectUrl);
+    const user = await this.authService.decodeToken(token)
+    const redirectUrl = `http://localhost:3000/auth/callback?token=${token}&user_id=${user.payload._id}`
+    res.redirect(redirectUrl);
   }
 
   @Get('google/logout')
