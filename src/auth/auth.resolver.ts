@@ -1,6 +1,6 @@
-import { Args, Mutation, Resolver, Query } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query, Context } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { UseGuards } from '@nestjs/common';
+import { Res, UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { LoginResponse } from './dto/login.response';
 import { GqlAuthGuard } from './guards/gql.auth.guard';
@@ -9,6 +9,7 @@ import { UserInput } from 'src/user/dto/user.input.dto';
 import { User } from 'src/user/entities/user.entity';
 import { GqlCurrentUser } from './decorator/gql.current.user';
 import { ChangePasswordInput } from './dto/change.password.input';
+import { Response, Request} from 'express'
 
 @Resolver()
 export class AuthResolver {
@@ -43,10 +44,16 @@ export class AuthResolver {
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logoutAllDevices(@GqlCurrentUser() { user, token }): Promise<boolean> {
+  async logoutAllDevices(@GqlCurrentUser() { user, token }, @Context("res") res: Response): Promise<boolean> {
     try {
       await this.authService.removeUserToken(user.payload._id, token, {
         removeAll: true,
+      });
+
+      res.cookie('jwt', '', {
+        httpOnly: true,
+        secure: true,
+        maxAge: 0,
       });
 
       return true;
@@ -57,7 +64,7 @@ export class AuthResolver {
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logoutDevice(@GqlCurrentUser() { user, token }): Promise<boolean> {
+  async logoutDevice(@GqlCurrentUser() { user, token }, @Context("res") res: Response): Promise<boolean> {
     const decodedToken = await this.authService.decodeToken(token);
     try {
       if (decodedToken.payload._id === user.payload._id) {
@@ -66,6 +73,13 @@ export class AuthResolver {
           token,
           { removeAll: user.payload.provider === 'google' },
         );
+
+        res.cookie('jwt', '', {
+          httpOnly: true,
+          secure: true,
+          maxAge: 0,
+        });
+
         return true;
       }
     } catch (error) {
@@ -74,15 +88,33 @@ export class AuthResolver {
   }
 
   @Mutation(() => LoginResponse)
-  async loginUser(@Args('userInput') userInput: LoginUserInput) {
-
+  async loginUser(@Args('userInput') userInput: LoginUserInput, @Context("res") res: Response) {
     try {
-      const token = await this.authService.login(userInput);
-      return token;
+      const result = await this.authService.login(userInput);
+      const refresh_token = await this.authService.createRefreshToken(result.user._id)
+
+      res.cookie('refresh_token', refresh_token, {
+        httpOnly: true,
+        secure: true, sameSite: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000
+      })
+
+      return result;
     } catch (error) {
       return error
     }
-    
+  }
+
+  @Query(() => String)
+  async refreshToken(@Context("req") req: Request) {
+    try {
+      const refreshToken = req.headers;
+      console.log(req.cookies, refreshToken)
+      // const validate = this.authService.validateRefreshToken(refreshToken)
+      return 'TEST';
+    } catch (error) {
+      return error
+    }
   }
 
   @Mutation(() => User)

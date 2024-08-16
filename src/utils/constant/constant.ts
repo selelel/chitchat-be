@@ -3,8 +3,9 @@ export const USER_PROVIDER = {
   userInject: 'DATABASE_CONNECTION',
 };
 export const JWT = {
-  JWT_SECRET_KEY: '_selelel',
-  JWT_EXPIRE_IN: '1day',
+  JWT_SECRET_KEY: process.env.JWT_SECRET_KEY || '_selelel',
+  ACCESSTOKEN_EXP: process.env.ACCESSTOKEN_EXP || '15m',
+  REFRESHTOKEN_EXP: process.env.REFRESHTOKEN_EXP || '30d',
 };
 
 export const BCRYPT = {

@@ -31,6 +31,11 @@ import { HttpModule } from '@nestjs/axios';
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
       context: ({ req, res }) => ({ req, res }),
+      playground: {
+        settings: {
+          "request.credentials": "include",
+        }
+      },
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,

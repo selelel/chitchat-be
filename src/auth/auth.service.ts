@@ -14,6 +14,7 @@ import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
 import { UserProfile } from './dto/google_payload.dto';;
 import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
+import { error } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -23,12 +24,32 @@ export class AuthService {
   ) {}
 
   async createAccessToken(payload: AccessTokenGeneration): Promise<string> {
-    const { _id } = payload;
     const accesstoken = sign(payload, JWT.JWT_SECRET_KEY, {
-      expiresIn: JWT.JWT_EXPIRE_IN,
+      expiresIn: JWT.ACCESSTOKEN_EXP,
     });
-    await this.updateUserToken(_id, accesstoken);
+
     return accesstoken;
+  }
+
+  async createRefreshToken(user_id: mongoose.Schema.Types.ObjectId): Promise<string> {
+    const refreshtoken = sign({ user_id }, JWT.JWT_SECRET_KEY, {
+      expiresIn: JWT.REFRESHTOKEN_EXP,
+    });
+
+    await this.updateUserToken(user_id, refreshtoken);
+    return refreshtoken;
+  }
+
+  async validateRefreshToken(token:string): Promise<void> {
+    verify(token, process.env.REFRESH_TOKEN_SECRET,
+      (err, decoded) => {
+          if(error) throw new UnauthorizedError()
+          console.log(decoded)
+
+      })
+
+    // await this.updateUserToken(user_id, refreshtoken);
+    // return refreshtoken;
   }
 
   async validateGoogleLogInUser(details: UserProfile): Promise<User> {
@@ -38,8 +59,7 @@ export class AuthService {
     }
     return user;
   }
-  // Random question
-  // What if the user decided to change his authentication with just jwt or vice versa, jwt to google?
+  
 
   async validateToken(validate_token: string): Promise<boolean> {
     const {
@@ -98,10 +118,12 @@ export class AuthService {
         throw new UnauthorizedError('The password you entered is incorrect.');
       }
 
-      const accesstoken = await this.createAccessToken({
+      const payload = {
         _id: user._id,
         provider,
-      });
+      }
+      const accesstoken = await this.createAccessToken(payload);
+
       return { accesstoken, user };
     } catch (error) {
       throw error;
@@ -110,11 +132,11 @@ export class AuthService {
 
   async updateUserToken(
     userId: mongoose.Schema.Types.ObjectId,
-    newToken: string,
+    token: string,
   ): Promise<User> {
     const user = await this.userModel.findByIdAndUpdate(
       userId,
-      { $push: { token: newToken } },
+      { $push: { token } },
       { new: true },
     );
 
