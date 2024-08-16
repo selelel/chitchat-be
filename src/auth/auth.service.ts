@@ -41,13 +41,12 @@ export class AuthService {
   }
 
   async validateRefreshToken(token:string): Promise<void> {
+    let accesstoken : string
     verify(token, process.env.REFRESH_TOKEN_SECRET,
       (err, decoded) => {
           if(error) throw new UnauthorizedError()
           console.log(decoded)
-
       })
-
     // await this.updateUserToken(user_id, refreshtoken);
     // return refreshtoken;
   }

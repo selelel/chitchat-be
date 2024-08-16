@@ -91,26 +91,28 @@ export class AuthResolver {
   async loginUser(@Args('userInput') userInput: LoginUserInput, @Context("res") res: Response) {
     try {
       const result = await this.authService.login(userInput);
-      const refresh_token = await this.authService.createRefreshToken(result.user._id)
-
+      const refresh_token = await this.authService.createRefreshToken(result.user._id);
+  
       res.cookie('refresh_token', refresh_token, {
         httpOnly: true,
-        secure: true, sameSite: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000
-      })
-
+        secure: false,
+        maxAge: 30 * 24 * 60 * 60 * 1000 
+      });
+  
       return result;
     } catch (error) {
-      return error
+      return error;
     }
   }
 
   @Query(() => String)
   async refreshToken(@Context("req") req: Request) {
     try {
-      const refreshToken = req.headers;
-      console.log(req.cookies, refreshToken)
-      // const validate = this.authService.validateRefreshToken(refreshToken)
+      const cookies = req.headers.cookie;
+      console.log('Cookies:', cookies);
+  
+      const refreshToken = cookies['refresh_token'];
+      console.log('Refresh Token:', refreshToken);
       return 'TEST';
     } catch (error) {
       return error

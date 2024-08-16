@@ -50,4 +50,17 @@ export class AuthController {
       );
     }
   }
+
+  @Get('refresh-token')
+  async refreshToken(@Req() req: Request) {
+      const cookies = req.cookies;
+      console.log(req, 'Cookies:', cookies['refresh_token'],);
+      return 'NEXT'
+  }
+
+  @Get('set_cookie')
+  findAll(@Res({ passthrough: true }) response: Response) {
+  response.cookie('set', 'value')
+  return 'SET COOKIE'
+}
 }

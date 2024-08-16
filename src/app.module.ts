@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -13,6 +13,7 @@ import { UtilModules } from './utils/utils_modules/utils.module';
 import { PassportModule } from '@nestjs/passport';
 import { AppController } from './app.controller';
 import { HttpModule } from '@nestjs/axios';
+import * as cookieParser from 'cookie-parser';
 
 @Module({
   imports: [
@@ -27,15 +28,11 @@ import { HttpModule } from '@nestjs/axios';
       envFilePath: '.env',
     }),
     PassportModule.register({ session: true }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRoot({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
       context: ({ req, res }) => ({ req, res }),
-      playground: {
-        settings: {
-          "request.credentials": "include",
-        }
-      },
+      cors: { origin: 'http://localhost:3000' , credentials: true },
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,
@@ -44,4 +41,10 @@ import { HttpModule } from '@nestjs/axios';
   providers:[ConfigService],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(cookieParser()) // Ensure this line is present
+      .forRoutes('*');
+  }
+}

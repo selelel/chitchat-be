@@ -24,6 +24,7 @@
     "@apollo/server": "^4.10.4",
     "@aws-sdk/client-s3": "^3.620.0",
     "@aws-sdk/lib-storage": "^3.620.0",
+    "@fastify/cookie": "^9.3.1",
     "@nestjs/apollo": "^12.1.0",
     "@nestjs/axios": "^3.0.3",
     "@nestjs/common": "^10.0.0",
