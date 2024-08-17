@@ -14,6 +14,7 @@ import { PassportModule } from '@nestjs/passport';
 import { AppController } from './app.controller';
 import { HttpModule } from '@nestjs/axios';
 import * as cookieParser from 'cookie-parser';
+import { response } from 'express';
 
 @Module({
   imports: [
@@ -31,8 +32,12 @@ import * as cookieParser from 'cookie-parser';
     GraphQLModule.forRoot({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
-      context: ({ req, res }) => ({ req, res }),
-      cors: { origin: 'http://localhost:3000' , credentials: true },
+      cors: {
+        credentials: 'include',
+        mode: 'cors',
+        origin: true
+      },
+      context: ({ req, res }) => ({ req, res })
     }),
     MongooseModule.forRoot(process.env.DB_URI),
     UtilModules,
@@ -41,10 +46,4 @@ import * as cookieParser from 'cookie-parser';
   providers:[ConfigService],
   controllers: [AppController],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(cookieParser()) // Ensure this line is present
-      .forRoutes('*');
-  }
-}
+export class AppModule{}

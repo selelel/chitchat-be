@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver, Query, Context } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query, Context, GraphQLExecutionContext } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
 import { Res, UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
@@ -10,6 +10,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GqlCurrentUser } from './decorator/gql.current.user';
 import { ChangePasswordInput } from './dto/change.password.input';
 import { Response, Request} from 'express'
+import { AUTH } from 'src/utils/constant/constant';
 
 @Resolver()
 export class AuthResolver {
@@ -88,31 +89,37 @@ export class AuthResolver {
   }
 
   @Mutation(() => LoginResponse)
-  async loginUser(@Args('userInput') userInput: LoginUserInput, @Context("res") res: Response) {
+  async loginUser(
+    @Context('res') res: Response,
+    @Args('userInput') userInput: LoginUserInput,
+  ) {
     try {
       const result = await this.authService.login(userInput);
       const refresh_token = await this.authService.createRefreshToken(result.user._id);
-  
-      res.cookie('refresh_token', refresh_token, {
-        httpOnly: true,
-        secure: false,
-        maxAge: 30 * 24 * 60 * 60 * 1000 
+      
+      res.cookie(AUTH.REFRESH_TOKEN, refresh_token, {
+          httpOnly: true,
+          secure: true,
+          maxAge: 30 * 24 * 60 * 60 * 1000 
       });
-  
-      return result;
+      
+      return result
     } catch (error) {
-      return error;
+      throw new Error(error.message);
     }
   }
 
   @Query(() => String)
-  async refreshToken(@Context("req") req: Request) {
+  async refresh(@Context("req") req: Request) {
     try {
-      const cookies = req.headers.cookie;
-      console.log('Cookies:', cookies);
+      const token = req.cookies
+      console.log('Cookies:', token);
+
+      // const validate_token = await this.authService.validateRefreshToken(token)
+      // console.log(validate_token)
   
-      const refreshToken = cookies['refresh_token'];
-      console.log('Refresh Token:', refreshToken);
+      // const refreshToken = token['refresh_token'];
+      // console.log('Refresh Token:', refreshToken);
       return 'TEST';
     } catch (error) {
       return error

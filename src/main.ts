@@ -7,13 +7,10 @@ import * as passport from 'passport';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { Logger } from '@nestjs/common';
-import fastifyCookie from '@fastify/cookie';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
-  await app.register(fastifyCookie, {
-    secret: 'my-secret', // for cookies signature
-  });
+  const app = await NestFactory.create(AppModule);
+  
   const port = process.env.PORT || 8080;
   app.use(
     '/graphql',
@@ -31,16 +28,16 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser())
+
   app.use(passport.initialize());
   app.use(passport.session());
   app.useGlobalPipes(new ValidationPipe());
   
   app.enableCors({
     origin: 'http://localhost:3000',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-  app.use(cookieParser());
 
   app.listen(port, '0.0.0.0', () => {
     Logger.log(`Server is running at http://localhost:${port}/graphql`);

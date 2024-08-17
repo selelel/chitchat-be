@@ -1,4 +1,4 @@
-import { Controller, Get, HttpException, HttpStatus, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleOAuthGuard } from './guards/google.auth.guard';
 import { GoogleCurrentUser } from './decorator/google.current.user';
@@ -7,6 +7,8 @@ import { AxiosResponse } from 'axios';
 import { NestAuthGuard } from './guards/nest.auth.guard';
 import { NestCurrentUser } from './decorator/nest.current.user';
 import { HttpService } from '@nestjs/axios/dist/http.service';
+import { LoginUserInput } from './dto/login.input';
+import { AUTH } from 'src/utils/constant/constant';
 
 @Controller('auth')
 export class AuthController {
@@ -52,15 +54,41 @@ export class AuthController {
   }
 
   @Get('refresh-token')
-  async refreshToken(@Req() req: Request) {
-      const cookies = req.cookies;
-      console.log(req, 'Cookies:', cookies['refresh_token'],);
-      return 'NEXT'
+  refreshToken(@Req() request: Request) {
+  console.log("GET COOKIE")
+  console.log(request.cookies[AUTH.REFRESH_TOKEN]);
+}
+
+@Get('/login')
+  async loginUser(
+    @Body() userInput: LoginUserInput,
+    @Res() res: Response
+  ) {
+    try {
+      const result = await this.authService.login(userInput);
+      const refresh_token = await this.authService.createRefreshToken(result.user._id);
+      
+      res.cookie('refresh_token', refresh_token, {
+        httpOnly: true,
+        secure: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000 
+      });
+
+      return result;
+    } catch (error) {
+      throw new Error(error.message);
+    }
   }
 
   @Get('set_cookie')
   findAll(@Res({ passthrough: true }) response: Response) {
-  response.cookie('set', 'value')
-  return 'SET COOKIE'
-}
-}
+    response.cookie('wompwomp', 'value', {
+        httpOnly: true,
+        secure: true,
+        maxAge: 30 * 24 * 60 * 60 * 1000 
+      })
+    response.header('Set-Cookie', `refresh_token=${'wompwomp'}; HttpOnly; Secure; Max-Age=2592000; SameSite=Lax`);
+    console.log("SET COOKIE")
+    return 'SET COOKIE'
+  }
+  }

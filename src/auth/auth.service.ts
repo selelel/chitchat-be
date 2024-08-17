@@ -44,7 +44,8 @@ export class AuthService {
     let accesstoken : string
     verify(token, process.env.REFRESH_TOKEN_SECRET,
       (err, decoded) => {
-          if(error) throw new UnauthorizedError()
+          // if(error) throw new UnauthorizedError()
+          console.log(err)
           console.log(decoded)
       })
     // await this.updateUserToken(user_id, refreshtoken);
@@ -123,7 +124,7 @@ export class AuthService {
       }
       const accesstoken = await this.createAccessToken(payload);
 
-      return { accesstoken, user };
+      return { accesstoken, user};
     } catch (error) {
       throw error;
     }
