@@ -1,8 +1,8 @@
-import { MiddlewareConsumer, Module, NestModule, OnModuleInit } from '@nestjs/common';
+import { Module, } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver } from '@nestjs/apollo';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
@@ -13,8 +13,6 @@ import { UtilModules } from './utils/utils_modules/utils.module';
 import { PassportModule } from '@nestjs/passport';
 import { AppController } from './app.controller';
 import { HttpModule } from '@nestjs/axios';
-import * as cookieParser from 'cookie-parser';
-import { response } from 'express';
 
 @Module({
   imports: [
@@ -39,7 +37,13 @@ import { response } from 'express';
       },
       context: ({ req, res }) => ({ req, res })
     }),
-    MongooseModule.forRoot(process.env.DB_URI),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('DB_URI'),
+      }),
+    }),
     UtilModules,
     HttpModule
   ],

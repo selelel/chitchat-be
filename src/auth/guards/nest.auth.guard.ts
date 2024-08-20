@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { AuthGuard } from '@nestjs/passport';
+import { log } from 'console';
 
 @Injectable()
 export class NestAuthGuard extends AuthGuard('jwt') {
@@ -13,7 +14,7 @@ export class NestAuthGuard extends AuthGuard('jwt') {
     const req = context.switchToHttp().getRequest();
     const [, token] = req.headers.authorization.split(' ');
 
-    
+    log(token)
     if (!token || !(await this.authService.validateToken(token))) {
       return false;
     }

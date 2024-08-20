@@ -17,7 +17,7 @@ import { HttpModule } from '@nestjs/axios';
   imports: [
     HttpModule,
     JwtModule.register({
-      secret: JWT.JWT_SECRET_KEY,
+      secret: JWT.ACCESSTOKEN_SECRET_KEY,
     }),
     PassportModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),

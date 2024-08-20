@@ -24,7 +24,7 @@ export class AuthService {
   ) {}
 
   async createAccessToken(payload: AccessTokenGeneration): Promise<string> {
-    const accesstoken = sign(payload, JWT.JWT_SECRET_KEY, {
+    const accesstoken = sign(payload, JWT.ACCESSTOKEN_SECRET_KEY, {
       expiresIn: JWT.ACCESSTOKEN_EXP,
     });
 
@@ -32,7 +32,7 @@ export class AuthService {
   }
 
   async createRefreshToken(user_id: mongoose.Schema.Types.ObjectId): Promise<string> {
-    const refreshtoken = sign({ user_id }, JWT.JWT_SECRET_KEY, {
+    const refreshtoken = sign({ user_id }, JWT.REFRESHTOKEN_SECRET_KEY, {
       expiresIn: JWT.REFRESHTOKEN_EXP,
     });
 
@@ -40,16 +40,11 @@ export class AuthService {
     return refreshtoken;
   }
 
-  async validateRefreshToken(token:string): Promise<void> {
-    let accesstoken : string
-    verify(token, process.env.REFRESH_TOKEN_SECRET,
-      (err, decoded) => {
-          // if(error) throw new UnauthorizedError()
-          console.log(err)
-          console.log(decoded)
-      })
-    // await this.updateUserToken(user_id, refreshtoken);
-    // return refreshtoken;
+  async validateRefreshToken(token?: string): Promise<string> {
+    if(!verify(token, JWT.REFRESHTOKEN_SECRET_KEY)) throw new UnauthorizedError()
+    const decode = await this.decodeToken(token) 
+
+    return await this.createAccessToken({ _id : decode.payload._id, provider: 'jwt' })
   }
 
   async validateGoogleLogInUser(details: UserProfile): Promise<User> {
@@ -66,11 +61,9 @@ export class AuthService {
       payload: { _id },
     } = this.decodeToken(validate_token);
     
-    const user = await this.usersService.findOneById(_id);
     try {
       if (
-        !user.token.includes(validate_token) &&
-        !verify(validate_token, process.env.JWT_SUPER_SECRET_KEY)
+        !verify(validate_token, JWT.ACCESSTOKEN_SECRET_KEY)
       ) {
         throw new Error('Authentication Error');
       }

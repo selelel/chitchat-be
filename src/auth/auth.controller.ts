@@ -52,43 +52,4 @@ export class AuthController {
       );
     }
   }
-
-  @Get('refresh-token')
-  refreshToken(@Req() request: Request) {
-  console.log("GET COOKIE")
-  console.log(request.cookies[AUTH.REFRESH_TOKEN]);
 }
-
-@Get('/login')
-  async loginUser(
-    @Body() userInput: LoginUserInput,
-    @Res() res: Response
-  ) {
-    try {
-      const result = await this.authService.login(userInput);
-      const refresh_token = await this.authService.createRefreshToken(result.user._id);
-      
-      res.cookie('refresh_token', refresh_token, {
-        httpOnly: true,
-        secure: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000 
-      });
-
-      return result;
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  }
-
-  @Get('set_cookie')
-  findAll(@Res({ passthrough: true }) response: Response) {
-    response.cookie('wompwomp', 'value', {
-        httpOnly: true,
-        secure: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000 
-      })
-    response.header('Set-Cookie', `refresh_token=${'wompwomp'}; HttpOnly; Secure; Max-Age=2592000; SameSite=Lax`);
-    console.log("SET COOKIE")
-    return 'SET COOKIE'
-  }
-  }

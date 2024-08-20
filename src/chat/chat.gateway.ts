@@ -11,8 +11,9 @@ import { OnModuleInit } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { ChatMiddleware } from './chat.middleware';
 import { MessageContentInput } from './dto/message.content_input';
+import { CHAT_PORT } from 'src/utils/constant/constant';
 
-@WebSocketGateway(Number(process.env.CHAT_PORT) || 8585)
+@WebSocketGateway(CHAT_PORT)
 export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   server: Server;

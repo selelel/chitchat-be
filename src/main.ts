@@ -7,6 +7,7 @@ import * as passport from 'passport';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { Logger } from '@nestjs/common';
+import { SESSION_SECRET } from './utils/constant/constant';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,7 +20,7 @@ async function bootstrap() {
   
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || 'default_secret',
+      secret: SESSION_SECRET,
       saveUninitialized: false,
       resave: false,
       cookie: {
@@ -29,7 +30,6 @@ async function bootstrap() {
   );
 
   app.use(cookieParser())
-
   app.use(passport.initialize());
   app.use(passport.session());
   app.useGlobalPipes(new ValidationPipe());

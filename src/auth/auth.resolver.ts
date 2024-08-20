@@ -1,6 +1,6 @@
-import { Args, Mutation, Resolver, Query, Context, GraphQLExecutionContext } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query, Context } from '@nestjs/graphql';
 import { AuthService } from './auth.service';
-import { Res, UseGuards } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { LoginResponse } from './dto/login.response';
 import { GqlAuthGuard } from './guards/gql.auth.guard';
@@ -11,6 +11,8 @@ import { GqlCurrentUser } from './decorator/gql.current.user';
 import { ChangePasswordInput } from './dto/change.password.input';
 import { Response, Request} from 'express'
 import { AUTH } from 'src/utils/constant/constant';
+import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
+import { RefreshResponse } from './dto/resfresh.response';
 
 @Resolver()
 export class AuthResolver {
@@ -33,7 +35,6 @@ export class AuthResolver {
     @Args('passwordInput') { oldPassword, newPassword }: ChangePasswordInput,
   ) {
     const { _id, provider } = user.user.payload;
-
     const status = await this.userService.userChangePassword(
       _id,
       oldPassword,
@@ -51,7 +52,7 @@ export class AuthResolver {
         removeAll: true,
       });
 
-      res.cookie('jwt', '', {
+      res.cookie(AUTH.REFRESH_TOKEN, '', {
         httpOnly: true,
         secure: true,
         maxAge: 0,
@@ -67,7 +68,7 @@ export class AuthResolver {
   @UseGuards(GqlAuthGuard)
   async logoutDevice(@GqlCurrentUser() { user, token }, @Context("res") res: Response): Promise<boolean> {
     const decodedToken = await this.authService.decodeToken(token);
-    try {
+    try { 
       if (decodedToken.payload._id === user.payload._id) {
         await this.authService.removeUserToken(
           decodedToken.payload._id,
@@ -75,7 +76,7 @@ export class AuthResolver {
           { removeAll: user.payload.provider === 'google' },
         );
 
-        res.cookie('jwt', '', {
+        res.cookie(AUTH.REFRESH_TOKEN, '', {
           httpOnly: true,
           secure: true,
           maxAge: 0,
@@ -98,7 +99,7 @@ export class AuthResolver {
       const refresh_token = await this.authService.createRefreshToken(result.user._id);
       
       res.cookie(AUTH.REFRESH_TOKEN, refresh_token, {
-          httpOnly: true,
+          httpOnly: true, 
           secure: true,
           maxAge: 30 * 24 * 60 * 60 * 1000 
       });
@@ -109,20 +110,15 @@ export class AuthResolver {
     }
   }
 
-  @Query(() => String)
+  @Query(() => RefreshResponse)
   async refresh(@Context("req") req: Request) {
     try {
-      const token = req.cookies
-      console.log('Cookies:', token);
-
-      // const validate_token = await this.authService.validateRefreshToken(token)
-      // console.log(validate_token)
-  
-      // const refreshToken = token['refresh_token'];
-      // console.log('Refresh Token:', refreshToken);
-      return 'TEST';
+      const refresh_token = req.cookies[AUTH.REFRESH_TOKEN]
+      const _token_refresh = await this.authService.validateRefreshToken(refresh_token)
+      return { accesstoken : _token_refresh };
     } catch (error) {
-      return error
+      console.log(error)
+      throw new Error(error.message);
     }
   }
 
