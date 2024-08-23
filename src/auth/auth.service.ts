@@ -14,7 +14,8 @@ import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
 import { UserProfile } from './dto/google_payload.dto';;
 import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
-import { error } from 'console';
+import { Decoded_JWT, JWTPayload } from './interfaces/jwt_type';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class AuthService {
@@ -31,55 +32,60 @@ export class AuthService {
     return accesstoken;
   }
 
-  async createRefreshToken(user_id: mongoose.Schema.Types.ObjectId): Promise<string> {
-    const refreshtoken = sign({ user_id }, JWT.REFRESHTOKEN_SECRET_KEY, {
+  async createRefreshToken(_id: mongoose.Schema.Types.ObjectId | string | string, provider?: JWTPayload['provider']): Promise<string> {
+    const refreshtoken = sign({ _id , provider}, JWT.REFRESHTOKEN_SECRET_KEY, {
       expiresIn: JWT.REFRESHTOKEN_EXP,
     });
 
-    await this.updateUserToken(user_id, refreshtoken);
+    await this.updateUserToken(_id, refreshtoken);
     return refreshtoken;
   }
 
-  async validateRefreshToken(token?: string): Promise<string> {
-    if(!verify(token, JWT.REFRESHTOKEN_SECRET_KEY)) throw new UnauthorizedError()
-    const decode = await this.decodeToken(token) 
-
-    return await this.createAccessToken({ _id : decode.payload._id, provider: 'jwt' })
+  async validateRefreshToken(token: string): Promise<string> {
+    try {
+      const decoded = verify(token, JWT.REFRESHTOKEN_SECRET_KEY) as JWTPayload;
+  
+      const user = await this.userModel.findOne({ _id: decoded._id, token }).exec();
+  
+      if (!user) {
+        throw new UnauthorizedError('Refresh token was not found.');
+      }
+  
+      const newAccessToken = await this.createAccessToken({ _id: decoded._id, provider: 'jwt' });
+      return newAccessToken;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async validateGoogleLogInUser(details: UserProfile): Promise<User> {
+  async validateGoogleLogInUser(details: UserProfile, openid: string): Promise<User> {
     const user = await this.usersService.findEmail(details.email);
     if (!user) {
-      return await this.usersService.createGoggleAccountUser(details);
+      return await this.usersService.createGoggleAccountUser(details, openid);
+    }
+    if (!user.google_accesstoken) {
+      await this.userModel.findByIdAndUpdate(user._id, { google_openid: openid }, { new : true })
     }
     return user;
   }
   
 
   async validateToken(validate_token: string): Promise<boolean> {
-    const {
-      payload: { _id },
-    } = this.decodeToken(validate_token);
-    
     try {
-      if (
-        !verify(validate_token, JWT.ACCESSTOKEN_SECRET_KEY)
-      ) {
-        throw new Error('Authentication Error');
-      }
+      verify(validate_token, JWT.ACCESSTOKEN_SECRET_KEY) as JWTPayload;
+  
       return Promise.resolve(true);
     } catch (error) {
-      this.removeUserToken(_id, validate_token);
-      return Promise.resolve(false);
+      throw error;
     }
   }
 
-  decodeToken(token: string): any {
+  decodeToken(token: string): any{
     try {
       const decodedToken = decode(token, { complete: true });
       return decodedToken;
     } catch (error) {
-      return null;
+      throw error;
     }
   }
 
@@ -124,7 +130,7 @@ export class AuthService {
   }
 
   async updateUserToken(
-    userId: mongoose.Schema.Types.ObjectId,
+    userId: mongoose.Schema.Types.ObjectId | string,
     token: string,
   ): Promise<User> {
     const user = await this.userModel.findByIdAndUpdate(
@@ -137,7 +143,7 @@ export class AuthService {
   }
 
   async removeUserToken(
-    userId: mongoose.Schema.Types.ObjectId,
+    userId: mongoose.Schema.Types.ObjectId | string,
     tokenToRemove: string,
     options?: {
       removeAll: boolean;
@@ -162,7 +168,7 @@ export class AuthService {
     }
   }
 
-  async findUserById(_id: string) {
+  async findUserById(_id: mongoose.Schema.Types.ObjectId | string) {
     const user = await this.userModel.findById(_id);
     if (!user) throw new UnauthorizedError('User was not found.');
     return user;

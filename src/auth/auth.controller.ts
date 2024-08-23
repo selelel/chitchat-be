@@ -1,18 +1,14 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleOAuthGuard } from './guards/google.auth.guard';
 import { GoogleCurrentUser } from './decorator/google.current.user';
-import { query, Response, Request} from 'express';
-import { AxiosResponse } from 'axios';
-import { NestAuthGuard } from './guards/nest.auth.guard';
-import { NestCurrentUser } from './decorator/nest.current.user';
-import { HttpService } from '@nestjs/axios/dist/http.service';
-import { LoginUserInput } from './dto/login.input';
-import { AUTH } from 'src/utils/constant/constant';
+import { Response} from 'express';
+import { AUTH, HTTP_COOKIE_OPTION } from 'src/utils/constant/constant';
+import { GoogleCurrentUserPayload } from './interfaces/jwt_type';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService, private readonly httpService: HttpService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Get('google/login')
   @UseGuards(GoogleOAuthGuard)
@@ -23,33 +19,14 @@ export class AuthController {
   @Get('google/redirect')
   @UseGuards(GoogleOAuthGuard)
   async redirect(
-    @GoogleCurrentUser() { token }: any,
+    @GoogleCurrentUser() { refresh_token }: GoogleCurrentUserPayload,
     @Res() res: Response,
   ) {
-    const user = await this.authService.decodeToken(token)
-    const redirectUrl = `http://localhost:3000/auth/callback?token=${token}&user_id=${user.payload._id}`
-    res.redirect(redirectUrl);
-  }
+    const redirectUrl = `http://localhost:3000/`;
 
-  @Get('google/logout')
-  @UseGuards(NestAuthGuard)
-  async logout(@NestCurrentUser() { user: { payload: { _id, google_tkn} }, token}: any) {
-    const revokeUrl = `https://accounts.google.com/o/oauth2/revoke?token=${google_tkn}`;
-    try {
-      const response: AxiosResponse = await this.httpService.post(revokeUrl).toPromise();
-      await this.authService.removeUserToken(
-        _id,
-        token,
-      );
-      return {
-        message: 'Successfully logged out from Google',
-      };
-    } catch (error) {
-      console.error('Error revoking Google token:', error);
-      throw new HttpException(
-        'Failed to log out from Google',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    console.log(refresh_token)
+    res.cookie(AUTH.REFRESH_TOKEN, refresh_token, HTTP_COOKIE_OPTION);
+    
+    res.redirect(redirectUrl);
   }
 }

@@ -16,7 +16,6 @@ export class GoogleOAuthGuard extends AuthGuard('google') {
     const request = context.switchToHttp().getRequest();
     const query = request.query;
 
-    // Redirect user when error occur
     if (query.error) {
       console.warn(`OAuth error occurred: ${query.error}`);
       const host = context.switchToHttp()

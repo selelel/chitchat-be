@@ -8,33 +8,37 @@ import { LoginUserInput } from './dto/login.input';
 import { UserInput } from 'src/user/dto/user.input.dto';
 import { User } from 'src/user/entities/user.entity';
 import { GqlCurrentUser } from './decorator/gql.current.user';
-import { ChangePasswordInput } from './dto/change.password.input';
-import { Response, Request} from 'express'
-import { AUTH } from 'src/utils/constant/constant';
-import { HttpErrorByCode } from '@nestjs/common/utils/http-error-by-code.util';
+import { ChangePasswordInput } from './dto/change.password.input'
+import { AUTH, HTTP_COOKIE_OPTION } from 'src/utils/constant/constant';
 import { RefreshResponse } from './dto/resfresh.response';
+import { Decoded_JWT, GetCurrentUser } from './interfaces/jwt_type';
+import { GraphQLContext } from './interfaces/context.interface';
+import { AxiosResponse } from 'axios';
+import { HttpService } from '@nestjs/axios';
+import { UnauthorizedError } from 'src/utils/error/graphql.error';
 
 @Resolver()
 export class AuthResolver {
   constructor(
     private authService: AuthService,
     private userService: UserService,
+    private readonly httpService: HttpService
   ) {}
 
   @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async getUserById(@GqlCurrentUser() { user }: any) {
-    const user_ = await this.userService.findById(user.payload._id);
+  async getUserById(@GqlCurrentUser() { decoded_token }: GetCurrentUser) {
+    const user_ = await this.userService.findById(decoded_token.payload._id);
     return user_;
   }
 
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async updateUserPassword(
-    @GqlCurrentUser() user: any,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
     @Args('passwordInput') { oldPassword, newPassword }: ChangePasswordInput,
   ) {
-    const { _id, provider } = user.user.payload;
+    const { _id, provider } = decoded_token.payload;
     const status = await this.userService.userChangePassword(
       _id,
       oldPassword,
@@ -46,16 +50,25 @@ export class AuthResolver {
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logoutAllDevices(@GqlCurrentUser() { user, token }, @Context("res") res: Response): Promise<boolean> {
+  async logoutAllDevices(@GqlCurrentUser() { decoded_token }: GetCurrentUser, @Context() {res, req}: GraphQLContext ): Promise<boolean> {
     try {
-      await this.authService.removeUserToken(user.payload._id, token, {
-        removeAll: true,
-      });
+      const refresh_token = req.cookies[AUTH.REFRESH_TOKEN]
+      const decoded_rftoken = await this.authService.decodeToken(refresh_token) as Decoded_JWT
 
-      res.cookie(AUTH.REFRESH_TOKEN, '', {
-        httpOnly: true,
-        secure: true,
-        maxAge: 0,
+      if(decoded_rftoken.payload.provider ==='google') {
+        const user = await this.authService.findUserById(decoded_rftoken.payload._id)
+        const revokeUrl = `https://accounts.google.com/o/oauth2/revoke?token=${user.google_accesstoken}`;
+        
+        await fetch(revokeUrl, {
+          method: 'POST'
+        })
+
+      }
+      
+      res.cookie(AUTH.REFRESH_TOKEN, '', {...HTTP_COOKIE_OPTION, maxAge: 0});
+
+      await this.authService.removeUserToken(decoded_token.payload._id, refresh_token, {
+        removeAll: true,
       });
 
       return true;
@@ -66,43 +79,37 @@ export class AuthResolver {
 
   @Query(() => Boolean)
   @UseGuards(GqlAuthGuard)
-  async logoutDevice(@GqlCurrentUser() { user, token }, @Context("res") res: Response): Promise<boolean> {
-    const decodedToken = await this.authService.decodeToken(token);
-    try { 
-      if (decodedToken.payload._id === user.payload._id) {
-        await this.authService.removeUserToken(
-          decodedToken.payload._id,
-          token,
-          { removeAll: user.payload.provider === 'google' },
-        );
+  async logoutDevice(@GqlCurrentUser() { decoded_token }: GetCurrentUser, @Context() { res, req}: GraphQLContext): Promise<boolean> {
+    try {
+      const refresh_token = req.cookies[AUTH.REFRESH_TOKEN]
+      const decoded_rftoken = await this.authService.decodeToken(refresh_token) as Decoded_JWT
 
-        res.cookie(AUTH.REFRESH_TOKEN, '', {
-          httpOnly: true,
-          secure: true,
-          maxAge: 0,
-        });
-
-        return true;
+      if(decoded_rftoken.payload.provider ==='google') {
+        const user = await this.authService.findUserById(decoded_rftoken.payload._id)
+        const revokeUrl = `https://accounts.google.com/o/oauth2/revoke?token=${user.google_accesstoken}`;
+        await this.httpService.post(revokeUrl).toPromise();
       }
+      
+      res.cookie(AUTH.REFRESH_TOKEN, '', {...HTTP_COOKIE_OPTION, maxAge: 0});
+
+      await this.authService.removeUserToken(decoded_token.payload._id, refresh_token);
+
+      return true;
     } catch (error) {
-      return false;
+      return error;
     }
   }
 
   @Mutation(() => LoginResponse)
   async loginUser(
-    @Context('res') res: Response,
+    @Context() { res }: GraphQLContext,
     @Args('userInput') userInput: LoginUserInput,
   ) {
     try {
       const result = await this.authService.login(userInput);
       const refresh_token = await this.authService.createRefreshToken(result.user._id);
       
-      res.cookie(AUTH.REFRESH_TOKEN, refresh_token, {
-          httpOnly: true, 
-          secure: true,
-          maxAge: 30 * 24 * 60 * 60 * 1000 
-      });
+      res.cookie(AUTH.REFRESH_TOKEN, refresh_token, HTTP_COOKIE_OPTION);
       
       return result
     } catch (error) {
@@ -111,16 +118,27 @@ export class AuthResolver {
   }
 
   @Query(() => RefreshResponse)
-  async refresh(@Context("req") req: Request) {
-    try {
-      const refresh_token = req.cookies[AUTH.REFRESH_TOKEN]
-      const _token_refresh = await this.authService.validateRefreshToken(refresh_token)
-      return { accesstoken : _token_refresh };
-    } catch (error) {
-      console.log(error)
-      throw new Error(error.message);
-    }
+async refresh(@Context() { res, req }: GraphQLContext) {
+  const refresh_token = req.cookies[AUTH.REFRESH_TOKEN];
+
+  if (!refresh_token) {
+    throw new Error('Refresh token is missing.');
   }
+
+  const decoded_rftoken = await this.authService.decodeToken(refresh_token) as Decoded_JWT;
+  try {
+    const accessToken = await this.authService.validateRefreshToken(refresh_token);
+    return { accesstoken: accessToken };
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+
+      res.cookie(AUTH.REFRESH_TOKEN, '', { ...HTTP_COOKIE_OPTION, maxAge: 0 });
+      await this.authService.removeUserToken(decoded_rftoken.payload._id, refresh_token);
+    }
+    throw new Error(error.message || 'Failed to refresh token.');
+  }
+}
+
 
   @Mutation(() => User)
   async registerUser(@Args('userInput') userInput: UserInput) {

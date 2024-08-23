@@ -1,20 +1,18 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { User } from 'src/user/entities/user.entity';
+import { GoogleCurrentUserPayload } from '../interfaces/jwt_type';
 
 export const GoogleCurrentUser = createParamDecorator(
   (data: unknown, context: ExecutionContext) => {
     const [req] = context.getArgs();
-    let temp_token: string;
-    let temp_google_tkn: string;
 
-    temp_token = req.user.token;
-    temp_google_tkn = req.user.google_tkn
+    console.log(req.user)
     
-    delete req.user.token;
     return {
-      user: req.user as User,
-      token: temp_token,
-      google_tkn : temp_google_tkn
-    };
+      user: req.user.user,
+      refresh_token: req.user.refresh_token,
+      decoded_token: req.user.decoded_token,
+      google_openid: req.user.google_accesstoken
+    } as GoogleCurrentUserPayload;
   },
 );

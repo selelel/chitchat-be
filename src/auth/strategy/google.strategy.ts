@@ -31,6 +31,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       displayName,
       _json: { given_name, family_name, picture },
     } = profile;
+
     const payload_details = {
       email: emails[0].value,
       displayName,
@@ -38,13 +39,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       family_name,
       picture,
     };
-      const user =
-        await this.authService.validateGoogleLogInUser(payload_details);
-    const create_accesstoken = await this.authService.createAccessToken({
-      _id: user._id,
-      provider: 'google',
-      google_tkn: _accesstoken,
-    });
-    done(null, { ...profile, token: create_accesstoken, google_tkn: _accesstoken });
+    const user = await this.authService.validateGoogleLogInUser(payload_details, _accesstoken);
+
+    const refresh_token = await this.authService.createRefreshToken(user._id, 'google');
+
+    const decoded_token = await this.authService.decodeToken(refresh_token);
+    done(null, { ...profile, refresh_token, decoded_token, google_accesstoken: _accesstoken, user });
   }
 }

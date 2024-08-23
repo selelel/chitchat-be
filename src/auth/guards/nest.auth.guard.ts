@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { AuthGuard } from '@nestjs/passport';
-import { log } from 'console';
+import { Decoded_JWT } from '../interfaces/jwt_type';
 
 @Injectable()
 export class NestAuthGuard extends AuthGuard('jwt') {
@@ -14,14 +14,17 @@ export class NestAuthGuard extends AuthGuard('jwt') {
     const req = context.switchToHttp().getRequest();
     const [, token] = req.headers.authorization.split(' ');
 
-    log(token)
-    if (!token || !(await this.authService.validateToken(token))) {
-      return false;
-    }
-    
-    req.user = await this.authService.decodeToken(token);
-    req.token = token;
+    try {
+      if (!token || !(await this.authService.validateToken(token))) {
+        return false;
+      }
 
-    return true;
+      req.decode_token = this.authService.decodeToken(token) as Decoded_JWT;
+      req.token = token as string;
+
+      return true;
+    } catch (error) {
+      return error
+    }
   }
 }

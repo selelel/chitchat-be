@@ -74,7 +74,11 @@ export class User {
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
   @Field(() => [Chat])
+
   rooms: mongoose.Schema.Types.ObjectId[];
+
+  @Prop({ type: String, required: false, default: null})
+  google_accesstoken: String;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

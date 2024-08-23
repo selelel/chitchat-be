@@ -5,11 +5,11 @@ import { JWT } from 'src/utils/constant/constant';
 import { UserService } from 'src/user/user.service';
 import { JwtPayload } from '../dto/jwt_payload.dto';
 import { AuthService } from '../auth.service';
+import { Decoded_JWT } from '../interfaces/jwt_type';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly authService: AuthService,
     private readonly userService: UserService,
   ) {
     super({
@@ -19,10 +19,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload, done: Function) {
+  async validate(jwt: Decoded_JWT, done: Function) {
     try {
-      const user = await this.userService.findById(payload._id);
-      if (!user || !payload) {
+      const user = await this.userService.findById(jwt.payload._id);
+      if (!user || !jwt) {
         throw new UnauthorizedException();
       }
       done(null, user);

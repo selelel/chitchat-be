@@ -6,6 +6,9 @@ import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { ChatService } from 'src/chat/chat.service';
+import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
+import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -31,14 +34,11 @@ export class UserResolver {
   @UseGuards(GqlAuthGuard)
   async followUser(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
 
     const userRequest = await this.userService.requestToFollowUser(
-      _id,
+      decoded_token.payload._id,
       targetUserId,
     );
 
@@ -49,14 +49,11 @@ export class UserResolver {
   @UseGuards(GqlAuthGuard)
   async cancelFollowRequest(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
 
     const userRequest = await this.userService.removesUserRequest(
-      _id,
+      decoded_token.payload._id,
       targetUserId,
     );
 
@@ -67,19 +64,16 @@ export class UserResolver {
   @UseGuards(GqlAuthGuard)
   async acceptFollowRequest(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
     try {
-      const {
-        payload: { _id },
-      } = user;
 
       const userRequest = await this.userService.acceptsUserRequestToFollow(
-        _id,
+        decoded_token.payload._id,
         targetUserId,
       );
 
-      await this.chatService.createPrivateRoom(_id, targetUserId);
+      await this.chatService.createPrivateRoom(decoded_token.payload._id, targetUserId);
       return userRequest;
     } catch (error) {
       return error;
