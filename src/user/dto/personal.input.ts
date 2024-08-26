@@ -5,12 +5,10 @@ import { IsString, Length, IsOptional, Matches } from 'class-validator';
 export class PersonalObjectInput {
   @Field(() => String)
   @IsString()
-  @Length(6, 60, { message: 'Firstname must be between 6 and 60 characters.' })
   firstname: string;
 
   @Field(() => String)
   @IsString()
-  @Length(6, 60, { message: 'Lastname must be between 6 and 60 characters.' })
   lastname: string;
 
   @Field(() => String)

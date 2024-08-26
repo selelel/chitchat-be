@@ -145,4 +145,12 @@ async refresh(@Context() { res, req }: GraphQLContext) {
     const createdUser = await this.userService.createUser(userInput);
     return createdUser;
   }
+
+  @Mutation(() => Boolean)
+  async checkUserExistsByEmail(@Args('email') email: string) {
+    const user = await this.userService.findEmail(email)
+    if(!user) return false
+
+    return true;
+  }
 }
