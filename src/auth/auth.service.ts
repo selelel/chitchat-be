@@ -58,18 +58,17 @@ export class AuthService {
     }
   }
 
-  async validateGoogleLogInUser(details: UserProfile, openid: string): Promise<User> {
-    const user = await this.usersService.findEmail(details.email);
+  async validateGoogleLogInUser(details: UserProfile, google_accesstoken: string): Promise<User> {
+    let user = await this.usersService.findEmail(details.email);
+
     if (!user) {
-      return await this.usersService.createGoggleAccountUser(details, openid);
+      user = await this.usersService.createGoggleAccountUser(details);
     }
-    if (!user.google_accesstoken) {
-      await this.userModel.findByIdAndUpdate(user._id, { google_openid: openid }, { new : true })
-    }
+
+    await this.userModel.findByIdAndUpdate(user._id, { google_accesstoken }, { new : true })
     return user;
   }
   
-
   async validateToken(validate_token: string): Promise<boolean> {
     try {
       verify(validate_token, JWT.ACCESSTOKEN_SECRET_KEY) as JWTPayload;

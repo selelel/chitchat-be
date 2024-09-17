@@ -24,8 +24,8 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
       req.token = token as string;
 
       return true;
-    } catch (error) {
-      throw error
+      } catch (error) {
+        throw error
     }
   }
 }

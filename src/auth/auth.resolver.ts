@@ -55,6 +55,7 @@ export class AuthResolver {
       const refresh_token = req.cookies[AUTH.REFRESH_TOKEN]
       const decoded_rftoken = await this.authService.decodeToken(refresh_token) as Decoded_JWT
 
+      console.log("hello", decoded_rftoken.payload.provider)
       if(decoded_rftoken.payload.provider ==='google') {
         const user = await this.authService.findUserById(decoded_rftoken.payload._id)
         const revokeUrl = `https://accounts.google.com/o/oauth2/revoke?token=${user.google_accesstoken}`;
@@ -84,6 +85,7 @@ export class AuthResolver {
       const refresh_token = req.cookies[AUTH.REFRESH_TOKEN]
       const decoded_rftoken = await this.authService.decodeToken(refresh_token) as Decoded_JWT
 
+      console.log("hello")
       if(decoded_rftoken.payload.provider ==='google') {
         const user = await this.authService.findUserById(decoded_rftoken.payload._id)
         const revokeUrl = `https://accounts.google.com/o/oauth2/revoke?token=${user.google_accesstoken}`;

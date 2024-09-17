@@ -35,7 +35,7 @@ export class UserService {
     }
   }
 
-  async createGoggleAccountUser(details: UserProfile, openid: string) {
+  async createGoggleAccountUser(details: UserProfile ) {
     const { email, displayName, given_name, family_name } = details;
 
     const user_details = {
@@ -49,7 +49,6 @@ export class UserService {
       const newUser = await this.userModel.create({
         user: user_details,
         email,
-        google_openid: openid
       });
 
       return newUser;

@@ -5,9 +5,6 @@ import { GoogleCurrentUserPayload } from '../interfaces/jwt_type';
 export const GoogleCurrentUser = createParamDecorator(
   (data: unknown, context: ExecutionContext) => {
     const [req] = context.getArgs();
-
-    console.log(req.user)
-    
     return {
       user: req.user.user,
       refresh_token: req.user.refresh_token,

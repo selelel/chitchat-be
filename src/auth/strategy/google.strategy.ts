@@ -14,7 +14,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
       scope: ['email', 'profile', 'openid'],
+      accessType: 'offline', // Ensure offline access to get a refresh token
+      prompt: 'consent', // Ask for user consent each time to get a refresh token
     });
+    
   }
 
   // PLEASE RE-INTEGRATE OAUTH
