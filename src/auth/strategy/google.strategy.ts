@@ -14,15 +14,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
       scope: ['email', 'profile', 'openid'],
+      accessType: 'offline', // Ensure offline access to get a refresh token
+      prompt: 'consent', // Ask for user consent each time to get a refresh token
     });
+    
   }
 
   // PLEASE RE-INTEGRATE OAUTH
   // ! Google OAuth Integration is full of drawbacks.
   // ! Note for need to take into serious considerations.
   async validate(
-    openid: string,
-    _: string,
+    _accesstoken: string,
+    _refreshtoken: string,
     profile: PassportProfile,
     done: VerifyCallback,
   ) {
@@ -31,6 +34,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       displayName,
       _json: { given_name, family_name, picture },
     } = profile;
+
     const payload_details = {
       email: emails[0].value,
       displayName,
@@ -38,12 +42,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       family_name,
       picture,
     };
-    const user =
-      await this.authService.validateGoogleLogInUser(payload_details);
-    const create_accesstoken = await this.authService.createAccessToken({
-      _id: user._id,
-      provider: 'google',
-    });
-    done(null, { ...profile, token: create_accesstoken });
+    const user = await this.authService.validateGoogleLogInUser(payload_details, _accesstoken);
+
+    const refresh_token = await this.authService.createRefreshToken(user._id, 'google');
+
+    const decoded_token = await this.authService.decodeToken(refresh_token);
+    done(null, { ...profile, refresh_token, decoded_token, google_accesstoken: _accesstoken, user });
   }
 }

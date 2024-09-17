@@ -5,9 +5,7 @@ import { Chat } from 'src/chat/entities/chat.entity';
 import { Post } from 'src/post/entity/post.schema';
 import { AccountObjectEntity } from '../dto/account.object.entity';
 import { PersonalObjectEntity } from '../dto/personal.object.entity';
-import {
-  RequestObjectDto,
-} from '../dto/request.object.dto';
+import { RequestObjectDto } from '../dto/request.object.dto';
 import { Status } from '../enums';
 import { IsEmail } from 'class-validator';
 
@@ -44,7 +42,10 @@ export class User {
   @Field(() => Status)
   status: Status;
 
-  @Prop({ type: RequestObjectDto, default: { toFollowings: [], toFollowers: [] }})
+  @Prop({
+    type: RequestObjectDto,
+    default: { toFollowings: [], toFollowers: [] },
+  })
   @Field(() => RequestObjectDto)
   requests: RequestObjectDto;
 
@@ -73,7 +74,11 @@ export class User {
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chat' }] })
   @Field(() => [Chat])
+
   rooms: mongoose.Schema.Types.ObjectId[];
+
+  @Prop({ type: String, required: false, default: null})
+  google_accesstoken: String;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

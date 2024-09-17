@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { UserInput } from './dto/user.input.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { ObjectId } from 'mongodb';
 import {
@@ -35,7 +35,7 @@ export class UserService {
     }
   }
 
-  async createGoggleAccountUser(details: UserProfile) {
+  async createGoggleAccountUser(details: UserProfile ) {
     const { email, displayName, given_name, family_name } = details;
 
     const user_details = {
@@ -58,16 +58,16 @@ export class UserService {
   }
 
   async requestToFollowUser(
-    userId: string,
+    _id: mongoose.Schema.Types.ObjectId,
     targetUserId: string,
   ): Promise<User> {
     try {
-      if (await this.isUserAlreadyFollowed(userId, targetUserId)) {
+      if (await this.isUserAlreadyFollowed(_id, targetUserId)) {
         throw new ConflictError('User is already on Following');
       }
 
       const userUpdate = await this.userModel.updateOne(
-        { _id: userId },
+        { _id },
         {
           $addToSet: { 'requests.toFollowings': new ObjectId(targetUserId) },
         },
@@ -75,7 +75,7 @@ export class UserService {
 
       const targetUpdate = await this.userModel.updateOne(
         { _id: targetUserId },
-        { $addToSet: { 'requests.toFollowers': new ObjectId(userId) } },
+        { $addToSet: { 'requests.toFollowers': _id } },
       );
 
       if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
@@ -83,7 +83,7 @@ export class UserService {
       }
 
       return await this.userModel
-        .findOne({ _id: userId })
+        .findOne({ _id })
         .populate(['requests.toFollowers', 'requests.toFollowings']);
     } catch (error) {
       throw error;
@@ -91,25 +91,21 @@ export class UserService {
   }
 
   async removesUserRequest(
-    userId: string,
+    userId: mongoose.Schema.Types.ObjectId,
     targetUserId: string,
   ): Promise<User> {
     try {
-      const userUpdate = await this.userModel.updateOne(
-        { _id: userId },
+      await this.userModel.findByIdAndUpdate(
+        userId,
         { $pull: { 'requests.toFollowers': targetUserId } },
+        { new: true },
       );
 
-      const targetUpdate = await this.userModel.updateOne(
-        { _id: targetUserId },
+      await this.userModel.findByIdAndUpdate(
+        targetUserId,
         { $pull: { 'requests.toFollowings': userId } },
+        { new: true },
       );
-
-      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
-        throw new ConflictError(
-          'Failed to remove user requests one or both users',
-        );
-      }
 
       return await this.userModel
         .findOne({ _id: userId })
@@ -120,28 +116,27 @@ export class UserService {
   }
 
   async acceptsUserRequestToFollow(
-    userId: string,
+    userId: mongoose.Schema.Types.ObjectId,
     targetUserId: string,
   ): Promise<User> {
     try {
+      await this.isUserExisted(targetUserId);
       if (!(await this.isUserToAccept(userId, targetUserId)))
         throw new UnauthorizedError("User can't accept to following");
 
       await this.removesUserRequest(userId, targetUserId);
 
-      const userUpdate = await this.userModel.updateOne(
-        { _id: userId },
+      await this.userModel.findByIdAndUpdate(
+        userId,
         { $addToSet: { followers: targetUserId } },
+        { new: true },
       );
 
-      const targetUpdate = await this.userModel.updateOne(
-        { _id: targetUserId },
+      await this.userModel.findByIdAndUpdate(
+        targetUserId,
         { $addToSet: { following: userId } },
+        { new: true },
       );
-
-      if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
-        throw new ConflictError('Failed to update one or both users');
-      }
 
       return await this.userModel
         .findOne({ _id: userId })
@@ -222,7 +217,7 @@ export class UserService {
   }
 
   async userChangePassword(
-    _id: string,
+    _id: mongoose.Schema.Types.ObjectId,
     oldPass: string | null,
     newPass: string,
     provider: 'jwt' | 'google' = 'jwt',
@@ -256,8 +251,7 @@ export class UserService {
   }
 
   // Helper Function
-  async findById(_id?: string) {
-    console.log(_id);
+  async findById(_id?: mongoose.Schema.Types.ObjectId) {
     const user = await this.userModel.findById(_id);
     return user;
   }
@@ -282,7 +276,7 @@ export class UserService {
     return await this.userModel.findOne({ email }).exec();
   }
 
-  async isUserToAccept(_id: string, targetUserId: string) {
+  async isUserToAccept(_id: mongoose.Schema.Types.ObjectId, targetUserId: string) {
     try {
       const targetUserIdObject = new ObjectId(targetUserId);
 
@@ -301,7 +295,7 @@ export class UserService {
     }
   }
 
-  async isUserAlreadyFollowed(_id: string, targetUserId: string) {
+  async isUserAlreadyFollowed(_id: mongoose.Schema.Types.ObjectId, targetUserId: string) {
     try {
       const targetUserIdObject = new ObjectId(targetUserId);
 

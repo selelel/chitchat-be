@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module, } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloDriver } from '@nestjs/apollo';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
@@ -11,6 +11,8 @@ import { GatewayModule } from './gateway/gateway.module';
 import { PostModule } from './post/post.module';
 import { UtilModules } from './utils/utils_modules/utils.module';
 import { PassportModule } from '@nestjs/passport';
+import { AppController } from './app.controller';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
@@ -25,13 +27,27 @@ import { PassportModule } from '@nestjs/passport';
       envFilePath: '.env',
     }),
     PassportModule.register({ session: true }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRoot({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
-      context: ({ req, res }) => ({ req, res }),
+      cors: {
+        credentials: 'include',
+        mode: 'cors',
+        origin: 'http://localhost:3000',
+      },
+      context: ({ req, res }) => ({ req, res })
     }),
-    MongooseModule.forRoot(process.env.DB_URI),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('DB_URI'),
+      }),
+    }),
     UtilModules,
+    HttpModule
   ],
+  providers:[ConfigService],
+  controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule{}

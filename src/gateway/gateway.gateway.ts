@@ -45,7 +45,7 @@ export class Gateway
       await this.userService.updateUserStatus(user._id, Status.ONLINE);
       this.notifyFriends(user._id, `User ${username} is online`);
     } catch (error) {
-      console.log(error);
+      console.assert(error);
     }
   }
 
@@ -58,13 +58,12 @@ export class Gateway
     try {
       this.notifyFriends(user._id, `User ${username} is offline`);
     } catch (error) {
-      console.log(error);
+      console.assert(error);
     }
   }
 
   async notifyFriends(_id: string, message: string) {
     const userRecord = await this.userService.findOneById(_id);
-    console.log(_id);
     const { followers, following } = userRecord;
     [...followers, ...following].forEach((friend) => {
       this.server.emit(friend.toString(), message);

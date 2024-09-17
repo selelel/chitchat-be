@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb';
 import { Message } from './entities/message.entity';
 import { GetConversation } from './dto/conversation.dto';
 import { ChatValidateUser } from './dto/chatvalidateuser.dto';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { ConflictError, UnauthorizedError } from 'src/utils/error/global.error';
 import { UserService } from 'src/user/user.service';
 import { MessageContentInput } from './dto/message.content_input';
@@ -37,7 +37,7 @@ export class ChatService {
     }
   }
 
-  async createPrivateRoom(_user1: string, _user2: string): Promise<Chat> {
+  async createPrivateRoom(_user1: mongoose.Schema.Types.ObjectId | string, _user2: mongoose.Schema.Types.ObjectId | string): Promise<Chat> {
     try {
       const privateRoomId = new ObjectId();
       const [user1, user2] = await Promise.all([
@@ -167,7 +167,6 @@ export class ChatService {
         'png',
       );
 
-      console.log(images);
       if (!images) {
         throw new ConflictError('Error processing image');
       }
@@ -182,7 +181,6 @@ export class ChatService {
 
       return message;
     } catch (error) {
-      console.log(error);
       return false;
     }
   }
@@ -225,7 +223,10 @@ export class ChatService {
     }
   }
 
-  async usersPrivateChatFinder(userId1: string, userId2: string) : Promise<Chat> {
+  async usersPrivateChatFinder(
+    userId1: mongoose.Schema.Types.ObjectId | string,
+    userId2: mongoose.Schema.Types.ObjectId | string,
+  ): Promise<Chat> {
     try {
       const detect = await this.chatModel.findOne({
         category: Category.PRIVATE,

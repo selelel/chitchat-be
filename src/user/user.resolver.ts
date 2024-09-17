@@ -6,10 +6,16 @@ import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { ChatService } from 'src/chat/chat.service';
+import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
+import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 
 @Resolver(() => User)
 export class UserResolver {
-  constructor(private readonly userService: UserService, private readonly chatService: ChatService, ) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly chatService: ChatService,
+  ) {}
 
   @Query(() => [User])
   async testQuery(): Promise<User[]> {
@@ -26,16 +32,13 @@ export class UserResolver {
 
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
-  async requestToFollowUser(
+  async followUser(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
 
     const userRequest = await this.userService.requestToFollowUser(
-      _id,
+      decoded_token.payload._id,
       targetUserId,
     );
 
@@ -44,16 +47,13 @@ export class UserResolver {
 
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
-  async declineUserRequest(
+  async cancelFollowRequest(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
 
     const userRequest = await this.userService.removesUserRequest(
-      _id,
+      decoded_token.payload._id,
       targetUserId,
     );
 
@@ -64,20 +64,20 @@ export class UserResolver {
   @UseGuards(GqlAuthGuard)
   async acceptFollowRequest(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
+    try {
 
-    const userRequest = await this.userService.acceptsUserRequestToFollow(
-      _id,
-      targetUserId,
-    );
+      const userRequest = await this.userService.acceptsUserRequestToFollow(
+        decoded_token.payload._id,
+        targetUserId,
+      );
 
-    // create private chat is there is it isn't created.
-    await this.chatService.createPrivateRoom(_id, targetUserId)
-    return userRequest;
+      await this.chatService.createPrivateRoom(decoded_token.payload._id, targetUserId);
+      return userRequest;
+    } catch (error) {
+      return error;
+    }
   }
 
   @Mutation(() => User)

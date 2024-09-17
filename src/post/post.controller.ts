@@ -35,7 +35,6 @@ export class PostController {
     @Body() { postId },
   ) {
     try {
-      console.log(postId, user.payload._id);
       await this.postService.isUserAuthor(postId, user.payload._id);
 
       const buffers = files.reduce((acc, file) => {
@@ -43,7 +42,6 @@ export class PostController {
       }, []) as Buffer[];
 
       const link = await this.postService.appendImageOnPost(postId, buffers);
-      console.log(link);
       return link;
     } catch (error) {
       return error;

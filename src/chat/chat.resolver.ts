@@ -13,27 +13,30 @@ export class ChatResolver {
 
   @Mutation(() => Chat)
   @UseGuards(GqlAuthGuard)
-  async createChat(
+  async createChatRoom(
     @Args('recipientId') recipientId: string,
     @GqlCurrentUser() { user },
   ): Promise<Chat> {
-    const createChat = await this.chatService.createPrivateRoom(
+    const createdChat = await this.chatService.createPrivateRoom(
       user.payload._id,
       recipientId,
     );
 
-    return createChat;
+    return createdChat;
   }
 
   @Mutation(() => Chat)
   @UseGuards(GqlAuthGuard)
-  async getUserPrivateChat(
+  async getUserPrivateChatRoom(
     @Args('targetUser') targetUser: string,
     @GqlCurrentUser() { user },
   ): Promise<Chat> {
     try {
-      const room = await this.chatService.usersPrivateChatFinder(targetUser, user.payload._id);
-      return room
+      const room = await this.chatService.usersPrivateChatFinder(
+        targetUser,
+        user.payload._id,
+      );
+      return room;
     } catch (error) {
       return error;
     }
@@ -41,20 +44,20 @@ export class ChatResolver {
 
   @Mutation(() => [Message])
   @UseGuards(GqlAuthGuard)
-  async getConversation(
-    @Args('getConversation') getConversation: GetConversation,
+  async getChatConversation(
+    @Args('conversationInput') conversationInput: GetConversation,
     @GqlCurrentUser() { user },
   ): Promise<Message[]> {
     try {
-      const validateUser = await this.chatService.validateUserIsOnChat({
+      const isValidUser = await this.chatService.validateUserIsOnChat({
         userId: user.payload._id,
-        chatId: getConversation.chatId,
+        chatId: conversationInput.chatId,
       });
 
-      if (validateUser !== true) {
-        throw validateUser;
+      if (isValidUser !== true) {
+        throw isValidUser;
       }
-      return await this.chatService.privateChats(getConversation);
+      return await this.chatService.privateChats(conversationInput);
     } catch (error) {
       return error;
     }

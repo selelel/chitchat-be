@@ -8,7 +8,6 @@ function base64urlUnescape(str) {
 }
 
 export function decodeJwt(token: string) {
-  console.log(token);
   const segments = token.split('.');
 
   if (segments.length !== 3) {

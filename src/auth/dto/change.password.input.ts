@@ -5,9 +5,9 @@ import { IsString } from 'class-validator';
 export class ChangePasswordInput {
   @Field(() => String, { nullable: true })
   @IsString()
-  oldPass?: string;
-  
+  oldPassword?: string;
+
   @Field(() => String)
   @IsString()
-  newPass: string;
+  newPassword: string;
 }

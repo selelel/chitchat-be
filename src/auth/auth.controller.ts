@@ -1,7 +1,10 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleOAuthGuard } from './guards/google.auth.guard';
 import { GoogleCurrentUser } from './decorator/google.current.user';
+import { Response} from 'express';
+import { AUTH, HTTP_COOKIE_OPTION } from 'src/utils/constant/constant';
+import { GoogleCurrentUserPayload } from './interfaces/jwt_type';
 
 @Controller('auth')
 export class AuthController {
@@ -15,8 +18,15 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(GoogleOAuthGuard)
-  async redirect(@GoogleCurrentUser() data: any) {
-    console.log('redirect', data);
-    return { msg: `user: ${data.user.displayName} is logged in.` };
+  async redirect(
+    @GoogleCurrentUser() { refresh_token }: GoogleCurrentUserPayload,
+    @Res() res: Response,
+  ) {
+    const redirectUrl = `http://localhost:3000/`;
+
+    console.log(refresh_token)
+    res.cookie(AUTH.REFRESH_TOKEN, refresh_token, HTTP_COOKIE_OPTION);
+    
+    res.redirect(redirectUrl);
   }
 }

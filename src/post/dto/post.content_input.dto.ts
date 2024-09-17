@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 @InputType()
 export class PostContentInput {
@@ -7,11 +7,8 @@ export class PostContentInput {
   @IsString()
   description?: string;
 
-  @Field(() => [String], { nullable: true })
-  @IsString()
-  image?: string[];
-
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
+  @IsOptional()
   @IsString()
   text?: string;
 }

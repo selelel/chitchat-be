@@ -5,6 +5,7 @@ import { UUID } from 'mongodb';
 import Jimp from 'jimp';
 import { Readable } from 'node:stream';
 import { ConflictError } from 'src/utils/error/graphql.error';
+import { AWS } from 'src/utils/constant/constant';
 
 @Injectable()
 export class FileUploadService {
@@ -12,7 +13,7 @@ export class FileUploadService {
   async removeFileImage(filename: string[]): Promise<string[] | boolean> {
     try {
       filename.forEach(async (d) => {
-        const key = d.replace(`${process.env.AWS_BASE_LINK}/`, '');
+        const key = d.replace(`${AWS.BASE_LINK}/`, '');
         await this.bucketService.deletePublicFile(key);
       });
     } catch (error) {
@@ -22,7 +23,7 @@ export class FileUploadService {
   async removeFileImagMessage(filename: string[]): Promise<string[] | boolean> {
     try {
       filename.forEach(async (d) => {
-        const key = d.replace(`${process.env.AWS_BASE_LINK}/`, '');
+        const key = d.replace(`${AWS.BASE_LINK}/`, '');
         await this.bucketService.deletePublicFile(key);
       });
     } catch (error) {
@@ -52,7 +53,7 @@ export class FileUploadService {
             Folders.POSTS,
           );
           filenames.push(
-            `${process.env.AWS_BASE_LINK}/${Folders.POSTS}/${place}`,
+            `${AWS.BASE_LINK}/${Folders.POSTS}/${place}`,
           );
         } catch (error) {
           return error;
@@ -86,14 +87,13 @@ export class FileUploadService {
             Folders.MESSAGES,
           );
           filenames.push(
-            `${process.env.AWS_BASE_LINK}/${Folders.MESSAGES}/${place}`,
+            `${AWS.BASE_LINK}/${Folders.MESSAGES}/${place}`,
           );
         } catch (error) {
           return error;
         }
       }
 
-      console.log(filenames);
       return filenames;
     } catch (error) {
       return false;

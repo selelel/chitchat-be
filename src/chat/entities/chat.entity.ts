@@ -23,7 +23,7 @@ export class Chat {
   category: Category;
 
   @Prop({ type: [{ type: mongoose.Schema.ObjectId, ref: 'Message' }] })
-  @Field(() => [Message])   
+  @Field(() => [Message])
   messages: Message[];
 
   @Prop({ type: String })
