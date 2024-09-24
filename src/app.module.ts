@@ -41,7 +41,7 @@ import { HttpModule } from '@nestjs/axios';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('DB_URI'),
+        uri: process.env.DB_URI,
       }),
     }),
     UtilModules,
