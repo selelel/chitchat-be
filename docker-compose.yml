@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  chitchat_be_dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env.docker
+    volumes:
+      - ./src:/user/src/app/src
+    depends_on:
+      - mongo_db
+    networks:
+      - chitchat_network
+
+  mongo_db:
+    image: mongo:6.0
+    container_name: chitchat_mongo
+    ports:
+      - "11111:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - chitchat_network 
+
+volumes:
+  mongo_data:
+    driver: local`
+
+networks:
+  chitchat_network:
+    driver: bridge

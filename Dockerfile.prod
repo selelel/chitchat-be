@@ -1,0 +1,15 @@
+FROM node:20
+
+WORKDIR /user/src/app
+
+COPY . .
+
+RUN yarn
+
+RUN yarn build
+
+RUN rm -rf /src
+
+EXPOSE 8080
+
+CMD [ "yarn", "start:prod"]
