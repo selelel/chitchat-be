@@ -92,7 +92,7 @@ export class UserService {
 
   async removesUserRequest(
     userId: mongoose.Schema.Types.ObjectId,
-    targetUserId: string,
+    targetUserId: mongoose.Schema.Types.ObjectId,
   ): Promise<User> {
     try {
       await this.userModel.findByIdAndUpdate(
@@ -117,7 +117,7 @@ export class UserService {
 
   async acceptsUserRequestToFollow(
     userId: mongoose.Schema.Types.ObjectId,
-    targetUserId: string,
+    targetUserId: mongoose.Schema.Types.ObjectId,
   ): Promise<User> {
     try {
       await this.isUserExisted(targetUserId);
@@ -276,9 +276,9 @@ export class UserService {
     return await this.userModel.findOne({ email }).exec();
   }
 
-  async isUserToAccept(_id: mongoose.Schema.Types.ObjectId, targetUserId: string) {
+  async isUserToAccept(_id: mongoose.Schema.Types.ObjectId, targetUserId: mongoose.Schema.Types.ObjectId) {
     try {
-      const targetUserIdObject = new ObjectId(targetUserId);
+      const targetUserIdObject = targetUserId;
 
       const user = await this.userModel.findOne({
         _id,
@@ -320,7 +320,7 @@ export class UserService {
     });
   }
 
-  async isUserExisted(_id: string): Promise<User> {
+  async isUserExisted(_id: mongoose.Schema.Types.ObjectId): Promise<User> {
     const user = await this.userModel.findOne({ _id });
     if (!user) throw new ConflictError('User not Found');
     return user;

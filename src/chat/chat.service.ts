@@ -69,7 +69,7 @@ export class ChatService {
     }
   }
 
-  async createUsersRoom(userIds: string[]): Promise<Chat> {
+  async createUsersRoom(userIds: mongoose.Schema.Types.ObjectId[]): Promise<Chat> {
     const users = [];
 
     for (const userId of userIds) {
@@ -94,7 +94,7 @@ export class ChatService {
     return room;
   }
 
-  async addUserOnRoom(roomId: string, _targetUser: string): Promise<Chat> {
+  async addUserOnRoom(roomId: mongoose.Schema.Types.ObjectId, _targetUser: mongoose.Schema.Types.ObjectId): Promise<Chat> {
     await this.usersService.isUserExisted(_targetUser);
     await this.isChatExisted(roomId);
 
@@ -197,7 +197,7 @@ export class ChatService {
     }
   }
 
-  async isChatExisted(_id: string) {
+  async isChatExisted(_id: mongoose.Schema.Types.ObjectId) {
     const chat = await this.chatModel.findById(_id);
     if (!chat) throw new ConflictError('Chat not found');
 

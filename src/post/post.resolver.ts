@@ -10,6 +10,8 @@ import { User } from 'src/user/entities/user.entity';
 import { CommentContentInput } from './dto/comment.content_input';
 import { Comments } from './entity/comments.schema';
 import { Pagination } from 'src/utils/global_dto/pagination.dto';
+import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
+import mongoose from 'mongoose';
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -48,16 +50,17 @@ export class PostResolver {
   @Mutation(() => Post)
   @UseGuards(GqlAuthGuard)
   async createNewPost(
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
     @Args('postContent') content: PostContentInput,
     @Args('postOption') option: PostOptionInput,
   ): Promise<Post> {
-    const { payload } = user;
+    const { payload } = decoded_token;
     const newPost = await this.postService.createPost(
       payload._id,
       content,
       option,
     );
+    
     return newPost;
   }
 
@@ -71,7 +74,7 @@ export class PostResolver {
   ): Promise<Post> {
     try {
       const updatedUser = await this.postService.updatePost(
-        postId,
+        postId as unknown as mongoose.Schema.Types.ObjectId,
         user.payload._id,
         option,
       );
@@ -93,7 +96,7 @@ export class PostResolver {
     },
   ): Promise<any> {
     try {
-      const user = await this.postService.removePost(postId, _id);
+      const user = await this.postService.removePost(postId as unknown as mongoose.Schema.Types.ObjectId , _id);
       return user;
     } catch (error) {
       return error;
@@ -115,7 +118,7 @@ export class PostResolver {
     try {
       const comment = await this.postService.addPostComments(
         _id,
-        postId,
+        postId as unknown as mongoose.Schema.Types.ObjectId,
         commentContent,
       );
       return comment;

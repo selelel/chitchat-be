@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument } from './entity/post.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { ConflictError } from 'src/utils/error/global.error';
 import { UserService } from 'src/user/user.service';
 import { Comments, CommentsDocument } from './entity/comments.schema';
@@ -25,7 +25,7 @@ export class PostService {
   ) {}
 
   async getUserFollowingPost(
-    userId: string,
+    userId: mongoose.Schema.Types.ObjectId,
     pagination: Pagination,
   ): Promise<Post[]> {
     this.usersService.isUserExisted(userId);
@@ -47,7 +47,7 @@ export class PostService {
   }
 
   async getRecommendations(
-    userId: string,
+    userId: mongoose.Schema.Types.ObjectId,
     pagination: Pagination,
   ): Promise<Post[]> {
     this.usersService.isUserExisted(userId);
@@ -69,7 +69,7 @@ export class PostService {
   }
 
   async createPost(
-    userId: string,
+    userId: mongoose.Schema.Types.ObjectId,
     content: PostContentObject,
     option?: PostOptionInput,
   ): Promise<Post> {
@@ -95,7 +95,7 @@ export class PostService {
   }
 
   async updatePost(
-    postId: string,
+    postId: mongoose.Schema.Types.ObjectId,
     content: Partial<PostContentObject>,
     option?: PostOptionInput,
   ): Promise<Post> {
@@ -122,7 +122,7 @@ export class PostService {
     return updatedPost;
   }
 
-  async removePost(postId: string, userId: string): Promise<User> {
+  async removePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<User> {
     try {
       await this.doesPostExist(postId);
       await this.usersService.isUserExisted(userId);
@@ -149,8 +149,8 @@ export class PostService {
   }
 
   async addPostComments(
-    userId: string,
-    postId: string,
+    userId: mongoose.Schema.Types.ObjectId,
+    postId: mongoose.Schema.Types.ObjectId,
     content: CommentContentObject,
   ): Promise<Comments> {
     try {
@@ -160,7 +160,7 @@ export class PostService {
       const comment = await this.commentModel.create({
         content,
         createdAt: Date.now(),
-        user: new ObjectId(userId),
+        user: userId,
         postId: postId,
       });
 
@@ -251,7 +251,7 @@ export class PostService {
     }
   }
 
-  private async doesPostExist(postId: any): Promise<PostDocument> {
+  private async doesPostExist(postId: mongoose.Schema.Types.ObjectId): Promise<PostDocument> {
     const post = await this.postModel.findById(postId);
     if (!post) {
       throw new ConflictError('Post not Found!');

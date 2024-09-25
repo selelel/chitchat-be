@@ -54,7 +54,7 @@ export class UserResolver {
 
     const userRequest = await this.userService.removesUserRequest(
       decoded_token.payload._id,
-      targetUserId,
+      targetUserId as unknown as mongoose.Schema.Types.ObjectId,
     );
 
     return userRequest;
@@ -67,10 +67,9 @@ export class UserResolver {
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
     try {
-
       const userRequest = await this.userService.acceptsUserRequestToFollow(
         decoded_token.payload._id,
-        targetUserId,
+        targetUserId as unknown as mongoose.Schema.Types.ObjectId,
       );
 
       await this.chatService.createPrivateRoom(decoded_token.payload._id, targetUserId);
