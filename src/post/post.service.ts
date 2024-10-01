@@ -236,7 +236,6 @@ export class PostService {
     buffers: Buffer[],
   ): Promise<Post | boolean> {
     try {
-      console.log("Hello")
       const images = await this.fileUploadService.uploadFileImagePost(
         buffers,
         postId,

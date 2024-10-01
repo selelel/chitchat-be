@@ -33,7 +33,7 @@ import { HttpModule } from '@nestjs/axios';
       cors: {
         credentials: 'include',
         mode: 'cors',
-        origin: 'http://localhost:3000',
+        origin: true,
       },
       context: ({ req, res }) => ({ req, res })
     }),

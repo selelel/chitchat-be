@@ -36,7 +36,6 @@ export class FileUploadService {
     filename: string,
     type: string,
   ): Promise<string[] | boolean> {
-    console.log(buffers, filename, type)
     try {
       const filenames = [];
       const buffered = await this.processMultipleBase64Images(buffers);

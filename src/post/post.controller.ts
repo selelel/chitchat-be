@@ -35,7 +35,6 @@ export class PostController {
     @Body() { postId },
   ) {
     try {
-      console.log(postId, decoded_token)
       await this.postService.isUserAuthor(postId, decoded_token.payload._id);
       const buffers = files.reduce((acc, file) => {
         return [...acc, file.buffer];

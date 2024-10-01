@@ -24,6 +24,7 @@ export const CHAT_PORT = Number(process.env.CHAT_PORT) || 8585
 export const AWS = {
   BASE_LINK: process.env.AWS_BASE_LINK,
 }
+
 export const HTTP_COOKIE_OPTION = {
   httpOnly: true, 
   secure: true,
