@@ -24,6 +24,15 @@ export class PostService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
+  async getPostById(postId: mongoose.Schema.Types.ObjectId): Promise<Post> {
+    try {
+      const post = await this.postModel.findById(postId)
+      return post;
+    } catch (error) {
+      return error;
+    }
+  }
+
   async getUserFollowingPost(
     userId: mongoose.Schema.Types.ObjectId,
     pagination: Pagination,
@@ -227,6 +236,7 @@ export class PostService {
     buffers: Buffer[],
   ): Promise<Post | boolean> {
     try {
+      console.log("Hello")
       const images = await this.fileUploadService.uploadFileImagePost(
         buffers,
         postId,
@@ -263,7 +273,7 @@ export class PostService {
     const post = await this.postModel.findOne({ _id: postId, author: userId });
 
     if (!post) {
-      throw new ConflictException('User is not the author of the post!');
+      throw new Error('User is not the author of the post!');
     }
 
     return post;

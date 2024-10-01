@@ -19,6 +19,16 @@ export class PostResolver {
     console.log('Invoked!');
   }
 
+  @Mutation(() => Post)
+  async getPost(@Args('postId') postId: string): Promise<Post> {
+    try {
+      const post = await this.postService.getPostById(postId as unknown as mongoose.Schema.Types.ObjectId);
+      return post;
+    } catch (error) {
+      return error;
+    }
+  }
+
   @Mutation(() => [Post])
   @UseGuards(GqlAuthGuard)
   async getUserFollowingPosts(

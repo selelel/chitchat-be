@@ -19,8 +19,8 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post('appendImagePost')
-  @UseInterceptors(FilesInterceptor('file'))
   @UseGuards(NestAuthGuard)
+  @UseInterceptors(FilesInterceptor('file'))
   async uploadImage(
     @UploadedFiles(
       new ParseFilePipe({
@@ -31,12 +31,12 @@ export class PostController {
       }),
     )
     files: Express.Multer.File[],
-    @NestCurrentUser() { user },
+    @NestCurrentUser() {decoded_token},
     @Body() { postId },
   ) {
     try {
-      await this.postService.isUserAuthor(postId, user.payload._id);
-
+      console.log(postId, decoded_token)
+      await this.postService.isUserAuthor(postId, decoded_token.payload._id);
       const buffers = files.reduce((acc, file) => {
         return [...acc, file.buffer];
       }, []) as Buffer[];
@@ -44,7 +44,24 @@ export class PostController {
       const link = await this.postService.appendImageOnPost(postId, buffers);
       return link;
     } catch (error) {
-      return error;
+      throw error
     }
   }
+
+  @Post('test')
+  @UseGuards(NestAuthGuard)
+  async test(
+    @NestCurrentUser() user,
+    @Body() { postId },
+  ) {
+    try {
+      console.log("Invoked")
+      console.log(postId, user)
+      return "test";
+    } catch (error) {
+      throw error
+    }
+  }
+
+  
 }

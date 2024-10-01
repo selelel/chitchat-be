@@ -6,7 +6,7 @@ export const USER_PROVIDER = {
 export const JWT = {
   ACCESSTOKEN_SECRET_KEY: process.env.ACCESSTOKEN_SECRET_KEY || 'default',
   REFRESHTOKEN_SECRET_KEY: process.env.REFRESHTOKEN_SECRET_KEY || 'default',
-  ACCESSTOKEN_EXP: process.env.ACCESSTOKEN_EXP || '5s',
+  ACCESSTOKEN_EXP: process.env.ACCESSTOKEN_EXP || '30d', // TODO: Change to much shorter duration.
   REFRESHTOKEN_EXP: process.env.REFRESHTOKEN_EXP || '30d',
 };
 

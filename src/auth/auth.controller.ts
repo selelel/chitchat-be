@@ -24,7 +24,6 @@ export class AuthController {
   ) {
     const redirectUrl = `http://localhost:3000/`;
 
-    console.log(refresh_token)
     res.cookie(AUTH.REFRESH_TOKEN, refresh_token, HTTP_COOKIE_OPTION);
     
     res.redirect(redirectUrl);
