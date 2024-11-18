@@ -35,7 +35,7 @@ export class UserService {
     }
   }
 
-  async createGoggleAccountUser(details: UserProfile ) {
+  async createGoggleAccountUser(details: UserProfile) {
     const { email, displayName, given_name, family_name } = details;
 
     const user_details = {
@@ -276,7 +276,10 @@ export class UserService {
     return await this.userModel.findOne({ email }).exec();
   }
 
-  async isUserToAccept(_id: mongoose.Schema.Types.ObjectId, targetUserId: mongoose.Schema.Types.ObjectId) {
+  async isUserToAccept(
+    _id: mongoose.Schema.Types.ObjectId,
+    targetUserId: mongoose.Schema.Types.ObjectId,
+  ) {
     try {
       const targetUserIdObject = targetUserId;
 
@@ -295,7 +298,10 @@ export class UserService {
     }
   }
 
-  async isUserAlreadyFollowed(_id: mongoose.Schema.Types.ObjectId, targetUserId: string) {
+  async isUserAlreadyFollowed(
+    _id: mongoose.Schema.Types.ObjectId,
+    targetUserId: string,
+  ) {
     try {
       const targetUserIdObject = new ObjectId(targetUserId);
 

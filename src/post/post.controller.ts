@@ -31,7 +31,7 @@ export class PostController {
       }),
     )
     files: Express.Multer.File[],
-    @NestCurrentUser() {decoded_token},
+    @NestCurrentUser() { decoded_token },
     @Body() { postId },
   ) {
     try {
@@ -43,24 +43,19 @@ export class PostController {
       const link = await this.postService.appendImageOnPost(postId, buffers);
       return link;
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
   @Post('test')
   @UseGuards(NestAuthGuard)
-  async test(
-    @NestCurrentUser() user,
-    @Body() { postId },
-  ) {
+  async test(@NestCurrentUser() user, @Body() { postId }) {
     try {
-      console.log("Invoked")
-      console.log(postId, user)
-      return "test";
+      console.log('Invoked');
+      console.log(postId, user);
+      return 'test';
     } catch (error) {
-      throw error
+      throw error;
     }
   }
-
-  
 }

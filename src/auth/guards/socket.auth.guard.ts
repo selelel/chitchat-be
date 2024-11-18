@@ -22,10 +22,10 @@ export class SocketAuthGuard extends AuthGuard('jwt') {
 
       req.decode_token = this.authService.decodeToken(token) as Decoded_JWT;
       req.token = token as string;
-      
+
       return true;
     } catch (error) {
-      return error
+      return error;
     }
   }
 }

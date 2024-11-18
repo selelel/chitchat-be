@@ -26,7 +26,7 @@ export class PostService {
 
   async getPostById(postId: mongoose.Schema.Types.ObjectId): Promise<Post> {
     try {
-      const post = await this.postModel.findById(postId)
+      const post = await this.postModel.findById(postId);
       return post;
     } catch (error) {
       return error;
@@ -131,7 +131,10 @@ export class PostService {
     return updatedPost;
   }
 
-  async removePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<User> {
+  async removePost(
+    postId: mongoose.Schema.Types.ObjectId,
+    userId: mongoose.Schema.Types.ObjectId,
+  ): Promise<User> {
     try {
       await this.doesPostExist(postId);
       await this.usersService.isUserExisted(userId);
@@ -241,7 +244,6 @@ export class PostService {
         postId,
         'png',
       );
-
       if (!images) {
         throw new ConflictError('Error processing image');
       }
@@ -260,7 +262,9 @@ export class PostService {
     }
   }
 
-  private async doesPostExist(postId: mongoose.Schema.Types.ObjectId): Promise<PostDocument> {
+  private async doesPostExist(
+    postId: mongoose.Schema.Types.ObjectId,
+  ): Promise<PostDocument> {
     const post = await this.postModel.findById(postId);
     if (!post) {
       throw new ConflictError('Post not Found!');

@@ -37,7 +37,10 @@ export class ChatService {
     }
   }
 
-  async createPrivateRoom(_user1: mongoose.Schema.Types.ObjectId | string, _user2: mongoose.Schema.Types.ObjectId | string): Promise<Chat> {
+  async createPrivateRoom(
+    _user1: mongoose.Schema.Types.ObjectId | string,
+    _user2: mongoose.Schema.Types.ObjectId | string,
+  ): Promise<Chat> {
     try {
       const privateRoomId = new ObjectId();
       const [user1, user2] = await Promise.all([
@@ -69,7 +72,9 @@ export class ChatService {
     }
   }
 
-  async createUsersRoom(userIds: mongoose.Schema.Types.ObjectId[]): Promise<Chat> {
+  async createUsersRoom(
+    userIds: mongoose.Schema.Types.ObjectId[],
+  ): Promise<Chat> {
     const users = [];
 
     for (const userId of userIds) {
@@ -94,7 +99,10 @@ export class ChatService {
     return room;
   }
 
-  async addUserOnRoom(roomId: mongoose.Schema.Types.ObjectId, _targetUser: mongoose.Schema.Types.ObjectId): Promise<Chat> {
+  async addUserOnRoom(
+    roomId: mongoose.Schema.Types.ObjectId,
+    _targetUser: mongoose.Schema.Types.ObjectId,
+  ): Promise<Chat> {
     await this.usersService.isUserExisted(_targetUser);
     await this.isChatExisted(roomId);
 

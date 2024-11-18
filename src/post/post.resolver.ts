@@ -22,7 +22,9 @@ export class PostResolver {
   @Mutation(() => Post)
   async getPost(@Args('postId') postId: string): Promise<Post> {
     try {
-      const post = await this.postService.getPostById(postId as unknown as mongoose.Schema.Types.ObjectId);
+      const post = await this.postService.getPostById(
+        postId as unknown as mongoose.Schema.Types.ObjectId,
+      );
       return post;
     } catch (error) {
       return error;
@@ -70,7 +72,7 @@ export class PostResolver {
       content,
       option,
     );
-    
+
     return newPost;
   }
 
@@ -106,7 +108,10 @@ export class PostResolver {
     },
   ): Promise<any> {
     try {
-      const user = await this.postService.removePost(postId as unknown as mongoose.Schema.Types.ObjectId , _id);
+      const user = await this.postService.removePost(
+        postId as unknown as mongoose.Schema.Types.ObjectId,
+        _id,
+      );
       return user;
     } catch (error) {
       return error;

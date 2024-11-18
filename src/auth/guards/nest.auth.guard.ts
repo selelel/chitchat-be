@@ -24,7 +24,7 @@ export class NestAuthGuard extends AuthGuard('jwt') {
 
       return true;
     } catch (error) {
-      return error
+      return error;
     }
   }
 }

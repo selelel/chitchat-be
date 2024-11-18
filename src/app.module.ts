@@ -1,4 +1,4 @@
-import { Module, } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
@@ -35,7 +35,7 @@ import { HttpModule } from '@nestjs/axios';
         mode: 'cors',
         origin: true,
       },
-      context: ({ req, res }) => ({ req, res })
+      context: ({ req, res }) => ({ req, res }),
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -45,9 +45,9 @@ import { HttpModule } from '@nestjs/axios';
       }),
     }),
     UtilModules,
-    HttpModule
+    HttpModule,
   ],
-  providers:[ConfigService],
+  providers: [ConfigService],
   controllers: [AppController],
 })
-export class AppModule{}
+export class AppModule {}

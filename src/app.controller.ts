@@ -6,6 +6,6 @@ export class AppController {
 
   @Get('status')
   async status(): Promise<{ status: string }> {
-    return { status: "UP" };
+    return { status: 'UP' };
   }
 }
