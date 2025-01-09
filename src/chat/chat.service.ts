@@ -133,8 +133,8 @@ export class ChatService {
       };
 
       const message = await this.messageModel.create(payload);
-      await message.save();
-      console.log(message)
+      await message.save()
+      await message.populate('userId');
 
       await chat.updateOne({ $push: { messages: message._id } });
       return message;
