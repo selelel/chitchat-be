@@ -11,8 +11,11 @@ export class ChatMiddleware {
 
   async middleware(socket: Socket, next: (err?: any) => void) {
     const token: string = socket.handshake.headers.authorization?.split(' ')[1] || socket.handshake.auth?.authorization.split(' ')[1];
-    const chatId = socket.handshake.headers.chatid as string || socket.handshake.auth?.chatid;
+    //! WTF IS THIS?!
+    const chatId = socket.handshake.headers.chatid as string || socket.handshake.auth?.chatid || socket.handshake.query.chatid;
     const tokenDecoded = await this.authService.decodeToken(token);
+
+    console.log(tokenDecoded, token, chatId, socket.handshake);
 
     try {
       if (

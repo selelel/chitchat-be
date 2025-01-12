@@ -22,6 +22,20 @@ export class ChatService {
     private usersService: UserService,
     private fileUploadService: FileUploadService,
   ) {}
+
+  async getAllChats(userId: mongoose.Schema.Types.ObjectId | string): Promise<Chat[]> {
+    try {
+      const user = await this.usersService.findOneById(userId.toString());
+
+      const chat = await this.chatModel
+        .find({ usersId: { $in: user._id } })
+
+      return chat;
+    } catch (error) {
+      return error;
+    }
+  }
+
   async privateChats(getConversation: GetConversation): Promise<Message[]> {
     try {
       const message = await this.messageModel

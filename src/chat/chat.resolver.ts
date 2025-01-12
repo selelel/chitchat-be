@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query} from '@nestjs/graphql';
 import { ChatService } from './chat.service';
 import { Chat } from './entities/chat.entity';
 import { UseGuards } from '@nestjs/common';
@@ -58,6 +58,18 @@ export class ChatResolver {
         throw isValidUser;
       }
       return await this.chatService.privateChats(conversationInput);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Query(() => [Chat])
+  @UseGuards(GqlAuthGuard)
+  async getAllChats(
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<Chat[]> {
+    try {
+      return await this.chatService.getAllChats(decoded_token.payload._id);
     } catch (error) {
       return error;
     }

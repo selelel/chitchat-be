@@ -13,10 +13,16 @@ import { ChatMiddleware } from './chat.middleware';
 import { MessageContentInput } from './dto/message.content_input';
 import { CHAT_PORT } from 'src/utils/constant/constant';
 
-@WebSocketGateway(CHAT_PORT)
+@WebSocketGateway(CHAT_PORT, {
+  cors: {
+    methods: ["GET", "POST"],
+    allowedHeaders: ["chatid"],
+    credentials: true
+  }
+})
 export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
-  server: Server;
+  server: Server; 
   private readonly middleware: ChatMiddleware;
   constructor(
     private readonly chatService: ChatService,
