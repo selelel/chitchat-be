@@ -26,10 +26,10 @@ export class ChatService {
   async getAllChats(userId: mongoose.Schema.Types.ObjectId | string): Promise<Chat[]> {
     try {
       const user = await this.usersService.findOneById(userId.toString());
-
       const chat = await this.chatModel
         .find({ usersId: { $in: user._id } })
-
+        .populate('usersId');
+        
       return chat;
     } catch (error) {
       return error;
