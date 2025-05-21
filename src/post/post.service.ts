@@ -65,9 +65,10 @@ export class PostService {
 
     const posts = (await this.postModel
       .find({
-        author: { $nin: [...user.following, user._id] },
+        // author: { $nin: [...user.following, user._id] },
         audience: Audience.PUBLIC,
       })
+      .populate('author')
       .skip(pagination.skip || 0)
       .limit(pagination.limit || 5)
       .exec()) as any[];

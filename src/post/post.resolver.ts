@@ -49,13 +49,14 @@ export class PostResolver {
   @UseGuards(GqlAuthGuard)
   async getRecommendedPosts(
     @Args('pagination') pagination: Pagination,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Post[]> {
-    const { payload } = user;
+    const { payload } = decoded_token;
     const posts = await this.postService.getRecommendations(
       payload._id,
       pagination,
     );
+    console.log(posts)
     return posts;
   }
 

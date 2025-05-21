@@ -85,7 +85,6 @@ export class AuthService {
   }
 
   async validateToken(validate_token: string): Promise<boolean> {
-    console.log('validate_token', validate_token);
     try {
       verify(validate_token, JWT.ACCESSTOKEN_SECRET_KEY) as JWTPayload;
 
