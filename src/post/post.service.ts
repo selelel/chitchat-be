@@ -61,12 +61,10 @@ export class PostService {
   ): Promise<Post[]> {
     this.usersService.isUserExisted(userId);
 
-    const user = await this.userModel.findOne({ _id: userId });
-
     const posts = (await this.postModel
       .find({
-        // author: { $nin: [...user.following, user._id] },
         audience: Audience.PUBLIC,
+        author: { $ne: userId },
       })
       .populate('author')
       .skip(pagination.skip || 0)
