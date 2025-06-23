@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Post } from './entity/post.schema';
 import { PostService } from './post.service';
 import { UseGuards } from '@nestjs/common/decorators';
@@ -19,29 +19,56 @@ export class PostResolver {
     console.log('Invoked!');
   }
 
-  @Mutation(() => Post)
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async likePost(
+    @Args('postId') postId: string,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+    await this.postService.userLikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+    console.log(payload)
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async unlikePost(
+    @Args('postId') postId: string, 
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+    await this.postService.userUnlikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+
+    return true;
+  }
+
+
+  @Query(() => Post)
   async getPost(@Args('postId') postId: string): Promise<Post> {
-    try {
-      const post = await this.postService.getPostById(
-        postId as unknown as mongoose.Schema.Types.ObjectId,
-      );
-      return post;
-    } catch (error) {
-      return error;
-    }
+      try {
+          const post = await this.postService.getPostById(
+              postId as unknown as mongoose.Schema.Types.ObjectId,
+          );
+          return post;
+      } catch (error) {
+          throw new Error(error);  // Properly handle the error
+      }
   }
 
   @Mutation(() => [Post])
   @UseGuards(GqlAuthGuard)
   async getUserFollowingPosts(
     @Args('pagination') pagination: Pagination,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Post[]> {
-    const { payload } = user;
+    const { payload } = decoded_token;
     const posts = await this.postService.getUserFollowingPost(
       payload._id,
       pagination,
     );
+    console.log(posts)
     return posts;
   }
 

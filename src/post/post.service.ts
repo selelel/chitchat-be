@@ -26,10 +26,53 @@ export class PostService {
 
   async getPostById(postId: mongoose.Schema.Types.ObjectId): Promise<Post> {
     try {
-      const post = await this.postModel.findById(postId);
+      const post = await this.postModel
+      .findById(postId)
+      .populate('author');
       return post;
     } catch (error) {
       return error;
+    }
+  }
+
+  async userLikePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (post.likes.includes(userId)) {
+        throw new ConflictError('User already liked the post!');
+      }
+
+      post.likes.push(userId);
+
+      await this.postModel.findByIdAndUpdate(postId, {
+        $push: { likes: userId },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async userUnlikePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (!post.likes.includes(userId)) {
+        throw new ConflictError('User has not liked the post!');
+      }
+
+      await this.postModel.findByIdAndUpdate(postId, {
+        $pull: { likes: userId },
+      });
+      
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -41,18 +84,20 @@ export class PostService {
 
     const { following } = await this.userModel.findOne({ _id: userId });
 
-    return await this.postModel
+    this.usersService.isUserExisted(userId);
+
+    const posts = (await this.postModel
       .find({
+        audience: Audience.PUBLIC,
         author: { $in: following },
-        audience: {
-          $in: [Audience.FRIENDS, Audience.PUBLIC],
-        },
-        createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
       })
+      .populate('author')
       .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
       .limit(pagination.limit || 5)
-      .populate('comments')
-      .exec();
+      .exec()) as any[];
+      
+      return posts;
   }
 
   async getRecommendations(
@@ -67,13 +112,12 @@ export class PostService {
         author: { $ne: userId },
       })
       .populate('author')
+      .sort({ createdAt: -1 })
       .skip(pagination.skip || 0)
       .limit(pagination.limit || 5)
       .exec()) as any[];
 
-    const filteredPosts = posts.filter((post) => !post.author?.isPrivate);
-
-    return filteredPosts;
+    return posts;
   }
 
   async createPost(
