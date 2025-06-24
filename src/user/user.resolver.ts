@@ -22,6 +22,15 @@ export class UserResolver {
     return await this.userService.findAll();
   }
 
+  @Query(() => User)
+  @UseGuards(GqlAuthGuard)
+  async getUserInfo(
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<User> {
+    const user = await this.userService.findById(decoded_token.payload._id);
+    return user;
+  }
+
   @Mutation(() => User)
   async createUser(
     @Args('createUserInput') createUserInput: UserInput,

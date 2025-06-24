@@ -51,6 +51,7 @@ export class PostResolver {
           const post = await this.postService.getPostById(
               postId as unknown as mongoose.Schema.Types.ObjectId,
           );
+          console.log(post)
           return post;
       } catch (error) {
           throw new Error(error);  // Properly handle the error
