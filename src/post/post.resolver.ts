@@ -150,26 +150,22 @@ export class PostResolver {
       return error;
     }
   }
-
-  @Mutation(() => User)
+  
+  // TODO: make the post to not be deleted, instead make it go label as deleted so we can still see it.
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async removePost(
     @Args('postId') postId: string,
-    @GqlCurrentUser()
-    {
-      user: {
-        payload: { _id },
-      },
-    },
-  ): Promise<any> {
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser
+  ): Promise<Boolean> {
     try {
-      const user = await this.postService.removePost(
+       await this.postService.removePost(
         postId as unknown as mongoose.Schema.Types.ObjectId,
-        _id,
+        decoded_token.payload._id,
       );
-      return user;
-    } catch (error) {
-      return error;
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
