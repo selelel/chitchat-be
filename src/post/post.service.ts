@@ -24,6 +24,39 @@ export class PostService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
+  async getUserLikedPosts(userId: mongoose.Schema.Types.ObjectId): Promise<Post[]> {
+    try {
+      const posts = await this.postModel.find({
+        $or: [
+          { likes: userId }
+        ]
+      })
+      .sort({ createdAt: -1 })
+      .populate('author');
+
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async getUserPosts(userId: mongoose.Schema.Types.ObjectId): Promise<Post[]> {
+    try {
+      const posts = await this.postModel.find({
+        $or: [
+          { author: userId }
+        ]
+      })
+      .sort({ createdAt: -1 })
+      .populate('author');
+
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+
+
   async getPostById(postId: mongoose.Schema.Types.ObjectId): Promise<Post> {
     try {
       const post = await this.postModel

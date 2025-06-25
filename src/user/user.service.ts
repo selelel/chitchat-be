@@ -252,7 +252,8 @@ export class UserService {
 
   // Helper Function
   async findById(_id?: mongoose.Schema.Types.ObjectId) {
-    const user = await this.userModel.findById(_id);
+    const user = await this.userModel.findById(_id)
+    .populate('posts.author');
     return user;
   }
 
@@ -265,7 +266,7 @@ export class UserService {
     try {
       return await this.userModel
         .findOne({ _id })
-        .populate(['requests.toFollowers', 'requests.toFollowings'])
+        .populate(['requests.toFollowers', 'requests.toFollowings', 'posts.author'])
         .exec();
     } catch (error) {
       return error;

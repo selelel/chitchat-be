@@ -125,6 +125,32 @@ export class PostResolver {
     }
   }
 
+  @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
+  async getLikedPost(
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser
+  ): Promise<any> {
+    try {
+      const posts = this.postService.getUserLikedPosts(decoded_token.payload._id)
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
+  async getUserPosts(
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser
+  ): Promise<any> {
+    try {
+      const posts = this.postService.getUserPosts(decoded_token.payload._id)
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+
   @Mutation(() => User)
   @UseGuards(GqlAuthGuard)
   async removePost(
