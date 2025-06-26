@@ -105,23 +105,22 @@ export class PostResolver {
     return newPost;
   }
 
-  @Mutation(() => Post)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async updatePost(
     @Args('postId') postId: string,
     @Args('updatedPost') updatedPost: PostContentInput,
     @Args('postOption') option: PostOptionInput,
-    @GqlCurrentUser() { user },
-  ): Promise<Post> {
+  ): Promise<Boolean> {
     try {
-      const updatedUser = await this.postService.updatePost(
+      await this.postService.updatePost(
         postId as unknown as mongoose.Schema.Types.ObjectId,
-        user.payload._id,
+        updatedPost,
         option,
       );
-      return updatedUser;
+      return true;
     } catch (error) {
-      return error;
+      return false;
     }
   }
 

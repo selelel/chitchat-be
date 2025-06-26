@@ -121,7 +121,7 @@ export class PostService {
 
     const posts = (await this.postModel
       .find({
-        audience: Audience.PUBLIC,
+        audience: [Audience.FRIENDS, Audience.PUBLIC],
         author: { $in: following },
       })
       .populate('author')
@@ -181,7 +181,7 @@ export class PostService {
 
   async updatePost(
     postId: mongoose.Schema.Types.ObjectId,
-    content: Partial<PostContentObject>,
+    content?: Partial<PostContentObject>,
     option?: PostOptionInput,
   ): Promise<Post> {
     const { content: prevContent, audience: prevAudience } =
@@ -329,7 +329,11 @@ export class PostService {
         {
           'content.images': images,
         },
-        { new: true },
+        { 
+          new: true, 
+          timestamps: false
+        },
+        
       );
 
       return post;
