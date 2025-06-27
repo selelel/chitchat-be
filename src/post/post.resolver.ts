@@ -15,9 +15,7 @@ import mongoose from 'mongoose';
 
 @Resolver(() => Post)
 export class PostResolver {
-  constructor(private readonly postService: PostService) {
-    console.log('Invoked!');
-  }
+  constructor(private readonly postService: PostService) {}
 
 
   @Mutation(() => Boolean)
@@ -28,7 +26,17 @@ export class PostResolver {
   ): Promise<boolean> {
     const { payload } = decoded_token;
     await this.postService.userLikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
-    console.log(payload)
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async savePost(
+    @Args('postId') postId: string,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+    await this.postService.userSavePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
     return true;
   }
 
@@ -51,7 +59,6 @@ export class PostResolver {
           const post = await this.postService.getPostById(
               postId as unknown as mongoose.Schema.Types.ObjectId,
           );
-          console.log(post)
           return post;
       } catch (error) {
           throw new Error(error);  // Properly handle the error
@@ -69,7 +76,6 @@ export class PostResolver {
       payload._id,
       pagination,
     );
-    console.log(posts)
     return posts;
   }
 
@@ -84,7 +90,6 @@ export class PostResolver {
       payload._id,
       pagination,
     );
-    console.log(posts)
     return posts;
   }
 
@@ -101,6 +106,8 @@ export class PostResolver {
       content,
       option,
     );
+
+    console.log(newPost)
 
     return newPost;
   }

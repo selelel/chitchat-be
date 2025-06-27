@@ -51,8 +51,6 @@ export class PostController {
   @UseGuards(NestAuthGuard)
   async test(@NestCurrentUser() user, @Body() { postId }) {
     try {
-      console.log('Invoked');
-      console.log(postId, user);
       return 'test';
     } catch (error) {
       throw error;

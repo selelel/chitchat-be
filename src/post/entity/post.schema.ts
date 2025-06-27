@@ -42,11 +42,20 @@ export class Post {
   @Field(() => Number)
   shares: number;
 
+  @Prop({ type: Boolean, default: false})
+  @Field(() => Number)
+  deleted: boolean;
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
+  @Field(() => [User])
+  save: mongoose.Schema.Types.ObjectId[];
+
   @Prop({
     type: String,
     enum: Audience,
     default: Audience.PUBLIC,
   })
+
   @Field(() => Audience)
   audience: Audience;
 

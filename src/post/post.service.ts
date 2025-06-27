@@ -29,7 +29,8 @@ export class PostService {
       const posts = await this.postModel.find({
         $or: [
           { likes: userId }
-        ]
+        ],
+        deleted: { $ne: true }
       })
       .sort({ createdAt: -1 })
       .populate('author');
@@ -45,7 +46,8 @@ export class PostService {
       const posts = await this.postModel.find({
         $or: [
           { author: userId }
-        ]
+        ],
+        deleted: { $ne: false }
       })
       .sort({ createdAt: -1 })
       .populate('author');
@@ -89,6 +91,27 @@ export class PostService {
     }
   }
 
+  async userSavePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (post.save.includes(userId)) {
+        throw new ConflictError('User already save the post!');
+      }
+
+      post.save.push(userId);
+
+      await this.postModel.findByIdAndUpdate(postId, {
+        $push: { save: userId },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async userUnlikePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
     try {
       const post = await this.postModel.findById(postId);
@@ -123,6 +146,7 @@ export class PostService {
       .find({
         audience: [Audience.FRIENDS, Audience.PUBLIC],
         author: { $in: following },
+        deleted: { $ne: false }
       })
       .populate('author')
       .skip(pagination.skip || 0)
@@ -143,6 +167,7 @@ export class PostService {
       .find({
         audience: Audience.PUBLIC,
         author: { $ne: userId },
+        deleted: { $ne: false }
       })
       .populate('author')
       .sort({ createdAt: -1 })
@@ -233,6 +258,41 @@ export class PostService {
       return user;
     } catch (error) {
       return error;
+    }
+  }
+
+  async deleteArchivedPost(
+    postId: mongoose.Schema.Types.ObjectId,
+    userId: mongoose.Schema.Types.ObjectId,
+  ): Promise<User> {
+    try {
+      await this.doesPostExist(postId);
+      await this.usersService.isUserExisted(userId);
+
+      const post = await this.postModel.findById(postId);
+
+      if (!!post.deleted) {
+        // If already archived, permanently delete
+        if (post.content.images) {
+          await this.fileUploadService.removeFileImage(post.content.images);
+        }
+        await this.commentModel.deleteMany({ postId: post._id });
+        await this.postModel.findByIdAndDelete(postId);
+      } else {
+        // If not archived, just set deleted: true (archive)
+        await post.updateOne({ $set: { deleted: true } });
+      }
+
+      // Remove post reference from user
+      const user = await this.userModel.findByIdAndUpdate(
+        userId,
+        { $pull: { posts: postId } },
+        { new: true }
+      );
+
+      return user;
+    } catch (error) {
+      throw error;
     }
   }
 

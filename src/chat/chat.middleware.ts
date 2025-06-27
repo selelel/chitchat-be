@@ -15,8 +15,6 @@ export class ChatMiddleware {
     const chatId = socket.handshake.headers.chatid as string || socket.handshake.auth?.chatid || socket.handshake.query.chatid;
     const tokenDecoded = await this.authService.decodeToken(token);
 
-    console.log(tokenDecoded, token, chatId, socket.handshake);
-
     try {
       if (
         !token ||
