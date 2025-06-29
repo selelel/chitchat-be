@@ -25,8 +25,12 @@ export class PostResolver {
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<boolean> {
     const { payload } = decoded_token;
-    await this.postService.userLikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
-    return true;
+    try {
+      await this.postService.userLikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+      return true;
+    } catch (_) {
+      return false
+    }
   }
 
   @Mutation(() => Boolean)
@@ -36,8 +40,13 @@ export class PostResolver {
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<boolean> {
     const { payload } = decoded_token;
-    await this.postService.userSavePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
-    return true;
+
+    try {
+      await this.postService.userSavePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+      return true;
+    } catch (_) {
+      return false
+    }
   }
 
   @Mutation(() => Boolean)
@@ -50,6 +59,22 @@ export class PostResolver {
     await this.postService.userUnlikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
 
     return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async unsavePost(
+    @Args('postId') postId: string, 
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+
+    try {
+      await this.postService.userUnsavePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+      return true;
+    } catch (_) {
+      return false
+    }
   }
 
 
@@ -73,6 +98,20 @@ export class PostResolver {
   ): Promise<Post[]> {
     const { payload } = decoded_token;
     const posts = await this.postService.getUserFollowingPost(
+      payload._id,
+      pagination,
+    );
+    return posts;
+  }
+
+  @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
+  async getSavePosts(
+    @Args('pagination') pagination: Pagination,
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<Post[]> {
+    const { payload } = decoded_token;
+    const posts = await this.postService.getUserSavePost(
       payload._id,
       pagination,
     );
@@ -134,10 +173,11 @@ export class PostResolver {
   @Query(() => [Post])
   @UseGuards(GqlAuthGuard)
   async getLikedPost(
-    @GqlCurrentUser() { decoded_token }: GetCurrentUser
+    @Args('pagination') pagination: Pagination,
+    @GqlCurrentUser() { decoded_token },
   ): Promise<any> {
     try {
-      const posts = this.postService.getUserLikedPosts(decoded_token.payload._id)
+      const posts = this.postService.getUserLikedPosts(decoded_token.payload._id, pagination)
       return posts;
     } catch (error) {
       return error;
@@ -147,10 +187,11 @@ export class PostResolver {
   @Query(() => [Post])
   @UseGuards(GqlAuthGuard)
   async getUserPosts(
-    @GqlCurrentUser() { decoded_token }: GetCurrentUser
+    @Args('pagination') pagination: Pagination,
+    @GqlCurrentUser() { decoded_token },
   ): Promise<any> {
     try {
-      const posts = this.postService.getUserPosts(decoded_token.payload._id)
+      const posts = this.postService.getUserPosts(decoded_token.payload._id, pagination)
       return posts;
     } catch (error) {
       return error;

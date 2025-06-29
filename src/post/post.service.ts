@@ -24,7 +24,7 @@ export class PostService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
-  async getUserLikedPosts(userId: mongoose.Schema.Types.ObjectId): Promise<Post[]> {
+  async getUserLikedPosts(userId: mongoose.Schema.Types.ObjectId, pagination: Pagination): Promise<Post[]> {
     try {
       const posts = await this.postModel.find({
         $or: [
@@ -33,7 +33,11 @@ export class PostService {
         deleted: { $ne: true }
       })
       .sort({ createdAt: -1 })
-      .populate('author');
+      .populate(['author', 'save'])
+      .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
+      .limit(pagination.limit || 5)
+      .exec() as any[];
 
       return posts;
     } catch (error) {
@@ -41,16 +45,20 @@ export class PostService {
     }
   }
 
-  async getUserPosts(userId: mongoose.Schema.Types.ObjectId): Promise<Post[]> {
+  async getUserPosts(userId: mongoose.Schema.Types.ObjectId, pagination: Pagination): Promise<Post[]> {
     try {
       const posts = await this.postModel.find({
         $or: [
-          { author: userId }
+          { likes: userId }
         ],
         deleted: { $ne: true }
       })
       .sort({ createdAt: -1 })
-      .populate('author');
+      .populate(['author', 'save'])
+      .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
+      .limit(pagination.limit || 5)
+      .exec() as any[];
 
       return posts;
     } catch (error) {
@@ -63,7 +71,7 @@ export class PostService {
     try {
       const post = await this.postModel
       .findById(postId)
-      .populate('author');
+      .populate(['author', 'save']);
       return post;
     } catch (error) {
       return error;
@@ -81,8 +89,6 @@ export class PostService {
         throw new ConflictError('User already liked the post!');
       }
 
-      post.likes.push(userId);
-
       await this.postModel.findByIdAndUpdate(postId, {
         $push: { likes: userId },
       });
@@ -91,22 +97,49 @@ export class PostService {
     }
   }
 
-  async userSavePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+  async userSavePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<Post> {
     try {
       const post = await this.postModel.findById(postId);
       if (!post) {
         throw new ConflictError('Post not Found!');
       }
 
-      if (post.save.includes(userId)) {
-        throw new ConflictError('User already save the post!');
+      if (post.deleted) {
+        throw new ConflictError('Cannot save a deleted post!');
       }
 
-      post.save.push(userId);
+      if (post.save.includes(userId)) {
+        throw new ConflictError('User already saved the post!');
+      }
+
+      const updatedPost = await this.postModel.findByIdAndUpdate(
+        postId,
+        { $push: { save: userId } },
+        { new: true }
+      ).populate('author');
+
+      return updatedPost;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async userUnsavePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (!post.save.includes(userId)) {
+        throw new ConflictError('User has not saved the post!');
+      }
 
       await this.postModel.findByIdAndUpdate(postId, {
-        $push: { save: userId },
+        $pull: { save: userId },
       });
+      
+      console.log(post)
     } catch (error) {
       throw error;
     }
@@ -148,13 +181,33 @@ export class PostService {
         author: { $in: following },
         deleted: { $ne: true }
       })
-      .populate('author')
+      .populate(['author', 'save'])
       .skip(pagination.skip || 0)
       .sort({ createdAt: -1 })
       .limit(pagination.limit || 5)
       .exec()) as any[];
       
       return posts;
+  }
+  async getUserSavePost(userId: mongoose.Schema.Types.ObjectId, pagination: Pagination): Promise<Post[]> {
+    try {
+      const posts = await this.postModel.find({
+        $or: [
+          { save: userId }
+        ],
+        deleted: { $ne: true }
+      })
+      .sort({ createdAt: -1 })
+      .populate(['author', 'save'])
+      .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
+      .limit(pagination.limit || 5)
+      .exec() as any[];
+
+      return posts;
+    } catch (error) {
+      return error;
+    }
   }
 
   async getRecommendations(
@@ -169,7 +222,7 @@ export class PostService {
         author: { $ne: userId },
         deleted: { $ne: true }
       })
-      .populate('author')
+      .populate(['author', 'save'])
       .sort({ createdAt: -1 })
       .skip(pagination.skip || 0)
       .limit(pagination.limit || 5)
