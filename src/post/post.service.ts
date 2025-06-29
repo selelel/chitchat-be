@@ -49,7 +49,7 @@ export class PostService {
     try {
       const posts = await this.postModel.find({
         $or: [
-          { likes: userId }
+          { author: userId }
         ],
         deleted: { $ne: true }
       })
