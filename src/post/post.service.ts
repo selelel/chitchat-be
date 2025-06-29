@@ -47,7 +47,7 @@ export class PostService {
         $or: [
           { author: userId }
         ],
-        deleted: { $ne: false }
+        deleted: { $ne: true }
       })
       .sort({ createdAt: -1 })
       .populate('author');
@@ -146,7 +146,7 @@ export class PostService {
       .find({
         audience: [Audience.FRIENDS, Audience.PUBLIC],
         author: { $in: following },
-        deleted: { $ne: false }
+        deleted: { $ne: true }
       })
       .populate('author')
       .skip(pagination.skip || 0)
@@ -167,7 +167,7 @@ export class PostService {
       .find({
         audience: Audience.PUBLIC,
         author: { $ne: userId },
-        deleted: { $ne: false }
+        deleted: { $ne: true }
       })
       .populate('author')
       .sort({ createdAt: -1 })
