@@ -11,14 +11,14 @@ export class GoogleOAuthGuard extends AuthGuard('google') {
     super();
     this.clientUri = this.configService.get<string>('CLIENT_URI');
   }
-  
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const query = request.query;
 
     if (query.error) {
       console.warn(`OAuth error occurred: ${query.error}`);
-      const host = context.switchToHttp()
+      const host = context.switchToHttp();
       const res = host.getResponse<Response>();
 
       res.redirect(`${this.clientUri}/auth/login`);

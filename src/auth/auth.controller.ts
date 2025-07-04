@@ -2,7 +2,7 @@ import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleOAuthGuard } from './guards/google.auth.guard';
 import { GoogleCurrentUser } from './decorator/google.current.user';
-import { Response} from 'express';
+import { Response } from 'express';
 import { AUTH, HTTP_COOKIE_OPTION } from 'src/utils/constant/constant';
 import { GoogleCurrentUserPayload } from './interfaces/jwt_type';
 
@@ -24,9 +24,8 @@ export class AuthController {
   ) {
     const redirectUrl = `http://localhost:3000/`;
 
-    console.log(refresh_token)
     res.cookie(AUTH.REFRESH_TOKEN, refresh_token, HTTP_COOKIE_OPTION);
-    
+
     res.redirect(redirectUrl);
   }
 }

@@ -26,4 +26,10 @@ export class UserInput {
   @Field(() => String)
   @IsEmail({}, { message: 'Please provide a valid email address.' })
   public email: string;
+
+  @Field(() => String)
+  @IsString({ message: 'Username must be a string.' })
+  @MinLength(3, { message: 'Username must be at least 3 characters long.' })
+  @MaxLength(20, { message: 'Username must not exceed 20 characters.' })
+  public username: string;
 }

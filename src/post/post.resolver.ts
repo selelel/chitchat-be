@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { Post } from './entity/post.schema';
 import { PostService } from './post.service';
 import { UseGuards } from '@nestjs/common/decorators';
@@ -15,19 +15,111 @@ import mongoose from 'mongoose';
 
 @Resolver(() => Post)
 export class PostResolver {
-  constructor(private readonly postService: PostService) {
-    console.log('Invoked!');
+  constructor(private readonly postService: PostService) {}
+
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async likePost(
+    @Args('postId') postId: string,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+    try {
+      await this.postService.userLikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+      return true;
+    } catch (_) {
+      return false
+    }
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async savePost(
+    @Args('postId') postId: string,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+
+    try {
+      await this.postService.userSavePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+      return true;
+    } catch (_) {
+      return false
+    }
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async unlikePost(
+    @Args('postId') postId: string, 
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+    await this.postService.userUnlikePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+
+    return true;
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async unsavePost(
+    @Args('postId') postId: string, 
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<boolean> {
+    const { payload } = decoded_token;
+
+    try {
+      await this.postService.userUnsavePost(postId as unknown as mongoose.Schema.Types.ObjectId, payload._id);
+      return true;
+    } catch (_) {
+      return false
+    }
+  }
+
+
+  @Query(() => Post, { nullable: true })
+  async getPost(
+    @Args('id', { type: () => String, nullable: true }) id?: string,
+  ): Promise<Post | null> {
+    if (!id) {
+      // handle the case where id is not provided
+      return null;
+    }
+    try {
+      const post = await this.postService.getPostById(
+        id as unknown as mongoose.Schema.Types.ObjectId,
+      );
+      return post;
+    } catch (error) {
+      throw new Error(error);  // Properly handle the error
+    }
   }
 
   @Mutation(() => [Post])
   @UseGuards(GqlAuthGuard)
   async getUserFollowingPosts(
     @Args('pagination') pagination: Pagination,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Post[]> {
-    const { payload } = user;
+    const { payload } = decoded_token;
     const posts = await this.postService.getUserFollowingPost(
       payload._id,
+      pagination,
+    );
+    return posts;
+  }
+
+  @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
+  async getSavePosts(
+    @Args('pagination') pagination: Pagination,
+    @Args('id', { type: () => String, nullable: true }) id: string,
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<Post[]> {
+    const { payload } = decoded_token;
+    const posts = await this.postService.getUserSavePost(
+      id && id !== 'undefined' ? id : payload._id,
       pagination,
     );
     return posts;
@@ -37,9 +129,9 @@ export class PostResolver {
   @UseGuards(GqlAuthGuard)
   async getRecommendedPosts(
     @Args('pagination') pagination: Pagination,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Post[]> {
-    const { payload } = user;
+    const { payload } = decoded_token;
     const posts = await this.postService.getRecommendations(
       payload._id,
       pagination,
@@ -60,46 +152,76 @@ export class PostResolver {
       content,
       option,
     );
-    
+
+    console.log(newPost)
+
     return newPost;
   }
 
-  @Mutation(() => Post)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async updatePost(
     @Args('postId') postId: string,
     @Args('updatedPost') updatedPost: PostContentInput,
     @Args('postOption') option: PostOptionInput,
-    @GqlCurrentUser() { user },
-  ): Promise<Post> {
+  ): Promise<Boolean> {
     try {
-      const updatedUser = await this.postService.updatePost(
+      await this.postService.updatePost(
         postId as unknown as mongoose.Schema.Types.ObjectId,
-        user.payload._id,
+        updatedPost,
         option,
       );
-      return updatedUser;
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
+  async getLikedPost(
+    @Args('pagination') pagination: Pagination,
+    @Args('id', { type: () => String, nullable: true }) id: string,
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<any> {
+    try {
+      const posts = this.postService.getUserLikedPosts(decoded_token.payload._id, pagination)
+      return posts;
     } catch (error) {
       return error;
     }
   }
 
-  @Mutation(() => User)
+  @Query(() => [Post])
+  @UseGuards(GqlAuthGuard)
+  async getUserPosts(
+    @Args('pagination') pagination: Pagination,
+    @Args('id', { type: () => String, nullable: true }) id: string,
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<any> {
+    try {
+      const posts = this.postService.getUserPosts(id && id !== 'undefined' ? id : decoded_token.payload._id, pagination)
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+  
+  // TODO: make the post to not be deleted, instead make it go label as deleted so we can still see it.
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async removePost(
     @Args('postId') postId: string,
-    @GqlCurrentUser()
-    {
-      user: {
-        payload: { _id },
-      },
-    },
-  ): Promise<any> {
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser
+  ): Promise<Boolean> {
     try {
-      const user = await this.postService.removePost(postId as unknown as mongoose.Schema.Types.ObjectId , _id);
-      return user;
-    } catch (error) {
-      return error;
+       await this.postService.removePost(
+        postId as unknown as mongoose.Schema.Types.ObjectId,
+        decoded_token.payload._id,
+      );
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

@@ -9,7 +9,7 @@ export const GoogleCurrentUser = createParamDecorator(
       user: req.user.user,
       refresh_token: req.user.refresh_token,
       decoded_token: req.user.decoded_token,
-      google_openid: req.user.google_accesstoken
+      google_openid: req.user.google_accesstoken,
     } as GoogleCurrentUserPayload;
   },
 );

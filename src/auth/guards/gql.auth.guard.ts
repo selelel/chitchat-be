@@ -14,8 +14,7 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
     const ctx = GqlExecutionContext.create(context);
     const { req } = ctx.getContext();
     const token = req.headers.authorization?.split(' ')[1];
-
-    console.log(token)
+    
     try {
       if (!token || !(await this.authService.validateToken(token))) {
         return false;
@@ -25,8 +24,8 @@ export class GqlAuthGuard extends AuthGuard('jwt') {
       req.token = token as string;
 
       return true;
-      } catch (error) {
-        throw error
+    } catch (error) {
+      throw error;
     }
   }
 }

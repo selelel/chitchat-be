@@ -24,6 +24,147 @@ export class PostService {
     private readonly fileUploadService: FileUploadService,
   ) {}
 
+  async getUserLikedPosts(userId: mongoose.Schema.Types.ObjectId, pagination: Pagination): Promise<Post[]> {
+    try {
+      const posts = await this.postModel.find({
+        $or: [
+          { likes: userId }
+        ],
+        deleted: { $ne: true }
+      })
+      .sort({ createdAt: -1 })
+      .populate(['author', 'save'])
+      .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
+      .limit(pagination.limit || 5)
+      .exec() as any[];
+
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async getUserPosts(userId: mongoose.Schema.Types.ObjectId, pagination: Pagination): Promise<Post[]> {
+    try {
+      const posts = await this.postModel.find({
+        $or: [
+          { author: userId }
+        ],
+        deleted: { $ne: true }
+      })
+      .sort({ createdAt: -1 })
+      .populate(['author', 'save'])
+      .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
+      .limit(pagination.limit || 5)
+      .exec() as any[];
+
+      return posts;
+    } catch (error) {
+      return error;
+    }
+  }
+
+
+  async getPostById(postId: mongoose.Schema.Types.ObjectId): Promise<Post> {
+    try {
+      const post = await this.postModel
+      .findById(postId)
+      .populate(['author', 'save']);
+      return post;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async userLikePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (post.likes.includes(userId)) {
+        throw new ConflictError('User already liked the post!');
+      }
+
+      await this.postModel.findByIdAndUpdate(postId, {
+        $push: { likes: userId },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async userSavePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<Post> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (post.deleted) {
+        throw new ConflictError('Cannot save a deleted post!');
+      }
+
+      if (post.save.includes(userId)) {
+        throw new ConflictError('User already saved the post!');
+      }
+
+      const updatedPost = await this.postModel.findByIdAndUpdate(
+        postId,
+        { $push: { save: userId } },
+        { new: true }
+      ).populate('author');
+
+      return updatedPost;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async userUnsavePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (!post.save.includes(userId)) {
+        throw new ConflictError('User has not saved the post!');
+      }
+
+      await this.postModel.findByIdAndUpdate(postId, {
+        $pull: { save: userId },
+      });
+      
+      console.log(post)
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async userUnlikePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<void> {
+    try {
+      const post = await this.postModel.findById(postId);
+      if (!post) {
+        throw new ConflictError('Post not Found!');
+      }
+
+      if (!post.likes.includes(userId)) {
+        throw new ConflictError('User has not liked the post!');
+      }
+
+      await this.postModel.findByIdAndUpdate(postId, {
+        $pull: { likes: userId },
+      });
+      
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getUserFollowingPost(
     userId: mongoose.Schema.Types.ObjectId,
     pagination: Pagination,
@@ -32,18 +173,41 @@ export class PostService {
 
     const { following } = await this.userModel.findOne({ _id: userId });
 
-    return await this.postModel
+    this.usersService.isUserExisted(userId);
+
+    const posts = (await this.postModel
       .find({
+        audience: [Audience.FRIENDS, Audience.PUBLIC],
         author: { $in: following },
-        audience: {
-          $in: [Audience.FRIENDS, Audience.PUBLIC],
-        },
-        createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        deleted: { $ne: true }
       })
+      .populate(['author', 'save'])
       .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
       .limit(pagination.limit || 5)
-      .populate('comments')
-      .exec();
+      .exec()) as any[];
+      
+      return posts;
+  }
+  async getUserSavePost(userId: mongoose.Schema.Types.ObjectId, pagination: Pagination): Promise<Post[]> {
+    try {
+      const posts = await this.postModel.find({
+        $or: [
+          { save: userId }
+        ],
+        deleted: { $ne: true }
+      })
+      .sort({ createdAt: -1 })
+      .populate(['author', 'save'])
+      .skip(pagination.skip || 0)
+      .sort({ createdAt: -1 })
+      .limit(pagination.limit || 5)
+      .exec() as any[];
+
+      return posts;
+    } catch (error) {
+      return error;
+    }
   }
 
   async getRecommendations(
@@ -52,20 +216,19 @@ export class PostService {
   ): Promise<Post[]> {
     this.usersService.isUserExisted(userId);
 
-    const user = await this.userModel.findOne({ _id: userId });
-
     const posts = (await this.postModel
       .find({
-        author: { $nin: [...user.following, user._id] },
         audience: Audience.PUBLIC,
+        author: { $ne: userId },
+        deleted: { $ne: true }
       })
+      .populate(['author', 'save'])
+      .sort({ createdAt: -1 })
       .skip(pagination.skip || 0)
       .limit(pagination.limit || 5)
       .exec()) as any[];
 
-    const filteredPosts = posts.filter((post) => !post.author?.isPrivate);
-
-    return filteredPosts;
+    return posts;
   }
 
   async createPost(
@@ -96,7 +259,7 @@ export class PostService {
 
   async updatePost(
     postId: mongoose.Schema.Types.ObjectId,
-    content: Partial<PostContentObject>,
+    content?: Partial<PostContentObject>,
     option?: PostOptionInput,
   ): Promise<Post> {
     const { content: prevContent, audience: prevAudience } =
@@ -122,7 +285,10 @@ export class PostService {
     return updatedPost;
   }
 
-  async removePost(postId: mongoose.Schema.Types.ObjectId, userId: mongoose.Schema.Types.ObjectId): Promise<User> {
+  async removePost(
+    postId: mongoose.Schema.Types.ObjectId,
+    userId: mongoose.Schema.Types.ObjectId,
+  ): Promise<User> {
     try {
       await this.doesPostExist(postId);
       await this.usersService.isUserExisted(userId);
@@ -145,6 +311,41 @@ export class PostService {
       return user;
     } catch (error) {
       return error;
+    }
+  }
+
+  async deleteArchivedPost(
+    postId: mongoose.Schema.Types.ObjectId,
+    userId: mongoose.Schema.Types.ObjectId,
+  ): Promise<User> {
+    try {
+      await this.doesPostExist(postId);
+      await this.usersService.isUserExisted(userId);
+
+      const post = await this.postModel.findById(postId);
+
+      if (!!post.deleted) {
+        // If already archived, permanently delete
+        if (post.content.images) {
+          await this.fileUploadService.removeFileImage(post.content.images);
+        }
+        await this.commentModel.deleteMany({ postId: post._id });
+        await this.postModel.findByIdAndDelete(postId);
+      } else {
+        // If not archived, just set deleted: true (archive)
+        await post.updateOne({ $set: { deleted: true } });
+      }
+
+      // Remove post reference from user
+      const user = await this.userModel.findByIdAndUpdate(
+        userId,
+        { $pull: { posts: postId } },
+        { new: true }
+      );
+
+      return user;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -232,7 +433,6 @@ export class PostService {
         postId,
         'png',
       );
-
       if (!images) {
         throw new ConflictError('Error processing image');
       }
@@ -242,7 +442,11 @@ export class PostService {
         {
           'content.images': images,
         },
-        { new: true },
+        { 
+          new: true, 
+          timestamps: false
+        },
+        
       );
 
       return post;
@@ -251,7 +455,9 @@ export class PostService {
     }
   }
 
-  private async doesPostExist(postId: mongoose.Schema.Types.ObjectId): Promise<PostDocument> {
+  private async doesPostExist(
+    postId: mongoose.Schema.Types.ObjectId,
+  ): Promise<PostDocument> {
     const post = await this.postModel.findById(postId);
     if (!post) {
       throw new ConflictError('Post not Found!');
@@ -263,7 +469,7 @@ export class PostService {
     const post = await this.postModel.findOne({ _id: postId, author: userId });
 
     if (!post) {
-      throw new ConflictException('User is not the author of the post!');
+      throw new Error('User is not the author of the post!');
     }
 
     return post;

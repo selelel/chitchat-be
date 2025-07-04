@@ -12,7 +12,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { User } from 'src/user/entities/user.entity';
 import { JWT } from 'src/utils/constant/constant';
-import { UserProfile } from './dto/google_payload.dto';;
+import { UserProfile } from './dto/google_payload.dto';
 import { AccessTokenGeneration } from './interfaces/accesstoken.interface';
 import { Decoded_JWT, JWTPayload } from './interfaces/jwt_type';
 import { HttpService } from '@nestjs/axios';
@@ -32,8 +32,11 @@ export class AuthService {
     return accesstoken;
   }
 
-  async createRefreshToken(_id: mongoose.Schema.Types.ObjectId | string | string, provider?: JWTPayload['provider']): Promise<string> {
-    const refreshtoken = sign({ _id , provider}, JWT.REFRESHTOKEN_SECRET_KEY, {
+  async createRefreshToken(
+    _id: mongoose.Schema.Types.ObjectId | string | string,
+    provider?: JWTPayload['provider'],
+  ): Promise<string> {
+    const refreshtoken = sign({ _id, provider }, JWT.REFRESHTOKEN_SECRET_KEY, {
       expiresIn: JWT.REFRESHTOKEN_EXP,
     });
 
@@ -44,42 +47,54 @@ export class AuthService {
   async validateRefreshToken(token: string): Promise<string> {
     try {
       const decoded = verify(token, JWT.REFRESHTOKEN_SECRET_KEY) as JWTPayload;
-  
-      const user = await this.userModel.findOne({ _id: decoded._id, token }).exec();
-  
+
+      const user = await this.userModel
+        .findOne({ _id: decoded._id, token })
+        .exec();
+
       if (!user) {
         throw new UnauthorizedError('Refresh token was not found.');
       }
-  
-      const newAccessToken = await this.createAccessToken({ _id: decoded._id, provider: 'jwt' });
+
+      const newAccessToken = await this.createAccessToken({
+        _id: decoded._id,
+        provider: 'jwt',
+      });
       return newAccessToken;
     } catch (error) {
       throw error;
     }
   }
 
-  async validateGoogleLogInUser(details: UserProfile, google_accesstoken: string): Promise<User> {
+  async validateGoogleLogInUser(
+    details: UserProfile,
+    google_accesstoken: string,
+  ): Promise<User> {
     let user = await this.usersService.findEmail(details.email);
 
     if (!user) {
       user = await this.usersService.createGoggleAccountUser(details);
     }
 
-    await this.userModel.findByIdAndUpdate(user._id, { google_accesstoken }, { new : true })
+    await this.userModel.findByIdAndUpdate(
+      user._id,
+      { google_accesstoken },
+      { new: true },
+    );
     return user;
   }
-  
+
   async validateToken(validate_token: string): Promise<boolean> {
     try {
       verify(validate_token, JWT.ACCESSTOKEN_SECRET_KEY) as JWTPayload;
-  
+
       return Promise.resolve(true);
     } catch (error) {
       throw error;
     }
   }
 
-  decodeToken(token: string): any{
+  decodeToken(token: string): any {
     try {
       const decodedToken = decode(token, { complete: true });
       return decodedToken;
@@ -109,8 +124,10 @@ export class AuthService {
         throw new Error('Email address does not exist');
       }
       if (!user.password) {
-        throw new UnauthorizedError('It looks like you signed up using Google. Please log in using Google to access your account.');
-      }      
+        throw new UnauthorizedError(
+          'It looks like you signed up using Google. Please log in using Google to access your account.',
+        );
+      }
 
       if (!(await bcrypt.compare(password, user.password)) || !user) {
         throw new UnauthorizedError('The password you entered is incorrect.');
@@ -119,10 +136,10 @@ export class AuthService {
       const payload = {
         _id: user._id,
         provider,
-      }
+      };
       const accesstoken = await this.createAccessToken(payload);
 
-      return { accesstoken, user};
+      return { accesstoken, user };
     } catch (error) {
       throw error;
     }

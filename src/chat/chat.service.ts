@@ -22,6 +22,20 @@ export class ChatService {
     private usersService: UserService,
     private fileUploadService: FileUploadService,
   ) {}
+
+  async getAllChats(userId: mongoose.Schema.Types.ObjectId | string): Promise<Chat[]> {
+    try {
+      const user = await this.usersService.findOneById(userId.toString());
+      const chat = await this.chatModel
+        .find({ usersId: { $in: user._id } })
+        .populate('usersId');
+        
+      return chat;
+    } catch (error) {
+      return error;
+    }
+  }
+
   async privateChats(getConversation: GetConversation): Promise<Message[]> {
     try {
       const message = await this.messageModel
@@ -37,7 +51,10 @@ export class ChatService {
     }
   }
 
-  async createPrivateRoom(_user1: mongoose.Schema.Types.ObjectId | string, _user2: mongoose.Schema.Types.ObjectId | string): Promise<Chat> {
+  async createPrivateRoom(
+    _user1: mongoose.Schema.Types.ObjectId | string,
+    _user2: mongoose.Schema.Types.ObjectId | string,
+  ): Promise<Chat> {
     try {
       const privateRoomId = new ObjectId();
       const [user1, user2] = await Promise.all([
@@ -69,7 +86,9 @@ export class ChatService {
     }
   }
 
-  async createUsersRoom(userIds: mongoose.Schema.Types.ObjectId[]): Promise<Chat> {
+  async createUsersRoom(
+    userIds: mongoose.Schema.Types.ObjectId[],
+  ): Promise<Chat> {
     const users = [];
 
     for (const userId of userIds) {
@@ -94,7 +113,10 @@ export class ChatService {
     return room;
   }
 
-  async addUserOnRoom(roomId: mongoose.Schema.Types.ObjectId, _targetUser: mongoose.Schema.Types.ObjectId): Promise<Chat> {
+  async addUserOnRoom(
+    roomId: mongoose.Schema.Types.ObjectId,
+    _targetUser: mongoose.Schema.Types.ObjectId,
+  ): Promise<Chat> {
     await this.usersService.isUserExisted(_targetUser);
     await this.isChatExisted(roomId);
 
@@ -125,7 +147,8 @@ export class ChatService {
       };
 
       const message = await this.messageModel.create(payload);
-      await message.save();
+      await message.save()
+      await message.populate('userId');
 
       await chat.updateOne({ $push: { messages: message._id } });
       return message;

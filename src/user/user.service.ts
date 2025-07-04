@@ -19,9 +19,14 @@ export class UserService {
 
   async createUser(user: UserInput): Promise<User> {
     try {
-      const userExist = await this.userModel.findOne({ email: user.email });
+      const userExist = await this.userModel.findOne({
+        $or: [
+          { email: user.email },
+          { username: user.username }
+        ]
+      });
       if (userExist) {
-        throw new ConflictError('User with this email already exists');
+        throw new ConflictError('User with this email or username already exists');
       }
 
       const newUser = await this.userModel.create({
@@ -31,17 +36,30 @@ export class UserService {
 
       return newUser;
     } catch (error) {
-      return error;
+      // Handle MongoDB duplicate key error
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.username) {
+        throw new ConflictError('Username already exists');
+      }
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+        throw new ConflictError('Email already exists');
+      }
+      throw error;
     }
   }
 
-  async createGoggleAccountUser(details: UserProfile ) {
+  async createGoggleAccountUser(details: UserProfile) {
     const { email, displayName, given_name, family_name } = details;
+
+    let baseUsername = displayName.replaceAll(' ', '_').toLowerCase();
+    let uniqueUsername = baseUsername;
+    while (await this.userModel.findOne({ username: uniqueUsername })) {
+      uniqueUsername = `${baseUsername}${Math.floor(Math.random() * 10000)}`;
+    }
 
     const user_details = {
       firstname: given_name,
       lastname: family_name,
-      username: displayName.replaceAll(' ', '_').toLowerCase(),
+      username: uniqueUsername,
       hide_name: false,
     };
 
@@ -49,11 +67,12 @@ export class UserService {
       const newUser = await this.userModel.create({
         user: user_details,
         email,
+        username: uniqueUsername,
       });
 
       return newUser;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 
@@ -252,7 +271,8 @@ export class UserService {
 
   // Helper Function
   async findById(_id?: mongoose.Schema.Types.ObjectId) {
-    const user = await this.userModel.findById(_id);
+    const user = await this.userModel.findById(_id)
+    .populate(['posts.author', 'requests.toFollowers', 'requests.toFollowings', 'followers', 'following']);
     return user;
   }
 
@@ -265,18 +285,32 @@ export class UserService {
     try {
       return await this.userModel
         .findOne({ _id })
-        .populate(['requests.toFollowers', 'requests.toFollowings'])
+        .populate(['requests.toFollowers', 'requests.toFollowings', 'posts.author'])
+        .exec();
+    } catch (error) {
+      return error;
+    }
+  }
+  async findByUsername(username: string): Promise<User> {
+    try {
+      return await this.userModel
+        .findOne({ 'user.username': username })
+        .populate(['followers', 'following'])
         .exec();
     } catch (error) {
       return error;
     }
   }
 
+
   async findEmail(email: string): Promise<User> {
     return await this.userModel.findOne({ email }).exec();
   }
 
-  async isUserToAccept(_id: mongoose.Schema.Types.ObjectId, targetUserId: mongoose.Schema.Types.ObjectId) {
+  async isUserToAccept(
+    _id: mongoose.Schema.Types.ObjectId,
+    targetUserId: mongoose.Schema.Types.ObjectId,
+  ) {
     try {
       const targetUserIdObject = targetUserId;
 
@@ -295,7 +329,10 @@ export class UserService {
     }
   }
 
-  async isUserAlreadyFollowed(_id: mongoose.Schema.Types.ObjectId, targetUserId: string) {
+  async isUserAlreadyFollowed(
+    _id: mongoose.Schema.Types.ObjectId,
+    targetUserId: string,
+  ) {
     try {
       const targetUserIdObject = new ObjectId(targetUserId);
 

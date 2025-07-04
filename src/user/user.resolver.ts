@@ -7,7 +7,6 @@ import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { ChatService } from 'src/chat/chat.service';
 import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
-import { ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
 
 @Resolver(() => User)
@@ -20,6 +19,24 @@ export class UserResolver {
   @Query(() => [User])
   async testQuery(): Promise<User[]> {
     return await this.userService.findAll();
+  }
+
+  @Query(() => User)
+  @UseGuards(GqlAuthGuard)
+  async getUserInfoByUsername(
+    @Args('username') username: string,
+  ): Promise<User> {
+    const user = await this.userService.findByUsername(username);
+    return user;
+  }
+
+  @Query(() => User)
+  @UseGuards(GqlAuthGuard)
+  async getUserInfo(
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<User> {
+    const user = await this.userService.findById(decoded_token.payload._id);
+    return user;
   }
 
   @Mutation(() => User)
@@ -36,7 +53,6 @@ export class UserResolver {
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-
     const userRequest = await this.userService.requestToFollowUser(
       decoded_token.payload._id,
       targetUserId,
@@ -51,7 +67,6 @@ export class UserResolver {
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
-
     const userRequest = await this.userService.removesUserRequest(
       decoded_token.payload._id,
       targetUserId as unknown as mongoose.Schema.Types.ObjectId,
@@ -72,7 +87,10 @@ export class UserResolver {
         targetUserId as unknown as mongoose.Schema.Types.ObjectId,
       );
 
-      await this.chatService.createPrivateRoom(decoded_token.payload._id, targetUserId);
+      await this.chatService.createPrivateRoom(
+        decoded_token.payload._id,
+        targetUserId,
+      );
       return userRequest;
     } catch (error) {
       return error;

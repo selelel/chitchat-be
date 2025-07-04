@@ -52,8 +52,9 @@ export class FileUploadService {
             place,
             Folders.POSTS,
           );
+          //! TODO: Create a AppConfig
           filenames.push(
-            `${AWS.BASE_LINK}/${Folders.POSTS}/${place}`,
+            `${process.env.AWS_BASE_LINK}/${Folders.POSTS}/${place}`,
           );
         } catch (error) {
           return error;
@@ -86,9 +87,7 @@ export class FileUploadService {
             place,
             Folders.MESSAGES,
           );
-          filenames.push(
-            `${AWS.BASE_LINK}/${Folders.MESSAGES}/${place}`,
-          );
+          filenames.push(`${AWS.BASE_LINK}/${Folders.MESSAGES}/${place}`);
         } catch (error) {
           return error;
         }

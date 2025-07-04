@@ -1,4 +1,4 @@
-import { Args, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver, Query} from '@nestjs/graphql';
 import { ChatService } from './chat.service';
 import { Chat } from './entities/chat.entity';
 import { UseGuards } from '@nestjs/common';
@@ -15,10 +15,10 @@ export class ChatResolver {
   @UseGuards(GqlAuthGuard)
   async createChatRoom(
     @Args('recipientId') recipientId: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Chat> {
     const createdChat = await this.chatService.createPrivateRoom(
-      user.payload._id,
+      decoded_token.payload._id,
       recipientId,
     );
 
@@ -29,12 +29,12 @@ export class ChatResolver {
   @UseGuards(GqlAuthGuard)
   async getUserPrivateChatRoom(
     @Args('targetUser') targetUser: string,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Chat> {
     try {
       const room = await this.chatService.usersPrivateChatFinder(
         targetUser,
-        user.payload._id,
+        decoded_token.payload._id,
       );
       return room;
     } catch (error) {
@@ -46,11 +46,11 @@ export class ChatResolver {
   @UseGuards(GqlAuthGuard)
   async getChatConversation(
     @Args('conversationInput') conversationInput: GetConversation,
-    @GqlCurrentUser() { user },
+    @GqlCurrentUser() { decoded_token },
   ): Promise<Message[]> {
     try {
       const isValidUser = await this.chatService.validateUserIsOnChat({
-        userId: user.payload._id,
+        userId: decoded_token.payload._id,
         chatId: conversationInput.chatId,
       });
 
@@ -58,6 +58,18 @@ export class ChatResolver {
         throw isValidUser;
       }
       return await this.chatService.privateChats(conversationInput);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  @Query(() => [Chat])
+  @UseGuards(GqlAuthGuard)
+  async getAllChats(
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<Chat[]> {
+    try {
+      return await this.chatService.getAllChats(decoded_token.payload._id);
     } catch (error) {
       return error;
     }

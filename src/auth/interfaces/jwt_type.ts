@@ -1,30 +1,28 @@
-import mongoose, { ObjectId } from "mongoose";
-import { User } from "src/user/entities/user.entity";
+import mongoose, { ObjectId } from 'mongoose';
+import { User } from 'src/user/entities/user.entity';
 
 interface JWTHeader {
-    alg: string;
-    typ: string;
-  }
+  alg: string;
+  typ: string;
+}
 
+export interface JWTPayload {
+  _id: mongoose.Schema.Types.ObjectId;
+  provider?: 'jwt' | 'google';
+  iat: number;
+  exp: number;
+}
 
-export  interface JWTPayload {
-    _id: mongoose.Schema.Types.ObjectId;
-    provider?: "jwt" | "google";
-    iat: number;
-    exp: number;
-  }
-  
 export interface Decoded_JWT {
-    header: JWTHeader;
-    payload: JWTPayload;
-    signature: string;
-  }
-  
+  header: JWTHeader;
+  payload: JWTPayload;
+  signature: string;
+}
 
 export type GetCurrentUser = {
-  decoded_token : Decoded_JWT,
-  token: string
-}
+  decoded_token: Decoded_JWT;
+  token: string;
+};
 
 export type GoogleCurrentUserPayload = {
   user: User;

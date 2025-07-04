@@ -11,13 +11,13 @@ import { SESSION_SECRET } from './utils/constant/constant';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   const port = process.env.PORT || 8080;
   app.use(
     '/graphql',
     graphqlUploadExpress({ maxFileSize: 5000000, maxFiles: 5 }),
   );
-  
+
   app.use(
     session({
       secret: SESSION_SECRET,
@@ -29,11 +29,11 @@ async function bootstrap() {
     }),
   );
 
-  app.use(cookieParser())
+  app.use(cookieParser());
   app.use(passport.initialize());
   app.use(passport.session());
   app.useGlobalPipes(new ValidationPipe());
-  
+
   app.enableCors({
     origin: 'http://localhost:3000',
     credentials: true,
