@@ -19,9 +19,14 @@ export class UserService {
 
   async createUser(user: UserInput): Promise<User> {
     try {
-      const userExist = await this.userModel.findOne({ email: user.email });
+      const userExist = await this.userModel.findOne({
+        $or: [
+          { email: user.email },
+          { username: user.username }
+        ]
+      });
       if (userExist) {
-        throw new ConflictError('User with this email already exists');
+        throw new ConflictError('User with this email or username already exists');
       }
 
       const newUser = await this.userModel.create({
@@ -31,17 +36,30 @@ export class UserService {
 
       return newUser;
     } catch (error) {
-      return error;
+      // Handle MongoDB duplicate key error
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.username) {
+        throw new ConflictError('Username already exists');
+      }
+      if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+        throw new ConflictError('Email already exists');
+      }
+      throw error;
     }
   }
 
   async createGoggleAccountUser(details: UserProfile) {
     const { email, displayName, given_name, family_name } = details;
 
+    let baseUsername = displayName.replaceAll(' ', '_').toLowerCase();
+    let uniqueUsername = baseUsername;
+    while (await this.userModel.findOne({ username: uniqueUsername })) {
+      uniqueUsername = `${baseUsername}${Math.floor(Math.random() * 10000)}`;
+    }
+
     const user_details = {
       firstname: given_name,
       lastname: family_name,
-      username: displayName.replaceAll(' ', '_').toLowerCase(),
+      username: uniqueUsername,
       hide_name: false,
     };
 
@@ -49,11 +67,12 @@ export class UserService {
       const newUser = await this.userModel.create({
         user: user_details,
         email,
+        username: uniqueUsername,
       });
 
       return newUser;
     } catch (error) {
-      return error;
+      throw error;
     }
   }
 

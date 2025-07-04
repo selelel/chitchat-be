@@ -34,6 +34,10 @@ export class User {
   @IsEmail({}, { message: 'Please provide a valid email address.' })
   email: string;
 
+  @Prop({ type: String, required: true, unique: true })
+  @Field(() => String)
+  username: string;
+
   @Prop({ type: [String] })
   @Field(() => [String])
   tags: string[];
