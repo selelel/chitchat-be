@@ -291,6 +291,17 @@ export class UserService {
       return error;
     }
   }
+  async findByUsername(username: string): Promise<User> {
+    try {
+      return await this.userModel
+        .findOne({ 'user.username': username })
+        .populate(['followers', 'following'])
+        .exec();
+    } catch (error) {
+      return error;
+    }
+  }
+
 
   async findEmail(email: string): Promise<User> {
     return await this.userModel.findOne({ email }).exec();

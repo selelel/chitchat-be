@@ -78,16 +78,22 @@ export class PostResolver {
   }
 
 
-  @Query(() => Post)
-  async getPost(@Args('postId') postId: string): Promise<Post> {
-      try {
-          const post = await this.postService.getPostById(
-              postId as unknown as mongoose.Schema.Types.ObjectId,
-          );
-          return post;
-      } catch (error) {
-          throw new Error(error);  // Properly handle the error
-      }
+  @Query(() => Post, { nullable: true })
+  async getPost(
+    @Args('id', { type: () => String, nullable: true }) id?: string,
+  ): Promise<Post | null> {
+    if (!id) {
+      // handle the case where id is not provided
+      return null;
+    }
+    try {
+      const post = await this.postService.getPostById(
+        id as unknown as mongoose.Schema.Types.ObjectId,
+      );
+      return post;
+    } catch (error) {
+      throw new Error(error);  // Properly handle the error
+    }
   }
 
   @Mutation(() => [Post])
@@ -108,11 +114,12 @@ export class PostResolver {
   @UseGuards(GqlAuthGuard)
   async getSavePosts(
     @Args('pagination') pagination: Pagination,
+    @Args('id', { type: () => String, nullable: true }) id: string,
     @GqlCurrentUser() { decoded_token },
   ): Promise<Post[]> {
     const { payload } = decoded_token;
     const posts = await this.postService.getUserSavePost(
-      payload._id,
+      id && id !== 'undefined' ? id : payload._id,
       pagination,
     );
     return posts;
@@ -174,6 +181,7 @@ export class PostResolver {
   @UseGuards(GqlAuthGuard)
   async getLikedPost(
     @Args('pagination') pagination: Pagination,
+    @Args('id', { type: () => String, nullable: true }) id: string,
     @GqlCurrentUser() { decoded_token },
   ): Promise<any> {
     try {
@@ -188,10 +196,11 @@ export class PostResolver {
   @UseGuards(GqlAuthGuard)
   async getUserPosts(
     @Args('pagination') pagination: Pagination,
+    @Args('id', { type: () => String, nullable: true }) id: string,
     @GqlCurrentUser() { decoded_token },
   ): Promise<any> {
     try {
-      const posts = this.postService.getUserPosts(decoded_token.payload._id, pagination)
+      const posts = this.postService.getUserPosts(id && id !== 'undefined' ? id : decoded_token.payload._id, pagination)
       return posts;
     } catch (error) {
       return error;

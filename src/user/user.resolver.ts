@@ -7,7 +7,6 @@ import { GqlAuthGuard } from 'src/auth/guards/gql.auth.guard';
 import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { ChatService } from 'src/chat/chat.service';
 import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
-import { ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
 
 @Resolver(() => User)
@@ -20,6 +19,15 @@ export class UserResolver {
   @Query(() => [User])
   async testQuery(): Promise<User[]> {
     return await this.userService.findAll();
+  }
+
+  @Query(() => User)
+  @UseGuards(GqlAuthGuard)
+  async getUserInfoByUsername(
+    @Args('username') username: string,
+  ): Promise<User> {
+    const user = await this.userService.findByUsername(username);
+    return user;
   }
 
   @Query(() => User)
