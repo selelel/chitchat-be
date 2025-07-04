@@ -253,7 +253,7 @@ export class UserService {
   // Helper Function
   async findById(_id?: mongoose.Schema.Types.ObjectId) {
     const user = await this.userModel.findById(_id)
-    .populate('posts.author');
+    .populate(['posts.author', 'requests.toFollowers', 'requests.toFollowings', 'followers', 'following']);
     return user;
   }
 
