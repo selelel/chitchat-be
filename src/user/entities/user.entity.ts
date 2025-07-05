@@ -44,7 +44,6 @@ export class User {
 
   @Prop({
     type: RequestObjectDto,
-    default: { toFollowings: [], toFollowers: [] },
   })
   @Field(() => RequestObjectDto)
   requests: RequestObjectDto;

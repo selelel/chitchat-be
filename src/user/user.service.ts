@@ -11,7 +11,7 @@ import {
 } from 'src/utils/error/graphql.error';
 import { Status } from './enums';
 import { BCRYPT } from 'src/utils/constant/constant';
-import { PassportProfile, UserProfile } from 'src/auth/dto/google_payload.dto';
+import { UserProfile } from 'src/auth/dto/google_payload.dto';
 
 @Injectable()
 export class UserService {
@@ -77,13 +77,15 @@ export class UserService {
   }
 
   async requestToFollowUser(
-    _id: mongoose.Schema.Types.ObjectId,
+    _id: string,
     targetUserId: string,
   ): Promise<User> {
     try {
       if (await this.isUserAlreadyFollowed(_id, targetUserId)) {
         throw new ConflictError('User is already on Following');
       }
+
+      
 
       const userUpdate = await this.userModel.updateOne(
         { _id },
@@ -94,7 +96,7 @@ export class UserService {
 
       const targetUpdate = await this.userModel.updateOne(
         { _id: targetUserId },
-        { $addToSet: { 'requests.toFollowers': _id } },
+        { $addToSet: { 'requests.toFollowers': new ObjectId(_id) } },
       );
 
       if (userUpdate.modifiedCount === 0 || targetUpdate.modifiedCount === 0) {
@@ -108,59 +110,83 @@ export class UserService {
       throw error;
     }
   }
-
+//! user toFollowing hasn't deleted the userId.
   async removesUserRequest(
-    userId: mongoose.Schema.Types.ObjectId,
-    targetUserId: mongoose.Schema.Types.ObjectId,
+    userId: string,
+    targetUserId: string,
   ): Promise<User> {
     try {
-      await this.userModel.findByIdAndUpdate(
+      const userToRemove = await this.userModel.findByIdAndUpdate(
+        new ObjectId(targetUserId),
+        { $pull: { 'requests.toFollowings': new ObjectId(userId) } },
+        { new: true },
+      );
+      
+      // Remove from userId's toFollowers (incoming request)
+      const userToAccepts = await this.userModel.findByIdAndUpdate(
         userId,
-        { $pull: { 'requests.toFollowers': targetUserId } },
+        { $pull: { 'requests.toFollowers': new ObjectId(targetUserId) } },
         { new: true },
       );
 
-      await this.userModel.findByIdAndUpdate(
-        targetUserId,
-        { $pull: { 'requests.toFollowings': userId } },
-        { new: true },
-      );
+      if (!userToAccepts || !userToRemove) {
+        throw new ConflictError('Failed to remove request from one or both users');
+      }
 
       return await this.userModel
         .findOne({ _id: userId })
-        .populate(['requests.toFollowers', 'requests.toFollowings']);
+        .populate('requests.toFollowers')
+        .populate('requests.toFollowings');
     } catch (error) {
-      throw error;
+      console.error('Error in removesUserRequest:', error);
+      throw error; // Re-throw the error instead of returning it
     }
   }
 
   async acceptsUserRequestToFollow(
-    userId: mongoose.Schema.Types.ObjectId,
-    targetUserId: mongoose.Schema.Types.ObjectId,
+    userId: string,
+    targetUserId: string,
   ): Promise<User> {
     try {
-      await this.isUserExisted(targetUserId);
+      // Check if the current user has an incoming request from targetUserId
       if (!(await this.isUserToAccept(userId, targetUserId)))
         throw new UnauthorizedError("User can't accept to following");
 
+      // Remove the request first
       await this.removesUserRequest(userId, targetUserId);
 
-      await this.userModel.findByIdAndUpdate(
+      // Verify the request was removed
+      const requestStillExists = await this.isUserToAccept(userId, targetUserId);
+      if (requestStillExists) {
+        throw new ConflictError('Failed to remove the follow request');
+      }
+
+      // Add to followers/following
+      const userUpdate = await this.userModel.findByIdAndUpdate(
         userId,
         { $addToSet: { followers: targetUserId } },
         { new: true },
       );
 
-      await this.userModel.findByIdAndUpdate(
+      const targetUpdate = await this.userModel.findByIdAndUpdate(
         targetUserId,
         { $addToSet: { following: userId } },
         { new: true },
       );
 
+      if (!userUpdate || !targetUpdate) {
+        throw new ConflictError('Failed to establish follow relationship');
+      }
+
+      console.log('Successfully accepted follow request');
+
       return await this.userModel
         .findOne({ _id: userId })
-        .populate('followers');
+        .populate('followers')
+        .populate('requests.toFollowers')
+        .populate('requests.toFollowings');
     } catch (error) {
+      console.error('Error in acceptsUserRequestToFollow:', error);
       throw error;
     }
   }
@@ -194,7 +220,9 @@ export class UserService {
 
       return await this.userModel
         .findOne({ _id: userId })
-        .populate('followers');
+        .populate('followers')
+        .populate('requests.toFollowers')
+        .populate('requests.toFollowings');
     } catch (error) {
       throw error;
     }
@@ -270,9 +298,19 @@ export class UserService {
   }
 
   // Helper Function
+  // TODO: Make the request objext populateable
   async findById(_id?: mongoose.Schema.Types.ObjectId) {
     const user = await this.userModel.findById(_id)
-    .populate(['posts.author', 'requests.toFollowers', 'requests.toFollowings', 'followers', 'following']);
+    .populate('posts.author')
+    .populate('requests')
+    .populate({
+      path: 'requests.toFollowers',
+      select: 'user userInfo email',
+    })
+    .populate('requests.toFollowings')
+    .populate('followers')
+    .populate('following');
+    console.log(user)
     return user;
   }
 
@@ -285,7 +323,11 @@ export class UserService {
     try {
       return await this.userModel
         .findOne({ _id })
-        .populate(['requests.toFollowers', 'requests.toFollowings', 'posts.author'])
+        .populate('posts.author')
+        .populate('requests.toFollowers')
+        .populate('requests.toFollowings')
+        .populate('followers')
+        .populate('following')
         .exec();
     } catch (error) {
       return error;
@@ -295,7 +337,8 @@ export class UserService {
     try {
       return await this.userModel
         .findOne({ 'user.username': username })
-        .populate(['followers', 'following'])
+        .populate('followers')
+        .populate('following')
         .exec();
     } catch (error) {
       return error;
@@ -308,29 +351,32 @@ export class UserService {
   }
 
   async isUserToAccept(
-    _id: mongoose.Schema.Types.ObjectId,
-    targetUserId: mongoose.Schema.Types.ObjectId,
+    _id: string,
+    targetUserId: string,
   ) {
     try {
-      const targetUserIdObject = targetUserId;
-
+      console.log('Checking if user', _id, 'has request from', targetUserId);
+      
       const user = await this.userModel.findOne({
         _id,
-        'requests.toFollowers': { $in: [targetUserIdObject] },
+        'requests.toFollowers': { $in: [new ObjectId(targetUserId)] },
       });
 
+      console.log('Found user:', user ? 'yes' : 'no');
+      
       if (!user) {
         return false;
       }
 
       return true;
     } catch (error) {
-      return null;
+      console.error('Error in isUserToAccept:', error);
+      return false;
     }
   }
 
   async isUserAlreadyFollowed(
-    _id: mongoose.Schema.Types.ObjectId,
+    _id: string,
     targetUserId: string,
   ) {
     try {
