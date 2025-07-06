@@ -39,6 +39,19 @@ export class UserResolver {
     return user;
   }
 
+  @Mutation(() => [User])
+  @UseGuards(GqlAuthGuard)
+  async getManyUserInfo(
+    @Args('id', { type: () => [String] }) ids: string[],
+  ): Promise<User[]> {
+    try {
+      const user = await this.userService.findManyById(ids);
+      return user;
+    } catch (error) {
+      return error
+    }
+  }
+
   @Mutation(() => User)
   async createUser(
     @Args('createUserInput') createUserInput: UserInput,

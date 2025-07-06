@@ -314,6 +314,18 @@ export class UserService {
     return user;
   }
 
+  async findManyById(_ids: string[]) {
+    const users = await this.userModel.find({ _id: { $in: _ids } })
+      .populate('posts.author')
+      .populate('requests')
+      .populate('requests.toFollowings')
+      .populate('followers')
+      .populate('following');
+
+    return users;
+  }
+
+
   async findAll(): Promise<User[]> {
     const allUser = await this.userModel.find().exec();
     return allUser;
@@ -411,5 +423,19 @@ export class UserService {
 
   async findByIds(ids: any): Promise<User[]> {
     return this.userModel.find({ _id: { $in: ids } }).exec();
+  }
+
+  async findByIdsWithRequests(ids: mongoose.Schema.Types.ObjectId[]): Promise<User[]> {
+    return this.userModel.find({ _id: { $in: ids } })
+      .populate('posts.author')
+      .populate('requests')
+      .populate({
+        path: 'requests.toFollowers',
+        select: 'user userInfo email',
+      })
+      .populate('requests.toFollowings')
+      .populate('followers')
+      .populate('following')
+      .exec();
   }
 }
