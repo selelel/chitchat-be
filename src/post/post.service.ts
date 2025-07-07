@@ -139,7 +139,6 @@ export class PostService {
         $pull: { save: userId },
       });
       
-      console.log(post)
     } catch (error) {
       throw error;
     }

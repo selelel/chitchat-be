@@ -178,15 +178,12 @@ export class UserService {
         throw new ConflictError('Failed to establish follow relationship');
       }
 
-      console.log('Successfully accepted follow request');
-
       return await this.userModel
         .findOne({ _id: userId })
         .populate('followers')
         .populate('requests.toFollowers')
         .populate('requests.toFollowings');
     } catch (error) {
-      console.error('Error in acceptsUserRequestToFollow:', error);
       throw error;
     }
   }
@@ -310,10 +307,43 @@ export class UserService {
     .populate('requests.toFollowings')
     .populate('followers')
     .populate('following');
-    console.log(user)
     return user;
   }
 
+
+  async getFriendSuggestion(
+    userId: string,
+    { limit = 10, skip = 0 }: { limit?: number; skip?: number }
+  ): Promise<User[]> {
+  
+    // Step 1: Fetch current user with their followings
+    const currentUser = await this.userModel
+      .findById(userId)
+      .populate('following')
+      .exec();
+  
+    if (!currentUser) return [];
+  
+    // Collect following IDs as strings
+    const followingIds = (currentUser.following as unknown as User[]).map((d) =>
+      d._id.toString()
+    );
+    followingIds.push(userId); // Exclude self
+  
+    // Step 2: Find public users excluding followings and self
+    const suggestedUsers = await this.userModel
+      .find({
+        _id: { $nin: followingIds },
+        isPrivate: false
+      })
+      .populate('followers')
+      .skip(skip)
+      .limit(limit)
+      .exec();
+  
+    return suggestedUsers;
+  }
+  
   async findManyById(_ids: string[]) {
     const users = await this.userModel.find({ _id: { $in: _ids } })
       .populate('posts.author')
@@ -367,14 +397,11 @@ export class UserService {
     targetUserId: string,
   ) {
     try {
-      console.log('Checking if user', _id, 'has request from', targetUserId);
       
       const user = await this.userModel.findOne({
         _id,
         'requests.toFollowers': { $in: [new ObjectId(targetUserId)] },
       });
-
-      console.log('Found user:', user ? 'yes' : 'no');
       
       if (!user) {
         return false;

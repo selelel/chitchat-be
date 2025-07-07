@@ -8,6 +8,7 @@ import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { ChatService } from 'src/chat/chat.service';
 import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
 import mongoose from 'mongoose';
+import { Pagination } from 'src/utils/global_dto/pagination.dto';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -36,6 +37,16 @@ export class UserResolver {
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
   ): Promise<User> {
     const user = await this.userService.findById(decoded_token.payload._id);
+    return user;
+  }
+
+  @Query(() => [User])
+  @UseGuards(GqlAuthGuard)
+  async getFriendSuggestion(
+    @Args('pagination') pagination: Pagination,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<User[]> {
+    const user = await this.userService.getFriendSuggestion((decoded_token.payload._id.toString()), pagination);
     return user;
   }
 
