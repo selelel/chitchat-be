@@ -134,10 +134,10 @@ export class UserResolver {
         targetUserId,
       );
 
-      // await this.chatService.createPrivateRoom(
-      //   decoded_token.payload._id,
-      //   targetUserId,
-      // );
+      await this.chatService.createPrivateRoom(
+        decoded_token.payload._id,
+        targetUserId,
+      );
       return true;
     } catch (error) {
       return error;
