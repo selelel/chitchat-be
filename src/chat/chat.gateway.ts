@@ -51,7 +51,7 @@ async sendDirectMessage(
     );
 
     // ✅ Emit to specific room
-    this.server.to(chatId).emit('onListening', message);
+    this.server.to(chatId).emit(chatId, {message, chatId});
 
   } catch (error) {
     this.server.to(chatId).emit('onListening', error);
