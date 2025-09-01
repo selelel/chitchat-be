@@ -30,6 +30,7 @@ import { HttpModule } from '@nestjs/axios';
     GraphQLModule.forRoot({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
+      csrfPrevention: false,
       cors: {
         credentials: 'include',
         mode: 'cors',
