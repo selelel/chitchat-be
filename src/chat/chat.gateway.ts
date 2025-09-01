@@ -6,7 +6,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { ChatService } from './chat.service';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { OnModuleInit } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { ChatMiddleware } from './chat.middleware';
@@ -36,26 +36,27 @@ export class ChatGateway implements OnModuleInit {
   }
 
   @SubscribeMessage('sendDirectMessage')
-  async sendDirectMessage(
-    @MessageBody() messageContent: MessageContentInput,
-    @ConnectedSocket() connect,
-  ) {
-    const { user, chatId } = connect.data;
-    try {
-      const message = await this.chatService.sendMessage(
-        chatId,
-        user.payload._id,
-        messageContent,
-      );
-      
-      this.server.emit(
-        'onListening',
-        message,
-      );
-    } catch (error) {
-      this.server.emit('onListening', error);
-    }
+async sendDirectMessage(
+  @MessageBody() messageContent: MessageContentInput,
+  @ConnectedSocket() connect: Socket,
+) {
+  const { user, chatId } = connect.data;
+  connect.join(chatId); 
+
+  try {
+    const message = await this.chatService.sendMessage(
+      chatId,
+      user.payload._id,
+      messageContent,
+    );
+
+    // ✅ Emit to specific room
+    this.server.to(chatId).emit(chatId, {message, chatId});
+
+  } catch (error) {
+    this.server.to(chatId).emit('onListening', error);
   }
+}
 
   @SubscribeMessage('unsentDirectMessage')
   async unsentDirectMessage(@MessageBody() { messageId }) {

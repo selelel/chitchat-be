@@ -153,8 +153,6 @@ export class PostResolver {
       option,
     );
 
-    console.log(newPost)
-
     return newPost;
   }
 

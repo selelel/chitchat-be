@@ -8,6 +8,7 @@ import { GqlCurrentUser } from 'src/auth/decorator/gql.current.user';
 import { ChatService } from 'src/chat/chat.service';
 import { GetCurrentUser } from 'src/auth/interfaces/jwt_type';
 import mongoose from 'mongoose';
+import { Pagination } from 'src/utils/global_dto/pagination.dto';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -39,6 +40,29 @@ export class UserResolver {
     return user;
   }
 
+  @Query(() => [User])
+  @UseGuards(GqlAuthGuard)
+  async getFriendSuggestion(
+    @Args('pagination') pagination: Pagination,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<User[]> {
+    const user = await this.userService.getFriendSuggestion((decoded_token.payload._id.toString()), pagination);
+    return user;
+  }
+
+  @Mutation(() => [User])
+  @UseGuards(GqlAuthGuard)
+  async getManyUserInfo(
+    @Args('id', { type: () => [String] }) ids: string[],
+  ): Promise<User[]> {
+    try {
+      const user = await this.userService.findManyById(ids);
+      return user;
+    } catch (error) {
+      return error
+    }
+  }
+
   @Mutation(() => User)
   async createUser(
     @Args('createUserInput') createUserInput: UserInput,
@@ -47,89 +71,120 @@ export class UserResolver {
     return createdUser;
   }
 
-  @Mutation(() => User)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async followUser(
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
-  ): Promise<User> {
-    const userRequest = await this.userService.requestToFollowUser(
-      decoded_token.payload._id,
-      targetUserId,
-    );
-
-    return userRequest;
+  ): Promise<Boolean> {
+    try {
+      await this.userService.requestToFollowUser(
+        decoded_token.payload._id.toString(),
+        targetUserId,
+      );
+      return true;
+    } catch (error) {
+      return error
+    }
   }
 
-  @Mutation(() => User)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async cancelFollowRequest(
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
-  ): Promise<User> {
-    const userRequest = await this.userService.removesUserRequest(
-      decoded_token.payload._id,
-      targetUserId as unknown as mongoose.Schema.Types.ObjectId,
-    );
-
-    return userRequest;
+  ): Promise<Boolean> {
+    try {
+      await this.userService.removesUserRequest(
+        targetUserId,
+        decoded_token.payload._id.toString()
+      );
+      return true;
+    } catch (error) {
+      return error
+    }
   }
 
-  @Mutation(() => User)
+  @Mutation(() => Boolean)
+  @UseGuards(GqlAuthGuard)
+  async declineFollowRequest(
+    @Args('targetUserId') targetUserId: string,
+    @GqlCurrentUser() { decoded_token }: GetCurrentUser,
+  ): Promise<Boolean> {
+    try {
+      await this.userService.removesUserRequest(
+        decoded_token.payload._id.toString(),
+        targetUserId,
+      );
+      return true;
+    } catch (error) {
+      return error
+    }
+  }
+
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async acceptFollowRequest(
     @Args('targetUserId') targetUserId: string,
     @GqlCurrentUser() { decoded_token }: GetCurrentUser,
-  ): Promise<User> {
+  ): Promise<Boolean> {
     try {
-      const userRequest = await this.userService.acceptsUserRequestToFollow(
-        decoded_token.payload._id,
-        targetUserId as unknown as mongoose.Schema.Types.ObjectId,
+      await this.userService.acceptsUserRequestToFollow(
+        decoded_token.payload._id.toString(),
+        targetUserId,
       );
 
       await this.chatService.createPrivateRoom(
         decoded_token.payload._id,
         targetUserId,
       );
-      return userRequest;
+      return true;
     } catch (error) {
       return error;
     }
   }
 
-  @Mutation(() => User)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async removeUserFollowing(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
-  ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<Boolean> {
+    try {
+      const {
+        payload: { _id },
+      } = decoded_token;
 
-    const userRequest = await this.userService.removeUserFollowing(
-      _id,
-      targetUserId,
-    );
-
-    return userRequest;
+      await this.userService.removeUserFollowing(
+        _id,
+        targetUserId,
+      );
+  
+      return true;
+    } catch (error) {
+      return error
+    }
   }
 
-  @Mutation(() => User)
+  @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async removeUserFollower(
     @Args('targetUserId') targetUserId: string,
-    @GqlCurrentUser() { user },
-  ): Promise<User> {
-    const {
-      payload: { _id },
-    } = user;
-
-    const userRequest = await this.userService.removeUserFollower(
-      _id,
-      targetUserId,
-    );
-
-    return userRequest;
+    @GqlCurrentUser() { decoded_token },
+  ): Promise<Boolean> {
+    try {
+      const {
+        payload: { _id },
+      } = decoded_token;
+  
+      await this.userService.removeUserFollower(
+        _id,
+        targetUserId,
+      );
+  
+      return true;
+    } catch (error) {
+      return error
+    }
   }
 }
