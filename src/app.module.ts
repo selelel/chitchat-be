@@ -32,11 +32,13 @@ import { HttpModule } from '@nestjs/axios';
       autoSchemaFile: join(process.cwd(), 'src/utils/schema.gql'),
       csrfPrevention: false,
       cors: {
-        credentials: 'include',
-        mode: 'cors',
-        origin: true,
+        credentials: true,
+        origin: '*',
       },
       context: ({ req, res }) => ({ req, res }),
+      introspection: true,    // 👈 allow schema queries in prod
+      playground: true,       // 👈 enable Playground UI at /graphql\
+      ssrMode: true,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
