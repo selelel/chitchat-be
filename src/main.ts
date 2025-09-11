@@ -4,47 +4,50 @@ import { graphqlUploadExpress } from 'graphql-upload-ts';
 import 'dotenv/config';
 import * as session from 'express-session';
 import * as passport from 'passport';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import { Logger } from '@nestjs/common';
 import { SESSION_SECRET } from './utils/constant/constant';
 
-const startServer = async () => {
-  try {
-    const app = await NestFactory.create(AppModule);
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
 
-    const port = process.env.PORT || 5000;
-    app.use(
-      '/graphql',
-      graphqlUploadExpress({ maxFileSize: 5000000, maxFiles: 5 }),
-    );
+  const port = process.env.PORT || 5000;
 
-    app.use(
-      session({
-        secret: SESSION_SECRET,
-        saveUninitialized: false,
-        resave: false,
-        cookie: {
-          maxAge: 60000,
-        },
-      }),
-    );
+  // GraphQL Upload middleware
+  app.use(
+    '/graphql',
+    graphqlUploadExpress({ maxFileSize: 5_000_000, maxFiles: 5 }),
+  );
 
-    app.use(cookieParser());
-    app.use(passport.initialize());
-    app.use(passport.session());
-    app.useGlobalPipes(new ValidationPipe());
+  // Session
+  app.use(
+    session({
+      secret: SESSION_SECRET,
+      saveUninitialized: false,
+      resave: false,
+      cookie: {
+        maxAge: 60000,
+      },
+    }),
+  );
 
-    app.enableCors({
-      origin: 'http://localhost:3000',
-      credentials: true,
-    });
+  // Middleware
+  app.use(cookieParser());
+  app.use(passport.initialize());
+  app.use(passport.session());
+  app.useGlobalPipes(new ValidationPipe());
 
-    await app.listen(port as number, '0.0.0.0');
-    Logger.log(`Server listening on ${port} http://localhost:${port}/graphql`);
-  } catch (err) {
-    Logger.error(err);
-  }
-};
+  // CORS
+  app.enableCors({
+    origin: [
+      'http://localhost:3000',
+      'https://chitchat-be-rhrm.onrender.com', // your Render domain
+    ],
+    credentials: true,
+  });
 
-startServer();
+  await app.listen(port as number, '0.0.0.0');
+  Logger.log(`🚀 Server running at http://0.0.0.0:${port}/graphql`);
+}
+
+bootstrap();

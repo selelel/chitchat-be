@@ -33,11 +33,12 @@ import { HttpModule } from '@nestjs/axios';
       csrfPrevention: false,
       cors: {
         credentials: true,
-        origin: true,
+        origin: '*',
       },
       context: ({ req, res }) => ({ req, res }),
       introspection: true,    // 👈 allow schema queries in prod
-      playground: true,       // 👈 enable Playground UI at /graphql
+      playground: true,       // 👈 enable Playground UI at /graphql\
+      ssrMode: true,
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
