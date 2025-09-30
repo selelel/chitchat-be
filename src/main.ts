@@ -41,7 +41,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
-      'https://chitchat-be-rhrm.onrender.com', // your Render domain
+      'https://chitchat-be-rhrm.onrender.com',
+      
     ],
     credentials: true,
   });
