@@ -33,6 +33,13 @@ export class AuthResolver {
     return user_;
   }
 
+  @Query(() => User)
+  @UseGuards(GqlAuthGuard)
+  async me(@GqlCurrentUser() { decoded_token }: GetCurrentUser) {
+    const user_ = await this.userService.findById(decoded_token.payload._id);
+    return user_;
+  }
+
   @Mutation(() => Boolean)
   @UseGuards(GqlAuthGuard)
   async updateUserPassword(
